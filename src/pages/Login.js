@@ -36,7 +36,7 @@ export default function Login({ navigation }) {
   }
   return (
     <ImageBackground
-      source={require("../../img/fundo.png")}
+      source={require("../img/fundo.png")}
       style={styles.background}
       resizeMode="cover"
     >
@@ -45,8 +45,8 @@ export default function Login({ navigation }) {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
         >
-          <View style={styles.container}>
-            <Image source={require("../../img/logo.png")} style={styles.logo} />
+          <View style={styles.body}>
+            <Image source={require("../img/logo.png")} style={styles.logo} />
             <TextInput
               placeholder=" e-mail"
               value={usuario.email}
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  container: {
+  body: {
     minHeight: 180,
     marginVertical: 100,
     justifyContent: "center",

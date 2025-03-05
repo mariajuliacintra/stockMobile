@@ -34,12 +34,12 @@ export default function Cadastro({ navigation }) {
   }
   return (
     <ImageBackground
-      source={require("../../img/fundo.png")}
+      source={require("../img/fundo.png")}
       style={styles.background}
       resizeMode="cover"
     >
       <View style={styles.container}>
-        <Image source={require("../../img/logo.png")} style={styles.logo} />
+        <Image source={require("../img/logo.png")} style={styles.logo} />
         <TextInput
           placeholder=" nome"
           value={usuario.nome}
