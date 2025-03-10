@@ -56,7 +56,17 @@ function Principal({ navigation }) {
             source={require("../img/iconelogout.png")}
             style={styles.imageButtonToHome}
           />
+          
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.buttonToProfile}
+          onPress={() => navigation.navigate("")}
+        >
+          <Image source={require("../img/iconeperfil.png")} 
+          style={styles.perfil}/>
+          
+        </TouchableOpacity>
+        
       </View>
       <View style={styles.body}>
         <View style={styles.tableHeader}>
@@ -111,6 +121,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: "white",
     borderWidth: 3,
+  },
+  perfil: {
+    justifyContent: "center",
+    alignItems: "center",
+    resizeMode: "contain",
+    width: 40,
+    height: 40,
   },
   buttonToHome: {
     justifyContent: "center",
