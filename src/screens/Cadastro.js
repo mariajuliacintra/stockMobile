@@ -38,6 +38,16 @@ export default function Cadastro({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
+      <View style={styles.header}>
+      <TouchableOpacity
+          style={styles.buttonToPrincipal}
+          onPress={() => navigation.navigate("Principal")}
+        >
+          <Image source={require("../img/botaohome.png")} 
+          style={styles.imageButtonToPrincipal}/>
+          
+        </TouchableOpacity>
+      </View>
       <View style={styles.container}>
         <Image source={require("../img/logo.png")} style={styles.logo} />
         <TextInput
@@ -85,18 +95,33 @@ export default function Cadastro({ navigation }) {
           <Text style={styles.textButtonToLogin}>Login</Text>
         </TouchableOpacity>
       </View>
+      <View style={styles.footer}>
+        <Text style={styles.textDesenvolvido}>
+          &copy; Desenvolvido por: Vinicius Fogaça, Maria Júlia e Maria Fernanda
+        </Text>
+      </View>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  header:{
+    backgroundColor: "rgba(177, 16, 16, 1)",
+    height: 60,
+    width:500,
+    marginTop:-300,
+    borderBottomColor: "white",
+    borderBottomWidth: 3,
+    flexDirection: "row",
+  },
   background: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   container: {
-    minHeight: 500,
+    marginTop: 150,
+    minHeight: 100,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "white",
@@ -124,6 +149,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 12,
     backgroundColor: "white",
+  },
+  buttonToPrincipal: {
+    justifyContent: "center",
+    alignItems: "center",
+    resizeMode: "contain",
+    marginLeft: 12,
+  },
+  imageButtonToPrincipal:{
+    justifyContent: "center",
+    alignItems: "center",
+    resizeMode: "contain",
+    width: 900,
+    height: 40,
   },
   buttonCadastrar: {
     backgroundColor: "rgb(250, 24, 24)",
@@ -159,5 +197,15 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "white",
+  },
+  footer: {
+    backgroundColor: "rgb(166, 13, 13)",
+    height: 50,
+    width: 900,
+    borderTopColor: "white",
+    borderTopWidth: 3,
+    marginTop: -158,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -49,6 +49,14 @@ function Principal({ navigation }) {
       <View style={styles.header}>
         <Image source={require("../img/logo.png")} style={styles.logo} />
         <TouchableOpacity
+          style={styles.buttonToProfile}
+          onPress={() => navigation.navigate("Perfil")}
+        >
+          <Image source={require("../img/iconeperfil.png")} 
+          style={styles.imageButtonToProfile}/>
+          
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.buttonToHome}
           onPress={() => navigation.navigate("Home")}
         >
@@ -57,16 +65,7 @@ function Principal({ navigation }) {
             style={styles.imageButtonToHome}
           />
           
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.buttonToProfile}
-          onPress={() => navigation.navigate("")}
-        >
-          <Image source={require("../img/iconeperfil.png")} 
-          style={styles.perfil}/>
-          
-        </TouchableOpacity>
-        
+        </TouchableOpacity> 
       </View>
       <View style={styles.body}>
         <View style={styles.tableHeader}>
@@ -122,20 +121,26 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderWidth: 3,
   },
-  perfil: {
+  buttonToHome: {
+    justifyContent: "center",
+    alignItems: "center",
+    resizeMode: "contain",
+    marginLeft: 12,
+  },
+  imageButtonToHome: {
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
     width: 40,
     height: 40,
   },
-  buttonToHome: {
+  buttonToProfile:{
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
-    marginLeft: 300,
+    marginLeft: 250,
   },
-  imageButtonToHome: {
+  imageButtonToProfile:{
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
@@ -226,7 +231,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   capacidade: {
-    width: 40,
+    width: 100,
     flexWrap: "wrap",
     textAlign: "center",
     justifyContent:"center",
@@ -241,7 +246,6 @@ const styles = StyleSheet.create({
     height: 50,
     borderTopColor: "white",
     borderTopWidth: 3,
-    marginTop: -158,
     alignItems: "center",
     justifyContent: "center",
   },
