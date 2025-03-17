@@ -1,12 +1,11 @@
 import React from "react";
 import {
+  Image,
   ImageBackground,
   StyleSheet,
-  View,
   Text,
   TouchableOpacity,
-  Image,
-  TextComponent,
+  View
 } from "react-native";
 
 function Home({ navigation }) {
@@ -72,10 +71,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgb(250, 24, 24)",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 20,
     borderWidth: 0,
     alignItems: "center",
     marginRight: 15,
+    borderColor: "white",
+    borderWidth: 2,
   },
   textButtonToCadastro: {
     fontSize: 14,
@@ -86,10 +87,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgb(250, 24, 24)",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 20,
     borderWidth: 0,
     alignItems: "center",
     marginRight: 20,
+    borderColor: "white",
+    borderWidth: 2,
   },
   textButtonToLogin: {
     fontSize: 14,
@@ -111,7 +114,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderTopColor: "white",
     borderTopWidth: 3,
-    marginTop: 150,
+    marginTop: 165,
     justifyContent: "center",
     alignItems: "center",
     width: 500,

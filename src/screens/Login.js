@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderTopColor: "white",
     borderTopWidth: 3,
     alignItems: "center",
-    marginTop: 85,
+    marginTop: 88,
     marginBottom:-278,
     justifyContent: "center",
   },

@@ -4,8 +4,8 @@ import {
   Image,
   ImageBackground,
   StyleSheet,
-  TouchableOpacity,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import api from "../services/axios";
@@ -47,7 +47,7 @@ function Principal({ navigation }) {
       resizeMode="cover"
     >
       <View style={styles.header}>
-        <Image source={require("../img/logo.png")} style={styles.logo} />
+        <Image source={require("../img/logoMinimalista.png")} style={styles.logo} />
         <TouchableOpacity
           style={styles.buttonToProfile}
           onPress={() => navigation.navigate("Perfil")}
@@ -91,11 +91,6 @@ function Principal({ navigation }) {
           keyExtractor={(sala) => sala.id_sala.toString()}
         />
       </View>
-      <View style={styles.footer}>
-        <Text style={styles.textDesenvolvido}>
-          &copy; Desenvolvido por: Vinicius Fogaça, Maria Júlia e Maria Fernanda
-        </Text>
-      </View>
     </ImageBackground>
   );
 }
@@ -116,16 +111,13 @@ const styles = StyleSheet.create({
     width: 120,
     height: 34,
     marginTop: 12,
-    marginLeft: 10,
-    borderRadius: 8,
-    borderColor: "white",
-    borderWidth: 3,
+    marginLeft: -30,
   },
   buttonToHome: {
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
-    marginLeft: 12,
+    marginLeft: 14,
   },
   imageButtonToHome: {
     justifyContent: "center",
@@ -138,7 +130,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
-    marginLeft: 250,
+    marginLeft: 280,
   },
   imageButtonToProfile:{
     justifyContent: "center",
@@ -151,6 +143,7 @@ const styles = StyleSheet.create({
     padding: 8,
     paddingTop: 10,
     paddingBottom: 180,
+    marginBottom: 60,
   },
   tableHeader: {
     flexDirection: "row",
@@ -241,15 +234,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 0.5,
     borderLeftColor: "white",
   },
-  footer: {
-    backgroundColor: "rgb(166, 13, 13)",
-    height: 50,
-    borderTopColor: "white",
-    borderTopWidth: 3,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textDesenvolvido: { color: "white", fontWeight: "bold" },
 });
 
 export default Principal;
