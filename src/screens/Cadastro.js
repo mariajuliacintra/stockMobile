@@ -39,13 +39,14 @@ export default function Cadastro({ navigation }) {
       resizeMode="cover"
     >
       <View style={styles.header}>
-      <TouchableOpacity
+        <TouchableOpacity
           style={styles.buttonToPrincipal}
           onPress={() => navigation.navigate("Principal")}
         >
-          <Image source={require("../img/botaohome.png")} 
-          style={styles.imageButtonToPrincipal}/>
-          
+          <Image
+            source={require("../img/botaohome.png")}
+            style={styles.imageButtonToPrincipal}
+          />
         </TouchableOpacity>
       </View>
       <View style={styles.container}>
@@ -105,11 +106,11 @@ export default function Cadastro({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header:{
+  header: {
     backgroundColor: "rgba(177, 16, 16, 1)",
     height: 60,
-    width:500,
-    marginTop:-300,
+    width: 500,
+    marginTop: -350,
     borderBottomColor: "white",
     borderBottomWidth: 3,
     flexDirection: "row",
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginLeft: 12,
   },
-  imageButtonToPrincipal:{
+  imageButtonToPrincipal: {
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
@@ -204,8 +205,9 @@ const styles = StyleSheet.create({
     width: 900,
     borderTopColor: "white",
     borderTopWidth: 3,
-    marginTop: -158,
     alignItems: "center",
+    marginTop: 150,
+    marginBottom:-350,
     justifyContent: "center",
   },
 });

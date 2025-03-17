@@ -1,17 +1,13 @@
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  Image,
+  ImageBackground,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
-  StyleSheet,
-  ImageBackground,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
+  View,
 } from "react-native";
 import api from "../services/axios";
 
@@ -40,49 +36,64 @@ export default function Login({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.buttonToPrincipal}
+          onPress={() => navigation.navigate("Principal")}
         >
-          <View style={styles.body}>
-            <Image source={require("../img/logo.png")} style={styles.logo} />
-            <TextInput
-              placeholder=" e-mail"
-              value={usuario.email}
-              onChangeText={(value) => {
-                setUsuario({ ...usuario, email: value });
-              }}
-              style={styles.input}
-            />
-            <TextInput
-              placeholder=" senha"
-              value={usuario.senha}
-              onChangeText={(value) => {
-                setUsuario({ ...usuario, senha: value });
-              }}
-              style={styles.input}
-            />
-            <TouchableOpacity
-              onPress={handleLogin}
-              style={styles.buttonEntrar}
-            >
-              <Text style={styles.textButtonEntrar}>Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.buttonToCadastro}
-              onPress={() => navigation.navigate("Cadastro")}
-            >
-              <Text style={styles.textButtonToCadastro}>Cadastre-se</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+          <Image
+            source={require("../img/botaohome.png")}
+            style={styles.imageButtonToPrincipal}
+          />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.body}>
+        <Image source={require("../img/logo.png")} style={styles.logo} />
+        <TextInput
+          placeholder=" e-mail"
+          value={usuario.email}
+          onChangeText={(value) => {
+            setUsuario({ ...usuario, email: value });
+          }}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder=" senha"
+          value={usuario.senha}
+          onChangeText={(value) => {
+            setUsuario({ ...usuario, senha: value });
+          }}
+          style={styles.input}
+        />
+        <TouchableOpacity onPress={handleLogin} style={styles.buttonEntrar}>
+          <Text style={styles.textButtonEntrar}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.buttonToCadastro}
+          onPress={() => navigation.navigate("Cadastro")}
+        >
+          <Text style={styles.textButtonToCadastro}>Cadastre-se</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.footer}>
+        <Text style={styles.textDesenvolvido}>
+          &copy; Desenvolvido por: Vinicius Fogaça, Maria Júlia e Maria Fernanda
+        </Text>
+      </View>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    backgroundColor: "rgba(177, 16, 16, 1)",
+    height: 60,
+    width: 500,
+    marginTop: -100,
+    borderBottomColor: "white",
+    borderBottomWidth: 3,
+    flexDirection: "row",
+  },
   background: {
     flex: 1,
     justifyContent: "center",
@@ -119,6 +130,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "white",
   },
+  buttonToPrincipal: {
+    justifyContent: "center",
+    alignItems: "center",
+    resizeMode: "contain",
+    marginLeft: 12,
+  },
+  imageButtonToPrincipal: {
+    justifyContent: "center",
+    alignItems: "center",
+    resizeMode: "contain",
+    width: 900,
+    height: 40,
+  },
   buttonEntrar: {
     backgroundColor: "rgb(250, 24, 24)",
     paddingVertical: 10,
@@ -153,5 +177,16 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "white",
+  },
+  footer: {
+    backgroundColor: "rgb(166, 13, 13)",
+    height: 50,
+    width: 900,
+    borderTopColor: "white",
+    borderTopWidth: 3,
+    alignItems: "center",
+    marginTop: 105,
+    marginBottom: -100,
+    justifyContent: "center",
   },
 });

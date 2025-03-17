@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   Image,
+  TextComponent,
 } from "react-native";
 
 function Home({ navigation }) {
@@ -36,7 +37,11 @@ function Home({ navigation }) {
         </Text>
       </View>
 
-      <View style={styles.footer}></View>
+      <View style={styles.footer}>
+        <Text style={styles.textDesenvolvido}>
+          &copy; Desenvolvido por: Vinicius Fogaça, Maria Júlia e Maria Fernanda
+        </Text>
+      </View>
     </ImageBackground>
   );
 }
@@ -61,7 +66,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: "white",
     borderWidth: 4,
-    marginRight:90
+    marginRight: 90,
   },
   buttonToCadastro: {
     backgroundColor: "rgb(250, 24, 24)",
@@ -107,6 +112,10 @@ const styles = StyleSheet.create({
     borderTopColor: "white",
     borderTopWidth: 3,
     marginTop: 150,
+  },
+  textDesenvolvido: {
+   color: "white",
+   fontSize: 50,
   },
 });
 
