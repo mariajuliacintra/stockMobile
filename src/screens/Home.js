@@ -47,7 +47,7 @@ function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  background: { height: "150%" },
+  background: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     backgroundColor: "rgba(177, 16, 16, 1)",
     height: 80,
@@ -108,15 +108,15 @@ const styles = StyleSheet.create({
 
   footer: {
     backgroundColor: "rgba(177, 16, 16, 1)",
-    height: 80,
+    height: 60,
     borderTopColor: "white",
     borderTopWidth: 3,
     marginTop: 150,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 500,
   },
-  textDesenvolvido: {
-   color: "white",
-   fontSize: 50,
-  },
+  textDesenvolvido: { color: "white", fontWeight: "bold" },
 });
 
 export default Home;

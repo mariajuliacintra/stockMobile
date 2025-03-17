@@ -38,12 +38,12 @@ export default function Login({ navigation }) {
     >
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.buttonToPrincipal}
-          onPress={() => navigation.navigate("Principal")}
+          style={styles.buttonToHome}
+          onPress={() => navigation.navigate("Home")}
         >
           <Image
             source={require("../img/botaohome.png")}
-            style={styles.imageButtonToPrincipal}
+            style={styles.imageButtonToHome}
           />
         </TouchableOpacity>
       </View>
@@ -87,9 +87,9 @@ export default function Login({ navigation }) {
 const styles = StyleSheet.create({
   header: {
     backgroundColor: "rgba(177, 16, 16, 1)",
-    height: 60,
+    height: 90,
     width: 500,
-    marginTop: -100,
+    marginTop: -290,
     borderBottomColor: "white",
     borderBottomWidth: 3,
     flexDirection: "row",
@@ -130,18 +130,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "white",
   },
-  buttonToPrincipal: {
-    justifyContent: "center",
-    alignItems: "center",
-    resizeMode: "contain",
-    marginLeft: 12,
-  },
-  imageButtonToPrincipal: {
+  imageButtonToHome: {
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
     width: 900,
-    height: 40,
+    height: 60,
+    marginTop: 20,
   },
   buttonEntrar: {
     backgroundColor: "rgb(250, 24, 24)",
@@ -181,12 +176,13 @@ const styles = StyleSheet.create({
   footer: {
     backgroundColor: "rgb(166, 13, 13)",
     height: 50,
-    width: 900,
+    width: 600,
     borderTopColor: "white",
     borderTopWidth: 3,
     alignItems: "center",
-    marginTop: 105,
-    marginBottom: -100,
+    marginTop: 85,
+    marginBottom:-278,
     justifyContent: "center",
   },
+  textDesenvolvido: { color: "white", fontWeight: "bold" },
 });
