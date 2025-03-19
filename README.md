@@ -80,8 +80,8 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 
   ```bash
       npm i @react-navigation/native
-       npm i @react-navigation/native-stack
-       npm i react-native-screens react-native-safe-area-context
+      npm i @react-navigation/native-stack
+      npm i react-native-screens react-native-safe-area-context
   ```
 
 3. **Axios**
