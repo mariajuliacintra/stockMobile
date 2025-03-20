@@ -35,14 +35,14 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 1. **Clonar o Repositório**
 
    ```bash
-    git clone https://github.com/MariaFernandaCintra/sprintMobile.git
+   git clone https://github.com/MariaFernandaCintra/sprintMobile.git
 
    ```
 
 2. **Entre na Pasta**
 
    ```bash
-    cd sprintMobile
+   cd sprintMobile
    ```
 
 3. **Instalar as Dependências**
@@ -50,14 +50,14 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 - Se estiver usando npm, execute:
 
   ```bash
-      npm i
+  npm i
   ```
 
 4. **Iniciar o Servidor de Desenvolvimento**
 
 - Com npm, execute:
   ```bash
-      npx expo start
+  npx expo start
   ```
 
 5. **Rodar o projeto no AndroidStudio**
@@ -71,7 +71,7 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 - Certifique-se de ter o Expo instalado:
 
   ```bash
-      npm i expo
+  npm i expo
   ```
 
 2. **React Navigation**
@@ -79,9 +79,9 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 - Para gerenciar a navegação entre as telas, instale:
 
   ```bash
-      npm i @react-navigation/native
-      npm i @react-navigation/native-stack
-      npm i react-native-screens react-native-safe-area-context
+  npm i @react-navigation/native
+  npm i @react-navigation/native-stack
+  npm i react-native-screens react-native-safe-area-context
   ```
 
 3. **Axios**
@@ -89,7 +89,7 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 - Para integrar com a API utilizando Axios, instale:
 
   ```bash
-      npm i axios
+  npm i axios
   ```
 
 4. **Styled-Components**
@@ -97,5 +97,5 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 - Para estilizar os componentes:
 
   ```bash
-      npm i styled-components
+  npm i styled-components
   ```
