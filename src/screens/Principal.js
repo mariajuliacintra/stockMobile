@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 import api from "../services/axios";
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 function Principal({ navigation }) {
   const [salas, setSalas] = useState([]);
@@ -47,23 +49,19 @@ function Principal({ navigation }) {
       resizeMode="cover"
     >
       <View style={styles.header}>
-        <Image source={require("../img/logoMinimalista.png")} style={styles.logo} />
+      <MaterialCommunityIcons name="menu" size={50} color="white" weight="thin" />
         <TouchableOpacity
           style={styles.buttonToProfile}
           onPress={() => navigation.navigate("Perfil")}
         >
-          <Image source={require("../img/iconeperfil.png")} 
-          style={styles.imageButtonToProfile}/>
+          <FontAwesome6 name="user-circle" size={38} color="white" weight="thin" />
           
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.buttonToHome}
           onPress={() => navigation.navigate("Home")}
         >
-          <Image
-            source={require("../img/iconelogout.png")}
-            style={styles.imageButtonToHome}
-          />
+          <MaterialCommunityIcons name="exit-to-app" size={40} color="white" weight="thin"/>
           
         </TouchableOpacity> 
       </View>
@@ -130,7 +128,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
-    marginLeft: 280,
+    marginLeft: 330,
   },
   imageButtonToProfile:{
     justifyContent: "center",

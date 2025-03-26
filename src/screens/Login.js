@@ -10,11 +10,15 @@ import {
   View,
 } from "react-native";
 import api from "../services/axios";
+import Header from "../components/Header";
+import { Ionicons } from "@expo/vector-icons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function Login({ navigation }) {
   const [usuario, setUsuario] = useState({
     email: "",
     senha: "",
+    showSenha: true,
   });
 
   async function handleLogin() {
@@ -36,17 +40,7 @@ export default function Login({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.buttonToHome}
-          onPress={() => navigation.navigate("Home")}
-        >
-          <Image
-            source={require("../img/botaohome.png")}
-            style={styles.imageButtonToHome}
-          />
-        </TouchableOpacity>
-      </View>
+      <Header/>
       <View style={styles.body}>
         <Image source={require("../img/logo.png")} style={styles.logo} />
         <TextInput
@@ -55,16 +49,30 @@ export default function Login({ navigation }) {
           onChangeText={(value) => {
             setUsuario({ ...usuario, email: value });
           }}
-          style={styles.input}
+          style={styles.inputEmail}
         />
-        <TextInput
-          placeholder=" senha"
-          value={usuario.senha}
-          onChangeText={(value) => {
-            setUsuario({ ...usuario, senha: value });
-          }}
-          style={styles.input}
-        />
+        <View style={styles.senhaContainer}>
+          <TextInput
+            style={styles.inputSenha}
+            placeholder=" senha"
+            value={usuario.senha}
+            secureTextEntry={usuario.showSenha}
+            onChangeText={(value) => {
+              setUsuario({ ...usuario, senha: value });
+            }}
+          />
+          <TouchableOpacity
+            onPress={() =>
+              setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+            }
+          >
+            <Ionicons
+              name={usuario.showSenha ? "eye-off" : "eye"}
+              size={24}
+              color="gray"
+            />
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity onPress={handleLogin} style={styles.buttonEntrar}>
           <Text style={styles.textButtonEntrar}>Login</Text>
         </TouchableOpacity>
@@ -85,15 +93,6 @@ export default function Login({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: "rgba(177, 16, 16, 1)",
-    height: 90,
-    width: 500,
-    marginTop: -290,
-    borderBottomColor: "white",
-    borderBottomWidth: 3,
-    flexDirection: "row",
-  },
   background: {
     flex: 1,
     justifyContent: "center",
@@ -121,7 +120,7 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderWidth: 4,
   },
-  input: {
+  inputEmail: {
     width: 250,
     height: 40,
     borderWidth: 0,
@@ -130,13 +129,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "white",
   },
-  imageButtonToHome: {
-    justifyContent: "center",
+  inputSenha: {
+    flex: 1,
+  },
+  senhaContainer: {
+    flexDirection: "row",
     alignItems: "center",
-    resizeMode: "contain",
-    width: 900,
-    height: 60,
-    marginTop: 20,
+    width: "250",
+    backgroundColor: "white",
+    borderRadius: 12,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    height: 40,
   },
   buttonEntrar: {
     backgroundColor: "rgb(250, 24, 24)",
@@ -180,8 +184,8 @@ const styles = StyleSheet.create({
     borderTopColor: "white",
     borderTopWidth: 3,
     alignItems: "center",
-    marginTop: 88,
-    marginBottom:-278,
+    marginTop: 95,
+    marginBottom: -278,
     justifyContent: "center",
   },
   textDesenvolvido: { color: "white", fontWeight: "bold" },

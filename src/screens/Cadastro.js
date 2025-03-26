@@ -10,6 +10,9 @@ import {
   View,
 } from "react-native";
 import api from "../services/axios";
+import Header from "../components/Header";
+import {Ionicons} from '@expo/vector-icons';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function Cadastro({ navigation }) {
   const [usuario, setUsuario] = useState({
@@ -17,6 +20,7 @@ export default function Cadastro({ navigation }) {
     email: "",
     NIF: "",
     senha: "",
+    showSenha: true,
   });
 
   async function handleCadastro() {
@@ -38,17 +42,7 @@ export default function Cadastro({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.buttonToHome}
-          onPress={() => navigation.navigate("Home")}
-        >
-          <Image
-            source={require("../img/botaohome.png")}
-            style={styles.imageButtonToHome}
-          />
-        </TouchableOpacity>
-      </View>
+    <Header/>
       <View style={styles.container}>
         <Image source={require("../img/logo.png")} style={styles.logo} />
         <TextInput
@@ -75,14 +69,27 @@ export default function Cadastro({ navigation }) {
           }}
           style={styles.input}
         />
-        <TextInput
+        <View style={styles.senhaContainer}>
+        <TextInput style={styles.inputSenha}
           placeholder=" senha"
           value={usuario.senha}
+          secureTextEntry={usuario.showSenha}
           onChangeText={(value) => {
             setUsuario({ ...usuario, senha: value });
           }}
-          style={styles.input}
         />
+        <TouchableOpacity
+            onPress={() =>
+              setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+            }
+          >
+            <Ionicons
+              name={usuario.showSenha ? "eye-off" : "eye"}
+              size={24}
+              color="gray"
+            />
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity
           onPress={handleCadastro}
           style={styles.buttonCadastrar}
@@ -106,15 +113,6 @@ export default function Cadastro({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: "rgba(177, 16, 16, 1)",
-    height: 90,
-    width: 500,
-    marginTop: -365,
-    borderBottomColor: "white",
-    borderBottomWidth: 3,
-    flexDirection: "row",
-  },
   background: {
     flex: 1,
     justifyContent: "center",
@@ -151,13 +149,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "white",
   },
-  imageButtonToHome: {
-    justifyContent: "center",
-    alignItems: "center",
-    resizeMode: "contain",
-    width: 900,
-    height: 60,
-    marginTop: 20,
+  inputSenha:{
+ flex: 1,
+  },
+  senhaContainer:{
+    flexDirection: "row",
+    alignItems:"center",
+    width: "250",
+    backgroundColor: "white",
+    borderRadius: 12,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    height: 40,
   },
   buttonCadastrar: {
     backgroundColor: "rgb(250, 24, 24)",
