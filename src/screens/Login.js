@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import api from "../services/axios";
 import { useNavigation } from "@react-navigation/native";
 
 export default function Login() {

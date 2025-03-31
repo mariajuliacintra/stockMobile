@@ -13,7 +13,7 @@ import {
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useNavigation } from "@react-navigation/native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import api from "../services/axios";
 
 export default function Cadastro() {
   const navigation = useNavigation();
