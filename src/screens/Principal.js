@@ -49,7 +49,7 @@ function Principal({ navigation }) {
       resizeMode="cover"
     >
       <View style={styles.header}>
-      <MaterialCommunityIcons name="menu" size={50} color="white" weight="thin" />
+      <MaterialCommunityIcons name="menu" size={50} color="white" weight="thin" marginLeft= "5"  />
         <TouchableOpacity
           style={styles.buttonToProfile}
           onPress={() => navigation.navigate("Perfil")}

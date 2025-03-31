@@ -4,7 +4,7 @@
     "slug": "meuApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/iconesenai.png",
+    "icon": "./src/img/iconesenai.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {

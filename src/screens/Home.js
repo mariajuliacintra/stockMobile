@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center",
+    width: "100%",
   },
   logo: {
     justifyContent: "center",
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: "white",
     borderWidth: 4,
-    marginRight: 90,
+    marginRight: 80,
   },
   buttonToCadastro: {
     backgroundColor: "rgb(250, 24, 24)",
