@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -9,10 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import api from "../services/axios";
 import Header from "../components/Header";
-import { Ionicons } from "@expo/vector-icons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import api from "../services/axios";
 
 export default function Login({ navigation }) {
   const [usuario, setUsuario] = useState({
@@ -40,7 +39,7 @@ export default function Login({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-      <Header/>
+      <Header />
       <View style={styles.body}>
         <Image source={require("../img/logo.png")} style={styles.logo} />
         <TextInput

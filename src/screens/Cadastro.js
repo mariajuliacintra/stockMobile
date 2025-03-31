@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -9,10 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import api from "../services/axios";
 import Header from "../components/Header";
-import {Ionicons} from '@expo/vector-icons';
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import api from "../services/axios";
 
 export default function Cadastro({ navigation }) {
   const [usuario, setUsuario] = useState({
@@ -42,7 +41,7 @@ export default function Cadastro({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-    <Header/>
+      <Header />
       <View style={styles.container}>
         <Image source={require("../img/logo.png")} style={styles.logo} />
         <TextInput
@@ -70,15 +69,16 @@ export default function Cadastro({ navigation }) {
           style={styles.input}
         />
         <View style={styles.senhaContainer}>
-        <TextInput style={styles.inputSenha}
-          placeholder=" senha"
-          value={usuario.senha}
-          secureTextEntry={usuario.showSenha}
-          onChangeText={(value) => {
-            setUsuario({ ...usuario, senha: value });
-          }}
-        />
-        <TouchableOpacity
+          <TextInput
+            style={styles.inputSenha}
+            placeholder=" senha"
+            value={usuario.senha}
+            secureTextEntry={usuario.showSenha}
+            onChangeText={(value) => {
+              setUsuario({ ...usuario, senha: value });
+            }}
+          />
+          <TouchableOpacity
             onPress={() =>
               setUsuario({ ...usuario, showSenha: !usuario.showSenha })
             }
@@ -149,12 +149,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "white",
   },
-  inputSenha:{
- flex: 1,
+  inputSenha: {
+    flex: 1,
   },
-  senhaContainer:{
+  senhaContainer: {
     flexDirection: "row",
-    alignItems:"center",
+    alignItems: "center",
     width: "250",
     backgroundColor: "white",
     borderRadius: 12,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 3,
     alignItems: "center",
     marginTop: 130,
-    marginBottom:-350,
+    marginBottom: -350,
     justifyContent: "center",
   },
   textDesenvolvido: { color: "white", fontWeight: "bold" },
