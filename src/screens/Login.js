@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 export default function Login() {
