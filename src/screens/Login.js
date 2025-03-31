@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -9,12 +10,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import api from "../services/axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export default function Login() {
   const navigation = useNavigation();

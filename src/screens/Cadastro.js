@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -9,10 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import api from "../services/axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -120,11 +119,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  container:{width:"100%", justifyContent:"center", alignItems:"center"},
+  container: { width: "100%", justifyContent: "center", alignItems: "center" },
   form: {
-    width:"65%",
+    width: "65%",
     marginTop: 150,
-    marginBottom:180,
+    marginBottom: 180,
     minHeight: 100,
     justifyContent: "center",
     alignItems: "center",
@@ -155,10 +154,11 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   inputSenha: {
-    flex: 1,
+    flex: 1
   },
   senhaForm: {
     flexDirection: "row",
+    alignItems: "center",
     alignItems: "center",
     width: "250",
     backgroundColor: "white",
