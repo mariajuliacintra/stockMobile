@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { useNavigation } from '@react-navigation/native';
 
-function Home({ navigation }) {
+function Home() {
+  const navigation = useNavigation();
   return (
     <ImageBackground
       source={require("../img/fundo.png")}
@@ -100,7 +102,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   backgroundBody: { height: "70%" },
-  body: {},
   textBody: {
     color: "white",
     fontSize: 80,
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderTopColor: "white",
     borderTopWidth: 3,
-    marginTop: 165,
+    marginTop: 210,
     justifyContent: "center",
     alignItems: "center",
     width: 500,

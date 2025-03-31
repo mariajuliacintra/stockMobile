@@ -11,10 +11,13 @@ import {
 } from "react-native";
 import api from "../services/axios";
 import Header from "../components/Header";
-import {Ionicons} from '@expo/vector-icons';
+import Footer from "../components/Footer";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-export default function Cadastro({ navigation }) {
+export default function Cadastro() {
+  const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
     nome: "",
     email: "",
@@ -42,71 +45,70 @@ export default function Cadastro({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-    <Header/>
       <View style={styles.container}>
-        <Image source={require("../img/logo.png")} style={styles.logo} />
-        <TextInput
-          placeholder=" nome"
-          value={usuario.nome}
-          onChangeText={(value) => {
-            setUsuario({ ...usuario, nome: value });
-          }}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder=" e-mail"
-          value={usuario.email}
-          onChangeText={(value) => {
-            setUsuario({ ...usuario, email: value });
-          }}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder=" NIF"
-          value={usuario.NIF}
-          onChangeText={(value) => {
-            setUsuario({ ...usuario, NIF: value });
-          }}
-          style={styles.input}
-        />
-        <View style={styles.senhaContainer}>
-        <TextInput style={styles.inputSenha}
-          placeholder=" senha"
-          value={usuario.senha}
-          secureTextEntry={usuario.showSenha}
-          onChangeText={(value) => {
-            setUsuario({ ...usuario, senha: value });
-          }}
-        />
-        <TouchableOpacity
-            onPress={() =>
-              setUsuario({ ...usuario, showSenha: !usuario.showSenha })
-            }
-          >
-            <Ionicons
-              name={usuario.showSenha ? "eye-off" : "eye"}
-              size={24}
-              color="gray"
+        <Header />
+        <View style={styles.form}>
+          <Image source={require("../img/logo.png")} style={styles.logo} />
+          <TextInput
+            placeholder=" nome"
+            value={usuario.nome}
+            onChangeText={(value) => {
+              setUsuario({ ...usuario, nome: value });
+            }}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder=" e-mail"
+            value={usuario.email}
+            onChangeText={(value) => {
+              setUsuario({ ...usuario, email: value });
+            }}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder=" NIF"
+            value={usuario.NIF}
+            onChangeText={(value) => {
+              setUsuario({ ...usuario, NIF: value });
+            }}
+            style={styles.input}
+          />
+          <View style={styles.senhaForm}>
+            <TextInput
+              style={styles.inputSenha}
+              placeholder=" senha"
+              value={usuario.senha}
+              secureTextEntry={usuario.showSenha}
+              onChangeText={(value) => {
+                setUsuario({ ...usuario, senha: value });
+              }}
             />
+            <TouchableOpacity
+              onPress={() =>
+                setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+              }
+            >
+              <Ionicons
+                name={usuario.showSenha ? "eye-off" : "eye"}
+                size={24}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            onPress={handleCadastro}
+            style={styles.buttonCadastrar}
+          >
+            <Text style={styles.textButtonCadastrar}>Cadastrar-se</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.buttonToLogin}
+            onPress={() => navigation.navigate("Login")}
+          >
+            <Text style={styles.textButtonToLogin}>Login</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={handleCadastro}
-          style={styles.buttonCadastrar}
-        >
-          <Text style={styles.textButtonCadastrar}>Cadastrar-se</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.buttonToLogin}
-          onPress={() => navigation.navigate("Login")}
-        >
-          <Text style={styles.textButtonToLogin}>Login</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.footer}>
-        <Text style={styles.textDesenvolvido}>
-          &copy; Desenvolvido por: Vinicius Fogaça, Maria Júlia e Maria Fernanda
-        </Text>
+        <Footer />
       </View>
     </ImageBackground>
   );
@@ -118,8 +120,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  container: {
+  container:{width:"100%", justifyContent:"center", alignItems:"center"},
+  form: {
+    width:"65%",
     marginTop: 150,
+    marginBottom:180,
     minHeight: 100,
     justifyContent: "center",
     alignItems: "center",
@@ -149,12 +154,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "white",
   },
-  inputSenha:{
- flex: 1,
+  inputSenha: {
+    flex: 1,
   },
-  senhaContainer:{
+  senhaForm: {
     flexDirection: "row",
-    alignItems:"center",
+    alignItems: "center",
     width: "250",
     backgroundColor: "white",
     borderRadius: 12,
@@ -197,16 +202,4 @@ const styles = StyleSheet.create({
   text: {
     color: "white",
   },
-  footer: {
-    backgroundColor: "rgb(166, 13, 13)",
-    height: 50,
-    width: 600,
-    borderTopColor: "white",
-    borderTopWidth: 3,
-    alignItems: "center",
-    marginTop: 130,
-    marginBottom:-350,
-    justifyContent: "center",
-  },
-  textDesenvolvido: { color: "white", fontWeight: "bold" },
 });

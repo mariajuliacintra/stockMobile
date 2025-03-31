@@ -11,10 +11,13 @@ import {
 } from "react-native";
 import api from "../services/axios";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-export default function Login({ navigation }) {
+export default function Login() {
+  const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
     email: "",
     senha: "",
@@ -40,53 +43,51 @@ export default function Login({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-      <Header/>
-      <View style={styles.body}>
-        <Image source={require("../img/logo.png")} style={styles.logo} />
-        <TextInput
-          placeholder=" e-mail"
-          value={usuario.email}
-          onChangeText={(value) => {
-            setUsuario({ ...usuario, email: value });
-          }}
-          style={styles.inputEmail}
-        />
-        <View style={styles.senhaContainer}>
+      <View style={styles.container}>
+        <Header />
+        <View style={styles.form}>
+          <Image source={require("../img/logo.png")} style={styles.logo} />
           <TextInput
-            style={styles.inputSenha}
-            placeholder=" senha"
-            value={usuario.senha}
-            secureTextEntry={usuario.showSenha}
+            placeholder=" e-mail"
+            value={usuario.email}
             onChangeText={(value) => {
-              setUsuario({ ...usuario, senha: value });
+              setUsuario({ ...usuario, email: value });
             }}
+            style={styles.inputEmail}
           />
-          <TouchableOpacity
-            onPress={() =>
-              setUsuario({ ...usuario, showSenha: !usuario.showSenha })
-            }
-          >
-            <Ionicons
-              name={usuario.showSenha ? "eye-off" : "eye"}
-              size={24}
-              color="gray"
+          <View style={styles.senhaContainer}>
+            <TextInput
+              style={styles.inputSenha}
+              placeholder=" senha"
+              value={usuario.senha}
+              secureTextEntry={usuario.showSenha}
+              onChangeText={(value) => {
+                setUsuario({ ...usuario, senha: value });
+              }}
             />
+            <TouchableOpacity
+              onPress={() =>
+                setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+              }
+            >
+              <Ionicons
+                name={usuario.showSenha ? "eye-off" : "eye"}
+                size={24}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={handleLogin} style={styles.buttonEntrar}>
+            <Text style={styles.textButtonEntrar}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.buttonToCadastro}
+            onPress={() => navigation.navigate("Cadastro")}
+          >
+            <Text style={styles.textButtonToCadastro}>Cadastre-se</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={handleLogin} style={styles.buttonEntrar}>
-          <Text style={styles.textButtonEntrar}>Login</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.buttonToCadastro}
-          onPress={() => navigation.navigate("Cadastro")}
-        >
-          <Text style={styles.textButtonToCadastro}>Cadastre-se</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.footer}>
-        <Text style={styles.textDesenvolvido}>
-          &copy; Desenvolvido por: Vinicius Fogaça, Maria Júlia e Maria Fernanda
-        </Text>
+        <Footer />
       </View>
     </ImageBackground>
   );
@@ -98,15 +99,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  body: {
+  container: { width: "100%", justifyContent: "center", alignItems: "center" },
+  form: {
+    width: "65%",
     minHeight: 180,
+    marginTop: 230,
+    marginBottom:230,
     marginVertical: 100,
     justifyContent: "center",
     alignItems: "center",
     padding: 30,
     backgroundColor: "rgba(255, 238, 238, 0.82)",
     borderRadius: 50,
-    marginTop: 220,
   },
   logo: {
     justifyContent: "center",
@@ -177,16 +181,4 @@ const styles = StyleSheet.create({
   text: {
     color: "white",
   },
-  footer: {
-    backgroundColor: "rgb(166, 13, 13)",
-    height: 50,
-    width: 600,
-    borderTopColor: "white",
-    borderTopWidth: 3,
-    alignItems: "center",
-    marginTop: 95,
-    marginBottom: -278,
-    justifyContent: "center",
-  },
-  textDesenvolvido: { color: "white", fontWeight: "bold" },
 });

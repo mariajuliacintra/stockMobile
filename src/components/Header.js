@@ -1,8 +1,10 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {TouchableOpacity, StyleSheet, View} from "react-native";
+import { useNavigation } from '@react-navigation/native';
 
 
-async function Header({ navigation }) {
+function Header() {
+  const navigation = useNavigation();
     return(
         <View style={styles.header}>
         <TouchableOpacity
@@ -21,7 +23,6 @@ const styles = StyleSheet.create ({
         backgroundColor: "rgba(177, 16, 16, 1)",
         height: 90,
         width: 500,
-        marginTop: -365,
         borderBottomColor: "white",
         borderBottomWidth: 3,
         flexDirection: "row",
