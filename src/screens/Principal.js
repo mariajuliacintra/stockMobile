@@ -35,7 +35,7 @@ function Principal({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  background: { height: "100vh" },
+  background: { flex: 1 },
   header: {
     backgroundColor: "rgba(177, 16, 16, 1)",
     height: 60,

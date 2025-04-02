@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.39:5000/reservas/v1/",
+  baseURL: "http://10.89.240.76:5000/reservas/v1/",
   headers: {
     accept: "application/json",
   },
