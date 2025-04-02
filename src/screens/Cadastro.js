@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
   Alert,
@@ -10,9 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useNavigation } from "@react-navigation/native";
+import Header from "../components/Header";
 import api from "../services/axios";
 
 export default function Cadastro() {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   inputSenha: {
-    flex: 1
+    flex: 1,
   },
   senhaForm: {
     flexDirection: "row",

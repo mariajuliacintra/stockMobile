@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React from "react";
 import {
   Image,
@@ -7,7 +8,6 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import { useNavigation } from '@react-navigation/native';
 
 function Home() {
   const navigation = useNavigation();

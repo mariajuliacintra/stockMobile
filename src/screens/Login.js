@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
   Alert,
@@ -10,10 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Header from "../components/Header";
 import api from "../services/axios";
-import { useNavigation } from "@react-navigation/native";
 
 export default function Login() {
   const navigation = useNavigation();
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     width: "65%",
     minHeight: 180,
     marginTop: 230,
-    marginBottom:230,
+    marginBottom: 230,
     marginVertical: 100,
     justifyContent: "center",
     alignItems: "center",
