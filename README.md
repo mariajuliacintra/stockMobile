@@ -28,7 +28,7 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 
 ### Pré-requisitos
 
-- [Node.js](https://nodejs.org/) instalado.
+- [node.js](https://nodejs.org/) instalado.
 
 ### Passos para Instalação
 
@@ -99,3 +99,13 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
   ```bash
   npm i styled-components
   ```
+
+## Documentação Completa dos Requisitos Necessários
+
+Os requisitos necessários para funcionamento pleno do projeto estão em outro repositório. Acesse-os [aqui](https://github.com/MariaFernandaCintra/sprintApi/).
+
+## Autores
+
+- [@fogazzaa](https://github.com/Fogazzaa)
+- [@mariafernandacintra](https://github.com/MariaFernandaCintra)
+- [@mariajuliacintra](https://github.com/mariajuliacintra)
