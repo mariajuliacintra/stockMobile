@@ -1,4 +1,3 @@
-import { useNavigation } from '@react-navigation/native';
 import React from "react";
 import {
   Image,
@@ -8,6 +7,7 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { useNavigation } from '@react-navigation/native';
 
 function Home() {
   const navigation = useNavigation();
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   background: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     backgroundColor: "rgba(177, 16, 16, 1)",
-    height: 80,
+    height: "10%",
     borderBottomColor: "white",
     borderBottomWidth: 3,
     flexDirection: "row",
@@ -63,12 +63,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
-    width: 155,
-    height: 45,
+    width: "45%",
+    height: "60%",
     borderRadius: 8,
     borderColor: "white",
     borderWidth: 4,
-    marginRight: 80,
+    marginRight: "4%",
   },
   buttonToCadastro: {
     backgroundColor: "rgb(250, 24, 24)",
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 0,
     alignItems: "center",
-    marginRight: 15,
+    marginRight: "3%",
     borderColor: "white",
     borderWidth: 2,
   },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 0,
     alignItems: "center",
-    marginRight: 20,
+    marginRight: "3%",
     borderColor: "white",
     borderWidth: 2,
   },
@@ -102,21 +102,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
-  backgroundBody: { height: "70%" },
+  body: { height: "83%", width:"90%", alignItems: "center", justifyContent: "center" },
   textBody: {
     color: "white",
-    fontSize: 80,
+    fontSize: 85,
     fontWeight: "bold",
-    marginLeft: 50,
-    marginTop: 130,
   },
 
   footer: {
     backgroundColor: "rgba(177, 16, 16, 1)",
-    height: 60,
+    height: "7%",
     borderTopColor: "white",
     borderTopWidth: 3,
-    marginTop: 210,
     justifyContent: "center",
     alignItems: "center",
     width: 500,
