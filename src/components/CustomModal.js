@@ -13,6 +13,7 @@ export default function CustomModal({
   const iconProps = {
     success: { name: "check-circle", color: "#4caf50" },
     error: { name: "error", color: "#f44336" },
+    info: { name: "info", color: "#2196f3" }, // Adicionado o tipo 'info'
   }[type] || {};
 
   return (
@@ -47,7 +48,6 @@ export default function CustomModal({
 }
 
 function capitalize(str) {
-  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
@@ -67,10 +67,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   success: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ffffff", 
   },
   error: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ffffff", 
+  },
+  info: {
+    backgroundColor: "#ffffff", 
   },
   title: {
     fontSize: 22,
@@ -94,6 +97,9 @@ const styles = StyleSheet.create({
   },
   buttonError: {
     backgroundColor: "rgb(226, 16, 16)",
+  },
+  buttonInfo: {
+    backgroundColor: "#2196f3", // Cor de fundo para 'info'
   },
   buttonText: {
     color: "#fff",
