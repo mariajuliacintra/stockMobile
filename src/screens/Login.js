@@ -48,6 +48,7 @@ export default function Login() {
       }
     );
   }
+  
   return (
     <ImageBackground
       source={require("../img/fundo.png")}

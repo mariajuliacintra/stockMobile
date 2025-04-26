@@ -99,7 +99,9 @@ function Principal({ navigation }) {
                 <Text style={[styles.tableHeaderCell, styles.descricao]}>
                   Descrição
                 </Text>
-                <Text style={[styles.tableHeaderCell, styles.bloco]}>Bloco</Text>
+                <Text style={[styles.tableHeaderCell, styles.bloco]}>
+                  Bloco
+                </Text>
                 <Text style={[styles.tableHeaderCell, styles.tipo]}>Tipo</Text>
                 <Text style={[styles.tableHeaderCell, styles.capacidade]}>
                   Cap
@@ -119,8 +121,8 @@ function Principal({ navigation }) {
       <ModalReservar
         isOpen={modalVisible}
         onClose={() => setModalVisible(false)}
-        onSave={(reserva) => {
-          console.log("Reserva feita para sala:", salaSelecionada?.nome, reserva);
+        idSala={salaSelecionada?.id_sala}
+        handleReserva={() => {
           setModalVisible(false);
         }}
       />
