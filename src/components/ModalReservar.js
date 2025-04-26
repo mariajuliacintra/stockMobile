@@ -5,13 +5,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getToday } from "../utils/dateUtils";
 import api from "../services/axios";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomModal from "./CustomModal";
 
 const ModalReservar = ({ isOpen, onClose, idSala }) => {
   const [data, setData] = useState(new Date());
@@ -23,6 +23,9 @@ const ModalReservar = ({ isOpen, onClose, idSala }) => {
   const [mostrarEndTimePicker, setMostrarEndTimePicker] = useState(false);
 
   const [idUsuario, setIdUsuario] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalInfo, setModalInfo] = useState({ type: "success", title: "", message: "" });
+
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -42,7 +45,7 @@ const ModalReservar = ({ isOpen, onClose, idSala }) => {
   }, []);
 
   function ajustarHoraFim() {
-    const horaFimAjustada = new Date(hora_inicio.getTime() + 50 * 60 * 1000);
+    const horaFimAjustada = new Date(hora_inicio.getTime() + 60 * 60 * 1000);
     setHoraFim(horaFimAjustada);
   }
 
@@ -59,7 +62,7 @@ const ModalReservar = ({ isOpen, onClose, idSala }) => {
       ajustarHoraFim();
     }
 
-    const formattedData = data.toISOString().split("T")[0]; // <-- aqui foi a mudança
+    const formattedData = data.toISOString().split("T")[0];
     const formattedHoraInicio = formatarHoraComSegundosZero(hora_inicio);
     const formattedHoraFim = formatarHoraComSegundosZero(hora_fim);
 
@@ -73,97 +76,127 @@ const ModalReservar = ({ isOpen, onClose, idSala }) => {
 
     try {
       const response = await api.postReserva(reserva);
-      Alert.alert("Sucesso", response.data.message);
-      navigation.navigate("Principal");
-      onClose();
+      setModalInfo({
+        type: "success",
+        title: "Sucesso",
+        message: response.data.message,
+      });
+      setModalVisible(true);
     } catch (error) {
-      Alert.alert("Erro", error.response?.data?.error || "Erro desconhecido");
+      setModalInfo({
+        type: "error",
+        title: "Erro",
+        message: error.response?.data?.error || "Erro desconhecido",
+      });
+      setModalVisible(true);
       console.log(error);
     }
   }
 
+  function handleModalClose() {
+    setModalVisible(false);
+    if (modalInfo.type === "success") {
+      navigation.navigate("Principal");
+      onClose();
+    }
+  }
+
   return (
-    <Modal visible={isOpen} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <Text style={styles.title}>Reservar</Text>
+    <>
+      <Modal visible={isOpen} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <Text style={styles.title}>Reservar</Text>
 
-          <Text style={styles.inputTitle}>Data</Text>
-          <TouchableOpacity
-            onPress={() => setMostrarDatePicker(true)}
-            style={styles.inputFake}
-          >
-            <Text>{data.toLocaleDateString()}</Text>
-          </TouchableOpacity>
-          {mostrarDatePicker && (
-            <DateTimePicker
-              mode="date"
-              value={data}
-              minimumDate={getToday()}
-              onChange={(e, selected) => {
-                if (selected) setData(selected);
-                setMostrarDatePicker(false);
-              }}
-            />
-          )}
-
-          <Text style={styles.inputTitle}>Hora de Início</Text>
-          <TouchableOpacity
-            onPress={() => setMostrarStartTimePicker(true)}
-            style={styles.inputFake}
-          >
-            <Text>{formatarHoraComSegundosZero(hora_inicio)}</Text>
-          </TouchableOpacity>
-          {mostrarStartTimePicker && (
-            <DateTimePicker
-              mode="time"
-              value={hora_inicio}
-              onChange={(e, selected) => {
-                if (selected) {
-                  const newHoraInicio = new Date(selected);
-                  newHoraInicio.setSeconds(0);
-                  setHoraInicio(newHoraInicio);
-                  ajustarHoraFim();
-                }
-                setMostrarStartTimePicker(false);
-              }}
-            />
-          )}
-
-          <Text style={styles.inputTitle}>Hora de Fim</Text>
-          <TouchableOpacity
-            onPress={() => setMostrarEndTimePicker(true)}
-            style={styles.inputFake}
-          >
-            <Text>{formatarHoraComSegundosZero(hora_fim)}</Text>
-          </TouchableOpacity>
-          {mostrarEndTimePicker && (
-            <DateTimePicker
-              mode="time"
-              value={hora_fim}
-              minimumDate={new Date(hora_inicio.getTime() + 50 * 60 * 1000)}
-              onChange={(e, selected) => {
-                if (selected) {
-                  const newHoraFim = new Date(selected);
-                  newHoraFim.setSeconds(0);
-                  setHoraFim(newHoraFim);
-                }
-                setMostrarEndTimePicker(false);
-              }}
-            />
-          )}
-
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.button} onPress={onClose}>
-              <Text style={styles.buttonText}>Cancelar</Text>
+            <Text style={styles.inputTitle}>Data</Text>
+            <TouchableOpacity
+              onPress={() => setMostrarDatePicker(true)}
+              style={styles.inputFake}
+            >
+              <Text>{data.toLocaleDateString()}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={handleReserva}>
-              <Text style={styles.buttonText}>Reservar</Text>
+            {mostrarDatePicker && (
+              <DateTimePicker
+                mode="date"
+                value={data}
+                minimumDate={getToday()}
+                onChange={(e, selected) => {
+                  if (selected) setData(selected);
+                  setMostrarDatePicker(false);
+                }}
+              />
+            )}
+
+            <Text style={styles.inputTitle}>Hora de Início</Text>
+            <TouchableOpacity
+              onPress={() => setMostrarStartTimePicker(true)}
+              style={styles.inputFake}
+            >
+              <Text>{formatarHoraComSegundosZero(hora_inicio)}</Text>
             </TouchableOpacity>
+            {mostrarStartTimePicker && (
+              <DateTimePicker
+                mode="time"
+                display="spinner"
+                is24Hour={true}
+                value={hora_inicio}
+                onChange={(e, selected) => {
+                  if (selected) {
+                    const newHoraInicio = new Date(selected);
+                    newHoraInicio.setSeconds(0);
+                    setHoraInicio(newHoraInicio);
+                    ajustarHoraFim();
+                  }
+                  setMostrarStartTimePicker(false);
+                }}
+              />
+            )}
+
+            <Text style={styles.inputTitle}>Hora de Fim</Text>
+            <TouchableOpacity
+              onPress={() => setMostrarEndTimePicker(true)}
+              style={styles.inputFake}
+            >
+              <Text>{formatarHoraComSegundosZero(hora_fim)}</Text>
+            </TouchableOpacity>
+            {mostrarEndTimePicker && (
+              <DateTimePicker
+                mode="time"
+                display="spinner"
+                is24Hour={true}
+                value={hora_fim}
+                minimumDate={new Date(hora_inicio.getTime() + 60 * 60 * 1000)}
+                onChange={(e, selected) => {
+                  if (selected) {
+                    const newHoraFim = new Date(selected);
+                    newHoraFim.setSeconds(0);
+                    setHoraFim(newHoraFim);
+                  }
+                  setMostrarEndTimePicker(false);
+                }}
+              />
+            )}
+
+            <View style={styles.actions}>
+              <TouchableOpacity style={styles.button} onPress={onClose}>
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={handleReserva}>
+                <Text style={styles.buttonText}>Reservar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      <CustomModal
+        open={modalVisible}
+        onClose={handleModalClose}
+        title={modalInfo.title}
+        message={modalInfo.message}
+        type={modalInfo.type}
+      />
+    </>
   );
 };
 

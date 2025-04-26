@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  Alert,
   Image,
   ImageBackground,
   StyleSheet,
@@ -17,6 +16,7 @@ import Footer from "../components/Footer";
 import api from "../services/axios";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomModal from "../components/CustomModal";
 
 export default function Login() {
   const navigation = useNavigation();
@@ -25,6 +25,10 @@ export default function Login() {
     senha: "",
     showSenha: true,
   });
+
+  const [modalVisible, setModalVisible] = useState(false);  // Controle de visibilidade do modal
+  const [modalMessage, setModalMessage] = useState("");     // Mensagem do modal
+  const [modalType, setModalType] = useState("info");       // Tipo do modal ('success', 'error')
 
   const armazenarDados = async () => {
     try {
@@ -38,17 +42,22 @@ export default function Login() {
     await api.postLogin(usuario).then(
       (response) => {
         console.log(response.data.message);
-        Alert.alert("OK", response.data.message);
-        navigation.navigate("Principal");
+        setModalMessage(response.data.message);
+        setModalType("success");
+        setModalVisible(true);  // Exibe o modal de sucesso
         armazenarDados();
+        setTimeout(() => {
+          navigation.navigate("Principal");
+        }, 1500);  // Aguarda o modal ser fechado antes de navegar
       },
       (error) => {
-        Alert.alert("Erro", error.response.data.error);
-        console.log(error);
+        setModalMessage(error.response.data.error);
+        setModalType("error");
+        setModalVisible(true);  // Exibe o modal de erro
       }
     );
   }
-  
+
   return (
     <ImageBackground
       source={require("../img/fundo.png")}
@@ -58,7 +67,7 @@ export default function Login() {
       <View style={styles.container}>
         <Header />
         <KeyboardAvoidingView
-          position={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{
             flex: 1,
             justifyContent: "center",
@@ -67,52 +76,60 @@ export default function Login() {
           }}
         >
           <View style={styles.body}>
-          <View style={styles.form}>
-            <Image source={require("../img/logo.png")} style={styles.logo} />
-            <TextInput
-              placeholder=" e-mail"
-              value={usuario.email}
-              onChangeText={(value) => {
-                setUsuario({ ...usuario, email: value });
-              }}
-              style={styles.inputEmail}
-            />
-            <View style={styles.senhaContainer}>
+            <View style={styles.form}>
+              <Image source={require("../img/logo.png")} style={styles.logo} />
               <TextInput
-                style={styles.inputSenha}
-                placeholder=" senha"
-                value={usuario.senha}
-                secureTextEntry={usuario.showSenha}
+                placeholder=" e-mail"
+                value={usuario.email}
                 onChangeText={(value) => {
-                  setUsuario({ ...usuario, senha: value });
+                  setUsuario({ ...usuario, email: value });
                 }}
+                style={styles.inputEmail}
               />
-              <TouchableOpacity
-                onPress={() =>
-                  setUsuario({ ...usuario, showSenha: !usuario.showSenha })
-                }
-              >
-                <Ionicons
-                  name={usuario.showSenha ? "eye-off" : "eye"}
-                  size={24}
-                  color="gray"
+              <View style={styles.senhaContainer}>
+                <TextInput
+                  style={styles.inputSenha}
+                  placeholder=" senha"
+                  value={usuario.senha}
+                  secureTextEntry={usuario.showSenha}
+                  onChangeText={(value) => {
+                    setUsuario({ ...usuario, senha: value });
+                  }}
                 />
+                <TouchableOpacity
+                  onPress={() =>
+                    setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+                  }
+                >
+                  <Ionicons
+                    name={usuario.showSenha ? "eye-off" : "eye"}
+                    size={24}
+                    color="gray"
+                  />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={handleLogin} style={styles.buttonEntrar}>
+                <Text style={styles.textButtonEntrar}>Login</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.buttonToCadastro}
+                onPress={() => navigation.navigate("Cadastro")}
+              >
+                <Text style={styles.textButtonToCadastro}>Cadastre-se</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={handleLogin} style={styles.buttonEntrar}>
-              <Text style={styles.textButtonEntrar}>Login</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.buttonToCadastro}
-              onPress={() => navigation.navigate("Cadastro")}
-            >
-              <Text style={styles.textButtonToCadastro}>Cadastre-se</Text>
-            </TouchableOpacity>
-          </View>
           </View>
         </KeyboardAvoidingView>
         <Footer />
       </View>
+
+      <CustomModal
+        open={modalVisible}
+        onClose={() => setModalVisible(false)}  // Fecha o modal ao clicar no botão
+        title={modalType === "success" ? "Login Concluído" : "Erro"}
+        message={modalMessage}
+        type={modalType}  // Determina o tipo do modal: sucesso ou erro
+      />
     </ImageBackground>
   );
 }

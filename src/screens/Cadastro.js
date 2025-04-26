@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  Alert,
   Image,
   ImageBackground,
   StyleSheet,
@@ -16,6 +15,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/axios";
+import CustomModal from "../components/CustomModal";
 
 export default function Cadastro() {
   const navigation = useNavigation();
@@ -27,19 +27,28 @@ export default function Cadastro() {
     showSenha: true,
   });
 
+  const [modalVisible, setModalVisible] = useState(false); // Controle de visibilidade do modal
+  const [modalMessage, setModalMessage] = useState(""); // Mensagem do modal
+  const [modalType, setModalType] = useState("info"); // Tipo do modal ('success', 'error')
+
   async function handleCadastro() {
     await api.postCadastro(usuario).then(
       (response) => {
-        console.log(response.data.message);
-        Alert.alert("OK", response.data.message);
-        navigation.navigate("Principal");
+        setModalMessage(response.data.message);
+        setModalType("success");
+        setModalVisible(true); // Exibe o modal de sucesso
+        setTimeout(() => {
+          navigation.navigate("Principal");
+        }, 1500); // Aguarda o modal ser fechado antes de navegar
       },
       (error) => {
-        Alert.alert("Erro", error.response.data.error);
-        console.log(error);
+        setModalMessage(error.response.data.error);
+        setModalType("error");
+        setModalVisible(true); // Exibe o modal de erro
       }
     );
   }
+
   return (
     <ImageBackground
       source={require("../img/fundo.png")}
@@ -123,6 +132,15 @@ export default function Cadastro() {
         </KeyboardAvoidingView>
         <Footer />
       </View>
+
+      {/* Modal de feedback */}
+      <CustomModal
+        open={modalVisible}
+        onClose={() => setModalVisible(false)} // Fecha o modal ao clicar no botão
+        title={modalType === "success" ? "Cadastro Concluído" : "Erro"}
+        message={modalMessage}
+        type={modalType} // Determina o tipo do modal: sucesso ou erro
+      />
     </ImageBackground>
   );
 }
