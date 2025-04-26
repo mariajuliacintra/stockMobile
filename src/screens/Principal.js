@@ -10,7 +10,7 @@ import {
 import api from "../services/axios";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import ModalReservar from "../components/ModalReservar";
+import ReservarModal from "../components/ReservarModal";
 
 function Principal({ navigation }) {
   const [salas, setSalas] = useState([]);
@@ -118,7 +118,7 @@ function Principal({ navigation }) {
         </View>
       </ImageBackground>
 
-      <ModalReservar
+      <ReservarModal
         isOpen={modalVisible}
         onClose={() => setModalVisible(false)}
         idSala={salaSelecionada?.id_sala}

@@ -13,7 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomModal from "./CustomModal";
 
-const ModalReservar = ({ isOpen, onClose, idSala }) => {
+const ReservarModal = ({ isOpen, onClose, idSala }) => {
   const [data, setData] = useState(new Date());
   const [hora_inicio, setHoraInicio] = useState(new Date());
   const [hora_fim, setHoraFim] = useState(new Date());
@@ -248,4 +248,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ModalReservar;
+export default ReservarModal;
