@@ -7,10 +7,9 @@ import {
   Image,
   ScrollView,
   ImageBackground,
+  StyleSheet,
 } from "react-native";
-import { StyleSheet } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import logo from "../img/logo.png";
 import api from "../services/axios";
@@ -19,6 +18,7 @@ import { useNavigation } from "@react-navigation/native";
 function Perfil() {
   const [reservas, setReservas] = useState([]);
   const [reservaSelecionada, setReservaSelecionada] = useState("");
+  const [mostrarListaReservas, setMostrarListaReservas] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
@@ -58,6 +58,16 @@ function Perfil() {
     fetchDados();
     recuperarDados();
   }, []);
+
+  const handleReservaSelecionada = (reservaId) => {
+    if (reservaId === "verTodas") {
+      console.log("Ver todas as reservas");
+      setReservaSelecionada(""); // Ou defina para um valor que indique "ver todas"
+    } else {
+      setReservaSelecionada(reservaId);
+    }
+    setMostrarListaReservas(false); // Oculta a lista após a seleção
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -106,7 +116,7 @@ function Perfil() {
                 placeholder="senha"
                 editable={false}
                 value={usuario.senha || ""}
-                style={{ ...styles.textField, marginTop: 16, flex: 1 }}
+                style={styles.passwordInput}
               />
               <TouchableOpacity
                 onPress={() => setMostrarSenha((prev) => !prev)}
@@ -120,37 +130,52 @@ function Perfil() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.selectContainer}>
-              <Picker
-                selectedValue={reservaSelecionada}
-                onValueChange={(itemValue) => {
-                  if (itemValue === "verTodas") {
-                    console.log("Ver todas as reservas");
-                  } else {
-                    setReservaSelecionada(itemValue);
-                  }
-                }}
-                style={styles.picker}
-              >
-                <Picker.Item
-                  label="Selecione uma reserva"
-                  value=""
-                  enabled={false}
-                />
-                {reservas.length > 0 ? (
-                  reservas.map((reserva) => (
-                    <Picker.Item
-                      key={reserva.id} // A chave única deve ser garantida aqui
-                      label={`${reserva.sala} - ${reserva.data}`}
-                      value={reserva.id}
-                    />
-                  ))
-                ) : (
-                  <Picker.Item label="Nenhuma reserva encontrada" value="" />
-                )}
-                <Picker.Item label="Ver todas as reservas" value="verTodas" />
-              </Picker>
-            </View>
+            <TouchableOpacity
+              style={styles.selectContainer}
+              onPress={() => setMostrarListaReservas(!mostrarListaReservas)}
+            >
+              <Text style={styles.selectText}>
+                {reservaSelecionada
+                  ? reservas.find((r) => r.id === reservaSelecionada)?.sala +
+                    " - " +
+                    reservas.find((r) => r.id === reservaSelecionada)?.data
+                  : "Minhas Reservas"}
+              </Text>
+              <MaterialIcons
+                name={mostrarListaReservas ? "arrow-drop-up" : "arrow-drop-down"}
+                size={20}
+                color="gray"
+                style={styles.dropdownIcon}
+              />
+            </TouchableOpacity>
+
+            {mostrarListaReservas && (
+              <View style={styles.listaReservasContainer}>
+                <ScrollView style={styles.listaReservasScroll}>
+                  {reservas.length > 0 ? (
+                    reservas.map((reserva) => (
+                      <TouchableOpacity
+                        key={reserva.id}
+                        style={styles.itemReserva}
+                        onPress={() => handleReservaSelecionada(reserva.id)}
+                      >
+                        <Text>
+                          {reserva.sala} - {reserva.data}
+                        </Text>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <Text>Nenhuma reserva encontrada</Text>
+                  )}
+                  <TouchableOpacity
+                    style={styles.itemReserva}
+                    onPress={() => handleReservaSelecionada("verTodas")}
+                  >
+                    <Text>Ver todas as reservas</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            )}
 
             <TouchableOpacity
               style={styles.buttonAtualizar}
@@ -173,7 +198,6 @@ function Perfil() {
 }
 
 const styles = StyleSheet.create({
-
   background: {
     flex: 1,
     justifyContent: "center",
@@ -212,7 +236,7 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderWidth: 6,
   },
-  body:{
+  body: {
     width: "100%",
     height: "84%",
     alignItems: "center",
@@ -229,7 +253,7 @@ const styles = StyleSheet.create({
   },
   textField: {
     width: "100%",
-    height: "8%",
+    height: 55,
     backgroundColor: "white",
     borderWidth: 1,
     borderColor: "transparent",
@@ -239,33 +263,79 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 17,
     color: "gray",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
   },
   passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     width: "100%",
-    height: "8%",
+    height: 55,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "transparent",
+    borderRadius: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    marginBottom: 10,
+    fontSize: 17,
+    color: "gray",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+  passwordInput: {
+    width: "100%",
+    height: 55,
+    fontSize: 17,
+    color: "gray",
   },
   visibilityButton: {
     padding: 10,
     position: "absolute",
-    right: 15,
-    top: 10,
+    right: 10,
   },
   selectContainer: {
-    width: "100%",
-    marginTop: 16,
-  },
-  picker: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     width: "100%",
     height: 55,
     backgroundColor: "white",
     borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
     paddingLeft: 10,
     paddingRight: 10,
-    marginBottom: 10,
-    fontSize: 12,
+  },
+  selectText: {
+    fontSize: 17,
     color: "gray",
+    flex: 2
+  },
+  dropdownIcon: {
+    right: 10,
+  },
+  listaReservasContainer: {
+    width: "100%",
+    maxHeight: 200,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 10,
+    backgroundColor: "white",
+    position: "absolute",
+    top: 445,
+    zIndex: 2,
+  },
+  listaReservasScroll: {
+    flexGrow: 1,
+  },
+  itemReserva: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   buttonAtualizar: {
     marginTop: 16,
