@@ -1,5 +1,4 @@
 import { StyleSheet, View, Text } from "react-native";
-import { RFValue } from "react-native-responsive-fontsize";
 
 function Footer() {
   return (
