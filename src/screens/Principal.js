@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     textAlign: "center",
+    justifyContent: "center",
     alignItems: "center",
     fontWeight: "bold",
     color: "white",
@@ -196,21 +197,21 @@ const styles = StyleSheet.create({
     borderRightColor: "white",
   },
   nome: {
-    width: 90,
+    width: 110,
     fontWeight: "bold",
   },
   descricao: {
-    width: 85.1,
+    width: 100,
   },
   bloco: {
-    width: 64.1,
+    width: 75,
   },
   tipo: {
     width: 80,
     fontStyle: "italic",
   },
   capacidade: {
-    width: 55,
+    width: 70,
     borderRightWidth: 0,
   },
 });

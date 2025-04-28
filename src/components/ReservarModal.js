@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Modal,
   View,
@@ -14,57 +14,67 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomModal from "./CustomModal";
 
 const ReservarModal = ({ isOpen, onClose, idSala }) => {
+  // Estados para data e hora
   const [data, setData] = useState(new Date());
-  const [hora_inicio, setHoraInicio] = useState(new Date());
-  const [hora_fim, setHoraFim] = useState(new Date());
+  const [horaInicio, setHoraInicio] = useState(new Date());
+  const [horaFim, setHoraFim] = useState(new Date());
 
+  // Estados para controlar a visibilidade dos pickers
   const [mostrarDatePicker, setMostrarDatePicker] = useState(false);
   const [mostrarStartTimePicker, setMostrarStartTimePicker] = useState(false);
   const [mostrarEndTimePicker, setMostrarEndTimePicker] = useState(false);
 
+  // Estado para o ID do usuário
   const [idUsuario, setIdUsuario] = useState("");
+
+  // Estados para o modal de feedback
   const [modalVisible, setModalVisible] = useState(false);
   const [modalInfo, setModalInfo] = useState({ type: "success", title: "", message: "" });
 
+  // Hook de navegação
   const navigation = useNavigation();
 
+  // Efeito para buscar o ID do usuário ao montar o componente
   useEffect(() => {
-    const fetchUsuario = async () => {
+    const buscarIdUsuario = async () => {
       try {
         const email = await AsyncStorage.getItem("email");
-        if (!email) return;
-
-        const response = await api.getUsuarioByEmail(email);
-        setIdUsuario(response.data.usuario.id_usuario);
+        if (email) {
+          const response = await api.getUsuarioByEmail(email);
+          setIdUsuario(response.data.usuario.id_usuario);
+        }
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
       }
     };
 
-    fetchUsuario();
-  }, []);
+    buscarIdUsuario();
+  }, []); // Executa apenas uma vez na montagem
 
-  function ajustarHoraFim() {
-    const horaFimAjustada = new Date(hora_inicio.getTime() + 60 * 60 * 1000);
-    setHoraFim(horaFimAjustada);
-  }
+  // Função para ajustar a hora de fim automaticamente (1 hora após o início)
+  const ajustarHoraFim = useCallback(() => {
+    setHoraFim(new Date(horaInicio.getTime() + 60 * 60 * 1000));
+  }, [horaInicio]); // Depende de horaInicio para recriar se horaInicio mudar
 
-  function formatarHoraComSegundosZero(date) {
-    const formattedTime = date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    return formattedTime + ":00";
-  }
+  // Função para formatar a hora com segundos zerados
+  const formatarHoraComSegundosZero = useCallback((date) => {
+    if (!(date instanceof Date)) {
+      return "";
+    }
+    const horas = date.getHours().toString().padStart(2, "0");
+    const minutos = date.getMinutes().toString().padStart(2, "0");
+    return `${horas}:${minutos}:00`;
+  }, []); // Não tem dependências, pode ser criada uma vez
 
-  async function handleReserva() {
-    if (hora_fim <= hora_inicio) {
+  // Função assíncrona para lidar com a reserva
+  const handleReserva = useCallback(async () => {
+    if (horaFim <= horaInicio) {
       ajustarHoraFim();
     }
 
     const formattedData = data.toISOString().split("T")[0];
-    const formattedHoraInicio = formatarHoraComSegundosZero(hora_inicio);
-    const formattedHoraFim = formatarHoraComSegundosZero(hora_fim);
+    const formattedHoraInicio = formatarHoraComSegundosZero(horaInicio);
+    const formattedHoraFim = formatarHoraComSegundosZero(horaFim);
 
     const reserva = {
       data: formattedData,
@@ -73,6 +83,8 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       fk_id_usuario: idUsuario,
       fk_id_sala: idSala,
     };
+
+    console.log("Objeto reserva:", reserva);
 
     try {
       const response = await api.postReserva(reserva);
@@ -91,15 +103,16 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       setModalVisible(true);
       console.log(error);
     }
-  }
+  }, [ajustarHoraFim, data, formatarHoraComSegundosZero, horaFim, horaInicio, idSala, idUsuario]); // Depende de todos os valores usados dentro
 
-  function handleModalClose() {
+  // Função para lidar com o fechamento do modal de feedback
+  const handleModalClose = useCallback(() => {
     setModalVisible(false);
     if (modalInfo.type === "success") {
       navigation.navigate("Principal");
       onClose();
     }
-  }
+  }, [modalInfo.type, navigation, onClose]); // Depende de valores externos
 
   return (
     <>
@@ -132,14 +145,15 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
               onPress={() => setMostrarStartTimePicker(true)}
               style={styles.inputFake}
             >
-              <Text>{formatarHoraComSegundosZero(hora_inicio)}</Text>
+              <Text>{formatarHoraComSegundosZero(horaInicio)}</Text>
             </TouchableOpacity>
             {mostrarStartTimePicker && (
               <DateTimePicker
                 mode="time"
                 display="spinner"
                 is24Hour={true}
-                value={hora_inicio}
+                ampm={false}
+                value={horaInicio}
                 onChange={(e, selected) => {
                   if (selected) {
                     const newHoraInicio = new Date(selected);
@@ -157,15 +171,16 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
               onPress={() => setMostrarEndTimePicker(true)}
               style={styles.inputFake}
             >
-              <Text>{formatarHoraComSegundosZero(hora_fim)}</Text>
+              <Text>{formatarHoraComSegundosZero(horaFim)}</Text>
             </TouchableOpacity>
             {mostrarEndTimePicker && (
               <DateTimePicker
                 mode="time"
                 display="spinner"
                 is24Hour={true}
-                value={hora_fim}
-                minimumDate={new Date(hora_inicio.getTime() + 60 * 60 * 1000)}
+                ampm={false}
+                value={horaFim}
+                minimumDate={new Date(horaInicio.getTime() + 60 * 60 * 1000)}
                 onChange={(e, selected) => {
                   if (selected) {
                     const newHoraFim = new Date(selected);
