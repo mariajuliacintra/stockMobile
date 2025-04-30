@@ -28,17 +28,6 @@ function Perfil() {
     senha: "",
   });
 
-  const recuperarDados = async () => {
-    try {
-      const email = await AsyncStorage.getItem("email");
-      if (email !== null) {
-        console.log("E-mail: ", email);
-      }
-    } catch (erro) {
-      console.error("Erro ao recuperar dados:", erro);
-    }
-  };
-
   useEffect(() => {
     const fetchDados = async () => {
       try {
@@ -56,7 +45,6 @@ function Perfil() {
     };
 
     fetchDados();
-    recuperarDados();
   }, []);
 
   const handleReservaSelecionada = (reservaId) => {

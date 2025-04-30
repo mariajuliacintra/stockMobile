@@ -12,6 +12,7 @@ const sheets = {
   getPerfil: (usuario) => api.get("/usuario/perfil/:id_usuario", usuario),
   postCadastro: (usuario) => api.post("cadastro/", usuario),
   getSalas: (sala) => api.get("salas/", sala),
+  getSalasDisponivelHorario: (sala) => api.post(`salasdisponivelhorario/`, sala),
   getUsuarioByEmail: (email) => api.get("usuario/perfil/", { params: { email } }),
   getUsuarioReservasByEmail: (email) => api.get("usuario/email/perfil/reservas", { params: { email } }),
   postReserva: (reserva) => api.post("reserva/", reserva),

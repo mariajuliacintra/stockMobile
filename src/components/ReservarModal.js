@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   inputFake: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#ccc",
     backgroundColor: "white",
     padding: 10,
