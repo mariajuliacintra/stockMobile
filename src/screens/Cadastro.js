@@ -31,15 +31,31 @@ export default function Cadastro() {
   const [modalMessage, setModalMessage] = useState(""); // Mensagem do modal
   const [modalType, setModalType] = useState("info"); // Tipo do modal ('success', 'error')
 
+  async function armazenarDados(idUsuario, token) {
+    try {
+      await AsyncStorage.setItem("idUsuario", idUsuario.toString());  // Convertendo para string
+      await AsyncStorage.setItem("tokenUsuario", token);  // Armazenando o token
+    } catch (erro) {
+      console.error("Erro ao armazenar dados:", erro);
+    }
+  }
+
   async function handleCadastro() {
     await api.postCadastro(usuario).then(
       (response) => {
         setModalMessage(response.data.message);
         setModalType("success");
         setModalVisible(true); // Exibe o modal de sucesso
+
+        const idUsuario = response.data.usuario.id_usuario;  // Extrai o id_usuario da resposta
+        const token = response.data.token;  // Extrai o token da resposta
+  
+        // Armazena o id e o token no AsyncStorage
+        armazenarDados(idUsuario, token);  
+
         setTimeout(() => {
           navigation.navigate("Principal");
-        }, 1500); // Aguarda o modal ser fechado antes de navegar
+        }, 700); // Aguarda o modal ser fechado antes de navegar
       },
       (error) => {
         setModalMessage(error.response.data.error);

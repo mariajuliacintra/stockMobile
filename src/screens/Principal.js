@@ -48,15 +48,18 @@ function Principal({ navigation }) {
   async function filtrarSalas() {
     try {
       const formatDateTime = (dateObj) => {
-        const yyyy = dateObj.getFullYear();
-        const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
-        const dd = String(dateObj.getDate()).padStart(2, "0");
-        const hh = String(dateObj.getHours()).padStart(2, "0");
-        const mi = String(dateObj.getMinutes()).padStart(2, "0");
-        const ss = String(dateObj.getSeconds()).padStart(2, "0");
-  
-        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
-      };
+        const cleanDate = new Date(dateObj);
+        cleanDate.setSeconds(0);
+        cleanDate.setMilliseconds(0);
+      
+        const yyyy = cleanDate.getFullYear();
+        const mm = String(cleanDate.getMonth() + 1).padStart(2, "0");
+        const dd = String(cleanDate.getDate()).padStart(2, "0");
+        const hh = String(cleanDate.getHours()).padStart(2, "0");
+        const mi = String(cleanDate.getMinutes()).padStart(2, "0");
+      
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:00`;
+      };      
   
       const dataFormatada = formatDateTime(data);
       const horaInicioFormatada = formatDateTime(horaInicio);

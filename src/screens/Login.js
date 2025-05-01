@@ -30,14 +30,15 @@ export default function Login() {
   const [modalMessage, setModalMessage] = useState("");     // Mensagem do modal
   const [modalType, setModalType] = useState("info");       // Tipo do modal ('success', 'error')
 
-  const armazenarDados = async () => {
+  async function armazenarDados(idUsuario, token) {
     try {
-      await AsyncStorage.setItem("email", usuario.email);
+      await AsyncStorage.setItem("idUsuario", idUsuario.toString());  // Convertendo para string
+      await AsyncStorage.setItem("tokenUsuario", token);  // Armazenando o token
     } catch (erro) {
       console.error("Erro ao armazenar dados:", erro);
     }
-  };
-
+  }
+  
   async function handleLogin() {
     await api.postLogin(usuario).then(
       (response) => {
@@ -45,10 +46,16 @@ export default function Login() {
         setModalMessage(response.data.message);
         setModalType("success");
         setModalVisible(true);  // Exibe o modal de sucesso
-        armazenarDados();
+  
+        const idUsuario = response.data.usuario.id_usuario;  // Extrai o id_usuario da resposta
+        const token = response.data.token;  // Extrai o token da resposta
+  
+        // Armazena o id e o token no AsyncStorage
+        armazenarDados(idUsuario, token);  
+  
         setTimeout(() => {
           navigation.navigate("Principal");
-        }, 1500);  // Aguarda o modal ser fechado antes de navegar
+        }, 700);  // Aguarda o modal ser fechado antes de navegar
       },
       (error) => {
         setModalMessage(error.response.data.error);

@@ -38,9 +38,9 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
   useEffect(() => {
     const buscarIdUsuario = async () => {
       try {
-        const email = await AsyncStorage.getItem("email");
-        if (email) {
-          const response = await api.getUsuarioByEmail(email);
+        const idUsuario = await AsyncStorage.getItem("idUsuario");
+        if (idUsuario) {
+          const response = await api.getUsuarioById(idUsuario);
           setIdUsuario(response.data.usuario.id_usuario);
         }
       } catch (error) {

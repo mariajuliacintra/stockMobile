@@ -31,13 +31,13 @@ function Perfil() {
   useEffect(() => {
     const fetchDados = async () => {
       try {
-        const email = await AsyncStorage.getItem("email");
-        if (!email) return;
+        const idUsuario = await AsyncStorage.getItem("idUsuario");
+        if (!idUsuario) return;
 
-        const responseUsuario = await api.getUsuarioByEmail(email);
+        const responseUsuario = await api.getUsuarioById(idUsuario);
         setUsuario(responseUsuario.data.usuario);
 
-        const responseReservas = await api.getUsuarioReservasByEmail(email);
+        const responseReservas = await api.getUsuarioReservasById(idUsuario);
         setReservas(responseReservas.data.reservas || []);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
