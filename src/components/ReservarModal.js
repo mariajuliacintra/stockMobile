@@ -84,7 +84,7 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       fk_id_sala: idSala,
     };
 
-    console.log("Objeto reserva:", reserva);
+    // console.log("Objeto reserva:", reserva);
 
     try {
       const response = await api.postReserva(reserva);

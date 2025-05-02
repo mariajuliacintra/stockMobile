@@ -11,6 +11,7 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import ReservarModal from "../components/ReservarModal";
 import CustomModal from "../components/CustomModal";
@@ -34,7 +35,7 @@ function Principal({ navigation }) {
     title: "",
     message: "",
     type: "",
-  }); 
+  });
 
   async function getSalas() {
     try {
@@ -51,33 +52,33 @@ function Principal({ navigation }) {
         const cleanDate = new Date(dateObj);
         cleanDate.setSeconds(0);
         cleanDate.setMilliseconds(0);
-      
+
         const yyyy = cleanDate.getFullYear();
         const mm = String(cleanDate.getMonth() + 1).padStart(2, "0");
         const dd = String(cleanDate.getDate()).padStart(2, "0");
         const hh = String(cleanDate.getHours()).padStart(2, "0");
         const mi = String(cleanDate.getMinutes()).padStart(2, "0");
-      
+
         return `${yyyy}-${mm}-${dd} ${hh}:${mi}:00`;
-      };      
-  
+      };
+
       const dataFormatada = formatDateTime(data);
       const horaInicioFormatada = formatDateTime(horaInicio);
       const horaFimFormatada = formatDateTime(horaFim);
-  
-      console.log("Data:", dataFormatada.split(" ")[0]);
-      console.log("Hora Início:", horaInicioFormatada.split(" ")[1]);
-      console.log("Hora Fim:", horaFimFormatada.split(" ")[1]);
-  
+
+      // console.log("Data:", dataFormatada.split(" ")[0]);
+      // console.log("Hora Início:", horaInicioFormatada.split(" ")[1]);
+      // console.log("Hora Fim:", horaFimFormatada.split(" ")[1]);
+
       const payload = {
         data: dataFormatada.split(" ")[0],
         hora_inicio: horaInicioFormatada.split(" ")[1],
         hora_fim: horaFimFormatada.split(" ")[1],
       };
-  
+
       const response = await api.getSalasDisponivelHorario(payload);
       const { salas, message, error } = response.data;
-  
+
       if (error) {
         setCustomModalContent({
           title: "Erro",
@@ -92,25 +93,23 @@ function Principal({ navigation }) {
           type: "success",
         });
       }
-  
+
       setCustomModalVisible(true);
     } catch (e) {
       console.log("Erro ao buscar salas:", e);
-    
+
       const errorMessage =
-        e.response?.data?.error ||
-        "Erro ao buscar salas disponíveis.";
-    
+        e.response?.data?.error || "Erro ao buscar salas disponíveis.";
+
       setCustomModalContent({
         title: "Erro",
         message: errorMessage,
         type: "error",
       });
-    
+
       setCustomModalVisible(true);
     }
   }
-      
 
   useEffect(() => {
     getSalas();
@@ -154,7 +153,11 @@ function Principal({ navigation }) {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.buttonToHome}
-                onPress={() => navigation.navigate("Home")}
+                onPress={async () => {
+                  await AsyncStorage.removeItem("tokenUsuario");
+                  await AsyncStorage.removeItem("idUsuario");
+                  navigation.navigate("Home");
+                }}
               >
                 <MaterialCommunityIcons
                   name="exit-to-app"
@@ -168,7 +171,9 @@ function Principal({ navigation }) {
           <View style={styles.body}>
             <View style={styles.filtro}>
               <TouchableOpacity onPress={() => setShowData(true)}>
-                <Text style={styles.inputFiltro}>Data: {data.toLocaleDateString()}</Text>
+                <Text style={styles.inputFiltro}>
+                  Data: {data.toLocaleDateString()}
+                </Text>
               </TouchableOpacity>
               {showData && (
                 <DateTimePicker
@@ -224,7 +229,12 @@ function Principal({ navigation }) {
                 />
               )}
 
-              <Button title="Filtrar" color="rgba(177, 16, 16, 1)"  onPress={filtrarSalas} />
+              <Button
+                title="Filtrar"
+                style={styles.buttonFiltrar}
+                color="rgba(177, 16, 16, 1)"
+                onPress={filtrarSalas}
+              />
             </View>
 
             <View style={styles.table}>
@@ -312,19 +322,21 @@ const styles = StyleSheet.create({
     borderColor: "white",
     borderRadius: 5,
   },
-  inputFiltro:{
-    borderWidth:1,
+  inputFiltro: {
+    borderWidth: 1,
     marginLeft: 2,
     paddingVertical: 5,
     paddingHorizontal: 8,
-    borderRadius:8,
+    borderRadius: 8,
     marginTop: 9,
-  }, 
+    backgroundColor: "white",
+    fontWeight: "bold",
+  },
+  buttonFiltrar: { fontWeight: "bold" },
   table: {
     flex: 1,
     borderWidth: 1.5,
     borderColor: "white",
-    
   },
   tableHeader: {
     flexDirection: "row",
