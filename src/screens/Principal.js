@@ -48,33 +48,34 @@ function Principal({ navigation }) {
 
   async function filtrarSalas() {
     try {
-      const formatDateTime = (dateObj) => {
+      const formatDate = (dateObj) => {
         const cleanDate = new Date(dateObj);
-        cleanDate.setSeconds(0);
-        cleanDate.setMilliseconds(0);
-
         const yyyy = cleanDate.getFullYear();
         const mm = String(cleanDate.getMonth() + 1).padStart(2, "0");
         const dd = String(cleanDate.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+      };
+
+      const formatTime24h = (dateObj) => {
+        const cleanDate = new Date(dateObj);
+        cleanDate.setSeconds(0);
+        cleanDate.setMilliseconds(0);
         const hh = String(cleanDate.getHours()).padStart(2, "0");
         const mi = String(cleanDate.getMinutes()).padStart(2, "0");
-
-        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:00`;
+        return `${hh}:${mi}:00`;
       };
 
-      const dataFormatada = formatDateTime(data);
-      const horaInicioFormatada = formatDateTime(horaInicio);
-      const horaFimFormatada = formatDateTime(horaFim);
-
-      // console.log("Data:", dataFormatada.split(" ")[0]);
-      // console.log("Hora Início:", horaInicioFormatada.split(" ")[1]);
-      // console.log("Hora Fim:", horaFimFormatada.split(" ")[1]);
+      const dataFormatada = formatDate(data);
+      const horaInicioFormatada = formatTime24h(horaInicio);
+      const horaFimFormatada = formatTime24h(horaFim);
 
       const payload = {
-        data: dataFormatada.split(" ")[0],
-        hora_inicio: horaInicioFormatada.split(" ")[1],
-        hora_fim: horaFimFormatada.split(" ")[1],
+        data: dataFormatada,
+        hora_inicio: horaInicioFormatada,
+        hora_fim: horaFimFormatada,
       };
+      
+      console.log("Payload: ", payload)
 
       const response = await api.getSalasDisponivelHorario(payload);
       const { salas, message, error } = response.data;
@@ -172,7 +173,11 @@ function Principal({ navigation }) {
             <View style={styles.filtro}>
               <TouchableOpacity onPress={() => setShowData(true)}>
                 <Text style={styles.inputFiltro}>
-                  Data: {data.toLocaleDateString()}
+                  Data: {data.toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </Text>
               </TouchableOpacity>
               {showData && (
@@ -193,6 +198,7 @@ function Principal({ navigation }) {
                   {horaInicio.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
+                    hour12: false,
                   })}
                 </Text>
               </TouchableOpacity>
@@ -201,6 +207,7 @@ function Principal({ navigation }) {
                   value={horaInicio}
                   mode="time"
                   display="default"
+                  is24Hour={true}
                   onChange={(_, selected) => {
                     setShowHoraInicio(false);
                     if (selected) setHoraInicio(selected);
@@ -214,6 +221,7 @@ function Principal({ navigation }) {
                   {horaFim.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
+                    hour12: false,
                   })}
                 </Text>
               </TouchableOpacity>
@@ -222,6 +230,7 @@ function Principal({ navigation }) {
                   value={horaFim}
                   mode="time"
                   display="default"
+                  is24Hour={true}
                   onChange={(_, selected) => {
                     setShowHoraFim(false);
                     if (selected) setHoraFim(selected);
@@ -321,16 +330,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "white",
     borderRadius: 5,
+    paddingVertical: 10
   },
   inputFiltro: {
     borderWidth: 1,
-    marginLeft: 2,
     paddingVertical: 5,
     paddingHorizontal: 8,
     borderRadius: 8,
-    marginTop: 9,
     backgroundColor: "white",
-    fontWeight: "bold",
+    fontWeight: "semibold",
+    margin: 2,
   },
   buttonFiltrar: { fontWeight: "bold" },
   table: {
