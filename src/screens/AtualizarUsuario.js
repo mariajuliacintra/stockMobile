@@ -18,12 +18,10 @@ import ReservasUsuarioModal from "../components/ReservasUsuarioModal";
 import logo from "../img/logo.png";
 import api from "../services/axios";
 
-function Perfil() {
-  const [reservas, setReservas] = useState([]);
-  const [reservaSelecionada, setReservaSelecionada] = useState("");
-  const [mostrarListaReservas, setMostrarListaReservas] = useState(false);
+function AtualizarUsuario() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigation = useNavigation();
+  const [editando, setEditando] = useState(false); // novo estado
   const [usuario, setUsuario] = useState({
     nome: "",
     email: "",
@@ -39,26 +37,28 @@ function Perfil() {
 
         const responseUsuario = await api.getUsuarioById(idUsuario);
         setUsuario(responseUsuario.data.usuario);
-
-        const responseReservas = await api.getUsuarioReservasById(idUsuario);
-        setReservas(responseReservas.data.reservas || []);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
     };
 
+    const handleAtualizarPerfil = async () => {
+        try {
+          const idUsuario = await AsyncStorage.getItem("idUsuario");
+          if (!idUsuario) return;
+    
+          await api.atualizarUsuario(idUsuario, usuario);
+          alert("Perfil atualizado com sucesso!");
+          setEditando(false);
+        } catch (error) {
+          console.error("Erro ao atualizar perfil:", error);
+          alert("Erro ao atualizar o perfil.");
+        }
+      };
+    
+
     fetchDados();
   }, []);
-
-  const handleReservaSelecionada = (reservaId) => {
-    if (reservaId === "verTodas") {
-      console.log("Ver todas as reservas");
-      setReservaSelecionada(""); // Ou defina para um valor que indique "ver todas"
-    } else {
-      setReservaSelecionada(reservaId);
-    }
-    setMostrarListaReservas(false); // Oculta a lista após a seleção
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -84,20 +84,23 @@ function Perfil() {
             <Image source={logo} style={styles.logo} />
             <TextInput
               placeholder="nome"
-              editable={false}
-              value={usuario.nome || ""}
+              editable={editando}
+              value={usuario.nome}
+              onChangeText={(text) => setUsuario({ ...usuario, nome: text })}
               style={styles.textField}
             />
             <TextInput
               placeholder="e-mail"
-              editable={false}
-              value={usuario.email || ""}
+              editable={editando}
+              value={usuario.email}
+              onChangeText={(text) => setUsuario({ ...usuario, email: text })}
               style={styles.textField}
             />
             <TextInput
               placeholder="NIF"
-              editable={false}
-              value={usuario.NIF || ""}
+              editable={editando}
+              value={usuario.NIF}
+              onChangeText={(text) => setUsuario({ ...usuario, NIF: text })}
               style={styles.textField}
             />
 
@@ -105,8 +108,9 @@ function Perfil() {
               <TextInput
                 secureTextEntry={!mostrarSenha}
                 placeholder="senha"
-                editable={false}
-                value={usuario.senha || ""}
+                editable={editando}
+                value={usuario.senha}
+                onChangeText={(text) => setUsuario({ ...usuario, senha: text })}
                 style={styles.passwordInput}
               />
               <TouchableOpacity
@@ -121,29 +125,31 @@ function Perfil() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.buttonAtualizar}
-              onPress={() => navigation.navigate("AtualizarUsuario")}
-            >
-              <Text style={styles.buttonText}>Atualizar Perfil</Text>
-            </TouchableOpacity>
+            {editando ? (
+              <>
+                <TouchableOpacity
+                  style={styles.buttonAtualizar}
+                  onPress={handleAtualizarPerfil}
+                >
+                  <Text style={styles.buttonText}>Salvar</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.buttonMinhasReservas}
-              onPress={() => setMostrarListaReservas(true)}
-            >
-              <Text style={styles.buttonTextMinhasReservas}>Minhas Reservas</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.buttonAtualizar, { backgroundColor: "#888" }]}
+                  onPress={() => setEditando(false)}
+                >
+                  <Text style={styles.buttonText}>Cancelar</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={styles.buttonAtualizar}
+                onPress={() => setEditando(true)}
+              >
+                <Text style={styles.buttonText}>Editar Perfil</Text>
+              </TouchableOpacity>
+            )}
 
-            <ReservasUsuarioModal
-              visible={mostrarListaReservas}
-              onClose={() => setMostrarListaReservas(false)}
-              reservas={reservas}
-              onSelecionar={(reservaId) => {
-                handleReservaSelecionada(reservaId);
-                setMostrarListaReservas(false);
-              }}
-            />
           </View>
         </View>
 
@@ -299,4 +305,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Perfil;
+export default AtualizarUsuario;

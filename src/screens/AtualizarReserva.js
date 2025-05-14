@@ -18,18 +18,11 @@ import ReservasUsuarioModal from "../components/ReservasUsuarioModal";
 import logo from "../img/logo.png";
 import api from "../services/axios";
 
-function Perfil() {
+function AtualizarReserva() {
   const [reservas, setReservas] = useState([]);
   const [reservaSelecionada, setReservaSelecionada] = useState("");
-  const [mostrarListaReservas, setMostrarListaReservas] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigation = useNavigation();
-  const [usuario, setUsuario] = useState({
-    nome: "",
-    email: "",
-    NIF: "",
-    senha: "",
-  });
 
   useEffect(() => {
     const fetchDados = async () => {
@@ -123,7 +116,7 @@ function Perfil() {
 
             <TouchableOpacity
               style={styles.buttonAtualizar}
-              onPress={() => navigation.navigate("AtualizarUsuario")}
+              onPress={() => console.log("Atualizar Perfil")}
             >
               <Text style={styles.buttonText}>Atualizar Perfil</Text>
             </TouchableOpacity>
