@@ -5,7 +5,6 @@ import Login from "./screens/Login";
 import Principal from "./screens/Principal";
 import Home from "./screens/Home";
 import Perfil from "./screens/Perfil"
-import AtualizarUsuario from "./screens/AtualizarUsuario"
 import { StatusBar } from "react-native";
 
 const Stack = createStackNavigator();
@@ -20,7 +19,6 @@ export default function App() {
         <Stack.Screen name="Principal" component={Principal} />
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Perfil" component={Perfil} />
-        <Stack.Screen name="AtualizarUsuario" component={AtualizarUsuario} />
       </Stack.Navigator>
     </NavigationContainer>
   );

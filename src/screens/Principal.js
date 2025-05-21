@@ -12,7 +12,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import ReservarModal from "../components/ReservarModal";
 import CustomModal from "../components/CustomModal";
 import api from "../services/axios";

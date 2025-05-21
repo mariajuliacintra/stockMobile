@@ -12,11 +12,15 @@ import {
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import AntDesign from '@expo/vector-icons/AntDesign';
+
 
 import ReservasUsuarioModal from "../components/ReservasUsuarioModal";
 
 import logo from "../img/logo.png";
 import api from "../services/axios";
+  
 
 function Perfil() {
   const [reservas, setReservas] = useState([]);
@@ -120,12 +124,11 @@ function Perfil() {
                 />
               </TouchableOpacity>
             </View>
-
             <TouchableOpacity
-              style={styles.buttonAtualizar}
-              onPress={() => navigation.navigate("AtualizarUsuario")}
+            style={styles.buttonAtualizar}
+              onPress={() => console.log("Atualizar Perfil")}
             >
-              <Text style={styles.buttonText}>Atualizar Perfil</Text>
+            <Text style={styles.buttonText}>Atualizar Perfil</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -257,22 +260,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
   },
-  buttonAtualizar: {
-    marginTop: 16,
-    backgroundColor: "rgb(199, 0, 0)",
-    width: "50%",
-    height: 45,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "600",
-    fontSize: 16,
-  },
   buttonMinhasReservas: {
-    marginTop: 16,
+    marginTop: 2,
     backgroundColor: "transparent",
     width: 180,
     height: 45,
@@ -283,6 +272,23 @@ const styles = StyleSheet.create({
     color: "rgb(155, 0, 0)",
     fontWeight: "600",
     fontSize: 17,
+  },
+  buttonAtualizar:{
+    marginTop: 16,
+    backgroundColor: "rgba(255, 0, 0, 1)",
+    width: 180,
+    backgroundColor: "rgb(199, 0, 0)",
+    width: "50%",
+    height: 45,
+    borderRadius: 15,
+    alignItems: "center",
+  },
+  buttonText:{
+    color: "white",
+    padding: 2,
+    marginTop:8,
+    fontWeight: "610",
+    fontSize: 15,
   },
   footer: {
     backgroundColor: "rgba(177, 16, 16, 1)",
