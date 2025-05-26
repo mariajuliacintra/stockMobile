@@ -10,16 +10,15 @@ import {
   StyleSheet,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "@react-navigation/native";
 
-
 import ReservasUsuarioModal from "../components/ReservasUsuarioModal";
-import AtualizarReservaModal from "../components/AtualizarReservaModal"
+import AtualizarReservaModal from "../components/AtualizarReservaModal";
+import CustomModal from "../components/CustomModal";
 
 import logo from "../img/logo.png";
 import api from "../services/axios";
-
 
 function Perfil() {
   const [reservas, setReservas] = useState([]);
@@ -38,9 +37,14 @@ function Perfil() {
   useEffect(() => {
     const fetchDados = async () => {
       try {
-        const idUsuario = await AsyncStorage.getItem("idUsuario");
-        if (!idUsuario) return;
+        const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+        if (!idUsuarioStr) return;
 
+        const idUsuario = Number(idUsuarioStr); 
+        if (isNaN(idUsuario)) {
+          console.error("ID do usuário não é um número válido");
+          return;
+        }
         const responseUsuario = await api.getUsuarioById(idUsuario);
         setUsuario(responseUsuario.data.usuario);
 
@@ -67,6 +71,50 @@ function Perfil() {
   const fecharModalEditar = () => {
     setMostrarEdiçãoReserva(false);
     setReservaSelecionada(null);
+  };
+
+  const [customModalOpen, setCustomModalOpen] = useState(false);
+  const [customModalTitle, setCustomModalTitle] = useState("");
+  const [customModalMessage, setCustomModalMessage] = useState("");
+  const [customModalType, setCustomModalType] = useState("info");
+
+  const handleDeletarReserva = async (reserva) => {
+    try {
+      console.log(reserva);
+      const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+      if (!idUsuarioStr) return; // não existe
+      
+      const idUsuario = Number(idUsuarioStr); // converte para número
+      
+      if (isNaN(idUsuario)) {
+        console.error("idUsuario não é um número válido");
+        return;
+      }
+      if (!idUsuario) {
+        setCustomModalTitle("Erro");
+        setCustomModalMessage("Usuário não encontrado.");
+        setCustomModalType("error");
+        setCustomModalOpen(true);
+        return;
+      }
+
+      await api.deleteReserva(reserva.id_reserva, idUsuario);
+
+      setCustomModalTitle("Sucesso");
+      setCustomModalMessage("Reserva apagada com sucesso!");
+      setCustomModalType("success");
+      setCustomModalOpen(true);
+
+      // Atualizar lista de reservas após deletar (opcional)
+      const responseReservas = await api.getUsuarioReservasById(idUsuario);
+      setReservas(responseReservas.data.reservas || []);
+    } catch (error) {
+      console.error("Erro ao apagar reserva:", error);
+      setCustomModalTitle("Erro");
+      setCustomModalMessage("Erro ao apagar reserva.");
+      setCustomModalType("error");
+      setCustomModalOpen(true);
+    }
   };
 
   return (
@@ -140,7 +188,9 @@ function Perfil() {
               style={styles.buttonMinhasReservas}
               onPress={() => setMostrarListaReservas(true)}
             >
-              <Text style={styles.buttonTextMinhasReservas}>Minhas Reservas</Text>
+              <Text style={styles.buttonTextMinhasReservas}>
+                Minhas Reservas
+              </Text>
             </TouchableOpacity>
 
             <ReservasUsuarioModal
@@ -151,6 +201,7 @@ function Perfil() {
                 handleReservaSelecionada(reserva);
                 setMostrarEdiçãoReserva(true);
               }}
+              onApagarReserva={handleDeletarReserva}
             />
 
             {reservaSelecionada && (
@@ -160,6 +211,14 @@ function Perfil() {
                 reserva={reservaSelecionada}
               />
             )}
+
+            <CustomModal
+              open={customModalOpen}
+              onClose={() => setCustomModalOpen(false)}
+              title={customModalTitle}
+              message={customModalMessage}
+              type={customModalType}
+            />
           </View>
         </View>
 

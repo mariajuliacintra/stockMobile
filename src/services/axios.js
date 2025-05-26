@@ -1,8 +1,8 @@
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.91:5000/reservas/v1/",
+  baseURL: "http://10.89.240.83:5000/reservas/v1/",
   headers: {
     accept: "application/json",
   },
@@ -11,7 +11,7 @@ const api = axios.create({
 // Interceptor para adicionar o token em cada requisição
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("tokenUsuario");
+    const token = await SecureStore.getItemAsync("tokenUsuario");
     if (token) {
       config.headers.Authorization = token;
     }
@@ -30,6 +30,7 @@ const sheets = {
   getUsuarioReservasById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}/reservas`),
   postReserva: (reserva) => api.post("reserva/", reserva),
   putAtualizarReserva: (id_reserva, reservaAtualizada) => api.put(`/reserva/${id_reserva}`, reservaAtualizada),
+  deleteReserva: (id_reserva, id_usuario) => api.delete(`reserva/${id_reserva}/${id_usuario}`),
 };
 
 export default sheets;

@@ -16,6 +16,7 @@ import Footer from "../components/Footer";
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/axios";
 import CustomModal from "../components/CustomModal";
+import * as SecureStore from "expo-secure-store";
 
 export default function Cadastro() {
   const navigation = useNavigation();
@@ -33,8 +34,8 @@ export default function Cadastro() {
 
   async function armazenarDados(idUsuario, token) {
     try {
-      await AsyncStorage.setItem("idUsuario", idUsuario.toString());  // Convertendo para string
-      await AsyncStorage.setItem("tokenUsuario", token);  // Armazenando o token
+      await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
+      await SecureStore.setItemAsync("tokenUsuario", token.toString());
     } catch (erro) {
       console.error("Erro ao armazenar dados:", erro);
     }
@@ -50,7 +51,7 @@ export default function Cadastro() {
         const idUsuario = response.data.usuario.id_usuario;  // Extrai o id_usuario da resposta
         const token = response.data.token;  // Extrai o token da resposta
   
-        // Armazena o id e o token no AsyncStorage
+        // Armazena o id e o token no SecureStorage
         armazenarDados(idUsuario, token);  
 
         setTimeout(() => {

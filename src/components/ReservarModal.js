@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getToday } from "../utils/dateUtils";
 import api from "../services/axios";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import CustomModal from "./CustomModal";
 
 const ReservarModal = ({ isOpen, onClose, idSala }) => {
@@ -29,7 +23,11 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
 
   // Estados para o modal de feedback
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalInfo, setModalInfo] = useState({ type: "success", title: "", message: "" });
+  const [modalInfo, setModalInfo] = useState({
+    type: "success",
+    title: "",
+    message: "",
+  });
 
   // Hook de navegação
   const navigation = useNavigation();
@@ -38,8 +36,9 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
   useEffect(() => {
     const buscarIdUsuario = async () => {
       try {
-        const idUsuario = await AsyncStorage.getItem("idUsuario");
-        if (idUsuario) {
+        const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+        if (idUsuarioStr) {
+          const idUsuario = Number(idUsuarioStr);
           const response = await api.getUsuarioById(idUsuario);
           setIdUsuario(response.data.usuario.id_usuario);
         }
@@ -103,7 +102,15 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       setModalVisible(true);
       console.log(error);
     }
-  }, [ajustarHoraFim, data, formatarHoraComSegundosZero, horaFim, horaInicio, idSala, idUsuario]); // Depende de todos os valores usados dentro
+  }, [
+    ajustarHoraFim,
+    data,
+    formatarHoraComSegundosZero,
+    horaFim,
+    horaInicio,
+    idSala,
+    idUsuario,
+  ]); // Depende de todos os valores usados dentro
 
   // Função para lidar com o fechamento do modal de feedback
   const handleModalClose = useCallback(() => {

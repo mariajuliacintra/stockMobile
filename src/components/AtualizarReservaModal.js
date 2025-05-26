@@ -10,7 +10,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { getToday } from "../utils/dateUtils";
 import api from "../services/axios";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import CustomModal from "./CustomModal";
 
 const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
@@ -43,8 +43,9 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
   useEffect(() => {
     const buscarIdUsuario = async () => {
       try {
-        const idUsuario = await AsyncStorage.getItem("idUsuario");
-        if (idUsuario) {
+        const idUsuarioString = await SecureStore.getItemAsync("idUsuario");
+        if (idUsuarioString) {
+          const idUsuario = Number(idUsuarioString);
           const response = await api.getUsuarioById(idUsuario);
           setIdUsuario(response.data.usuario.id_usuario);
         }
@@ -80,6 +81,11 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
       }
     }
   }, [reserva, visible]); // Executa apenas uma vez na montagem
+
+  const formatarData = (data) => {
+    if (!(data instanceof Date)) return "";
+    return data.toLocaleDateString("pt-BR");
+  };
 
   // Função para ajustar a hora de fim automaticamente (1 hora após o início)
   const ajustarHoraFim = useCallback(() => {
@@ -154,7 +160,7 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
               onPress={() => setMostrarDatePicker(true)}
               style={styles.inputFake}
             >
-              <Text>{data.toLocaleDateString()}</Text>
+              <Text>{formatarData(data)}</Text>
             </TouchableOpacity>
             {mostrarDatePicker && (
               <DateTimePicker

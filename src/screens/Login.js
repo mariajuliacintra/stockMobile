@@ -15,7 +15,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import api from "../services/axios";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import CustomModal from "../components/CustomModal";
 
 export default function Login() {
@@ -32,8 +32,8 @@ export default function Login() {
 
   async function armazenarDados(idUsuario, token) {
     try {
-      await AsyncStorage.setItem("idUsuario", idUsuario.toString());  // Convertendo para string
-      await AsyncStorage.setItem("tokenUsuario", token);  // Armazenando o token
+      await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
+      await SecureStore.setItemAsync("tokenUsuario", token.toString());  // Armazenando o token
     } catch (erro) {
       console.error("Erro ao armazenar dados:", erro);
     }
@@ -46,12 +46,13 @@ export default function Login() {
         setModalMessage(response.data.message);
         setModalType("success");
         setModalVisible(true);  // Exibe o modal de sucesso
-  
+
+
         const idUsuario = response.data.usuario.id_usuario;  // Extrai o id_usuario da resposta
         const token = response.data.token;  // Extrai o token da resposta
   
-        // Armazena o id e o token no AsyncStorage
-        armazenarDados(idUsuario, token);  
+        // Armazena o id e o token no SecureStorage
+        armazenarDados(idUsuario, token);   
   
         setTimeout(() => {
           navigation.navigate("Principal");
