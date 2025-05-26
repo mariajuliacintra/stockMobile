@@ -143,13 +143,12 @@ function Principal({ navigation }) {
       >
         <View style={styles.container}>
           <View style={styles.header}>
-            <MaterialCommunityIcons name="menu" size={40} color="white" />
             <View style={{ flexDirection: "row", gap: 15 }}>
               <TouchableOpacity
                 style={styles.buttonToProfile}
                 onPress={() => navigation.navigate("Perfil")}
               >
-                <FontAwesome6 name="user-circle" size={35} color="white" />
+                <FontAwesome6 name="user-circle" size={35} color="white" style={{marginTop:10}} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.buttonToHome}
@@ -163,6 +162,7 @@ function Principal({ navigation }) {
                   name="exit-to-app"
                   size={38}
                   color="white"
+                  style={{marginTop:10}}
                 />
               </TouchableOpacity>
             </View>
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "white",
     borderBottomWidth: 3,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     paddingHorizontal: 20,
   },

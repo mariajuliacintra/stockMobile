@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.83:5000/reservas/v1/",
+  baseURL: "http://10.89.240.91:5000/reservas/v1/",
   headers: {
     accept: "application/json",
   },
@@ -29,7 +29,7 @@ const sheets = {
   getUsuarioById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}`),
   getUsuarioReservasById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}/reservas`),
   postReserva: (reserva) => api.post("reserva/", reserva),
-  putAtualizarReserva: (reserva) => api.put("/reserva/:id_reserva", reserva),
+  putAtualizarReserva: (id_reserva, reservaAtualizada) => api.put(`/reserva/${id_reserva}`, reservaAtualizada),
 };
 
 export default sheets;

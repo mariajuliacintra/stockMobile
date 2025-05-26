@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import {
   Modal,
   View,
@@ -14,32 +14,15 @@ const ReservasUsuarioModal = ({
   visible,
   onClose,
   onApagarReserva,
-  onEditarReserva,
   reservas = [],
   onSelecionar,
 }) => {
-    const [modalVisible, setModalVisible] = useState(false);
-    const [modalEdicaoVisible, setModalEdicaoVisible] = useState(false);
-    const [reservaSelecionada, setReservaSelecionada] = useState(null);
-    const [listaDeReservas, setListaDeReservas] = useState([]);
-  
-    const handleEditarReserva = (reserva) => {
-      setModalVisible(false); // Fecha o modal de reservas
-      setReservaSelecionada(reserva); // Define a reserva selecionada
-      setModalEdicaoVisible(true); // Abre o modal de edição
-    };
-  
-    const handleFecharModalEdicao = () => {
-      setModalEdicaoVisible(false);
-      setReservaSelecionada(null);
-    };
-  
-  if (typeof onEditarReserva === 'function') {
-    onEditarReserva(reserva);
-  } else {
-    console.log('onEditarReserva não está definido'); 
-  }
 
+  const handleEditarReserva = (reserva) => {
+    console.log(reserva)
+    onSelecionar(reserva); // para avisar ao componente pai qual reserva foi selecionada
+    onClose(); // fecha o modal de lista
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -58,16 +41,9 @@ const ReservasUsuarioModal = ({
                       {reserva.sala} - {reserva.data}
                     </Text>
                     <View style={{ flexDirection: "row" }}>
-                      <FontAwesome
-                        name="pencil"
-                        size={24}
-                        color="black"
-                        style={{ marginLeft: 15 }}
-                        onPress={() => {
-                          onClose(); // Fecha o modal atual
-                          onEditarReserva={handleEditarReserva}; // Abre o modal de atualização com os dados da reserva
-                        }}
-                      />
+                      <TouchableOpacity onPress={() => handleEditarReserva(reserva)}>
+                        <FontAwesome name="pencil" size={24} color="black" />
+                      </TouchableOpacity>
                       <AntDesign
                         name="delete"
                         size={24}

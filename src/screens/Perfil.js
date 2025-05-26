@@ -12,20 +12,20 @@ import {
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import AntDesign from '@expo/vector-icons/AntDesign';
 
 
 import ReservasUsuarioModal from "../components/ReservasUsuarioModal";
+import AtualizarReservaModal from "../components/AtualizarReservaModal"
 
 import logo from "../img/logo.png";
 import api from "../services/axios";
-  
+
 
 function Perfil() {
   const [reservas, setReservas] = useState([]);
   const [reservaSelecionada, setReservaSelecionada] = useState("");
   const [mostrarListaReservas, setMostrarListaReservas] = useState(false);
+  const [mostrarEdiçãoReserva, setMostrarEdiçãoReserva] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
@@ -54,14 +54,19 @@ function Perfil() {
     fetchDados();
   }, []);
 
-  const handleReservaSelecionada = (reservaId) => {
-    if (reservaId === "verTodas") {
-      console.log("Ver todas as reservas");
-      setReservaSelecionada(""); // Ou defina para um valor que indique "ver todas"
-    } else {
-      setReservaSelecionada(reservaId);
-    }
-    setMostrarListaReservas(false); // Oculta a lista após a seleção
+  const handleReservaSelecionada = (reserva) => {
+    setReservaSelecionada(reserva);
+    setMostrarListaReservas(false);
+  };
+
+  const abrirModalAtualizar = (reserva) => {
+    setReservaSelecionada(reserva);
+    setModalAtualizarAberto(true);
+  };
+
+  const fecharModalEditar = () => {
+    setMostrarEdiçãoReserva(false);
+    setReservaSelecionada(null);
   };
 
   return (
@@ -125,10 +130,10 @@ function Perfil() {
               </TouchableOpacity>
             </View>
             <TouchableOpacity
-            style={styles.buttonAtualizar}
+              style={styles.buttonAtualizar}
               onPress={() => console.log("Atualizar Perfil")}
             >
-            <Text style={styles.buttonText}>Atualizar Perfil</Text>
+              <Text style={styles.buttonText}>Atualizar Perfil</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -142,11 +147,19 @@ function Perfil() {
               visible={mostrarListaReservas}
               onClose={() => setMostrarListaReservas(false)}
               reservas={reservas}
-              onSelecionar={(reservaId) => {
-                handleReservaSelecionada(reservaId);
-                setMostrarListaReservas(false);
+              onSelecionar={(reserva) => {
+                handleReservaSelecionada(reserva);
+                setMostrarEdiçãoReserva(true);
               }}
             />
+
+            {reservaSelecionada && (
+              <AtualizarReservaModal
+                visible={mostrarEdiçãoReserva}
+                onClose={fecharModalEditar}
+                reserva={reservaSelecionada}
+              />
+            )}
           </View>
         </View>
 
@@ -273,7 +286,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 17,
   },
-  buttonAtualizar:{
+  buttonAtualizar: {
     marginTop: 16,
     backgroundColor: "rgba(255, 0, 0, 1)",
     width: 180,
@@ -283,10 +296,10 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
   },
-  buttonText:{
+  buttonText: {
     color: "white",
     padding: 2,
-    marginTop:8,
+    marginTop: 8,
     fontWeight: "610",
     fontSize: 15,
   },

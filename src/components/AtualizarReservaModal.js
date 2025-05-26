@@ -13,7 +13,12 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomModal from "./CustomModal";
 
-const AtualizarReservaModal = ({ isOpen, onClose, reserva, idUsuario }) => {
+const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
+
+  if (!reserva) {
+    console.error("Reserva inválida:", reserva);
+    return;
+  }
   // Estados para data e hora
   const [data, setData] = useState(new Date());
   const [horaInicio, setHoraInicio] = useState(new Date());
@@ -47,9 +52,34 @@ const AtualizarReservaModal = ({ isOpen, onClose, reserva, idUsuario }) => {
         console.error("Erro ao buscar usuário:", error);
       }
     };
-
+    console.log("Reserva recebida:", reserva);
     buscarIdUsuario();
-  }, []); // Executa apenas uma vez na montagem
+
+    if (visible && reserva) {
+      // Data: de "31-12-2025" para Date(2025, 11, 31)
+      if (reserva.data) {
+        const [dia, mes, ano] = reserva.data.split("-");
+        const novaData = new Date(ano, mes - 1, dia);
+        setData(novaData);
+      }
+
+      // Hora de início
+      if (reserva.hora_inicio) {
+        const [h, m] = reserva.hora_inicio.split(":");
+        const novaHoraInicio = new Date();
+        novaHoraInicio.setHours(parseInt(h), parseInt(m), 0, 0);
+        setHoraInicio(new Date(novaHoraInicio)); // Garante nova instância
+      }
+
+      // Hora de fim
+      if (reserva.hora_fim) {
+        const [h, m] = reserva.hora_fim.split(":");
+        const novaHoraFim = new Date();
+        novaHoraFim.setHours(parseInt(h), parseInt(m), 0, 0);
+        setHoraFim(new Date(novaHoraFim)); // Garante nova instância
+      }
+    }
+  }, [reserva, visible]); // Executa apenas uma vez na montagem
 
   // Função para ajustar a hora de fim automaticamente (1 hora após o início)
   const ajustarHoraFim = useCallback(() => {
@@ -76,18 +106,15 @@ const AtualizarReservaModal = ({ isOpen, onClose, reserva, idUsuario }) => {
     const formattedHoraInicio = formatarHoraComSegundosZero(horaInicio);
     const formattedHoraFim = formatarHoraComSegundosZero(horaFim);
 
-    const reserva = {
+    const dadosReserva = {
       data: formattedData,
       hora_inicio: formattedHoraInicio,
       hora_fim: formattedHoraFim,
       fk_id_usuario: idUsuario,
-      fk_id_sala: idSala,
     };
 
-    // console.log("Objeto reserva:", reserva);
-
     try {
-      const response = await api.putAtualizarReserva(reserva);
+      const response = await api.putAtualizarReserva(reserva.id_reserva, dadosReserva);
       setModalInfo({
         type: "success",
         title: "Sucesso",
@@ -103,7 +130,7 @@ const AtualizarReservaModal = ({ isOpen, onClose, reserva, idUsuario }) => {
       setModalVisible(true);
       console.log(error);
     }
-  }, [ajustarHoraFim, data, formatarHoraComSegundosZero, horaFim, horaInicio, idSala, idUsuario]); // Depende de todos os valores usados dentro
+  }, [ajustarHoraFim, data, formatarHoraComSegundosZero, horaFim, horaInicio, idUsuario, visible, reserva]); // Depende de todos os valores usados dentro
 
   // Função para lidar com o fechamento do modal de feedback
   const handleModalClose = useCallback(() => {
@@ -116,10 +143,11 @@ const AtualizarReservaModal = ({ isOpen, onClose, reserva, idUsuario }) => {
 
   return (
     <>
-      <Modal visible={isOpen} transparent animationType="fade">
+      <Modal visible={visible} transparent animationType="fade">
+
         <View style={styles.overlay}>
-          <View style={styles.modal}>
-            <Text style={styles.title}>Reservar</Text>
+          <View style={styles.modalContainer}>
+            <Text style={styles.title}>Atualizar Reserva</Text>
 
             <Text style={styles.inputTitle}>Data</Text>
             <TouchableOpacity
@@ -197,7 +225,7 @@ const AtualizarReservaModal = ({ isOpen, onClose, reserva, idUsuario }) => {
                 <Text style={styles.buttonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.button} onPress={handleReserva}>
-                <Text style={styles.buttonText}>Reservar</Text>
+                <Text style={styles.buttonText}>Atualizar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -222,11 +250,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  modal: {
-    backgroundColor: "rgb(227, 227, 227)",
+  modalContainer: {
+    backgroundColor: "white",
     padding: 20,
-    borderRadius: 8,
-    width: 300,
+    width: "60%",
+    maxHeight: "70%",
+    borderRadius: 10,
   },
   title: {
     fontSize: 20,
