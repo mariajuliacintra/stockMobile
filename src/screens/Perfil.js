@@ -15,16 +15,23 @@ import { useNavigation } from "@react-navigation/native";
 
 import ReservasUsuarioModal from "../components/ReservasUsuarioModal";
 import AtualizarReservaModal from "../components/AtualizarReservaModal";
+import HistoricoReservasModal from "../components/HistoricoReservasModal";
+import ReservasDeletadas from "../components/ReservasDeletadasModal";
 import CustomModal from "../components/CustomModal";
 
 import logo from "../img/logo.png";
-import api from "../services/axios";
+import api from "../services/axios"; // Garanta que este import esteja correto
 
 function Perfil() {
   const [reservas, setReservas] = useState([]);
   const [reservaSelecionada, setReservaSelecionada] = useState("");
   const [mostrarListaReservas, setMostrarListaReservas] = useState(false);
   const [mostrarEdiçãoReserva, setMostrarEdiçãoReserva] = useState(false);
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+  const [mostrarDeletadas, setMostrarDeletadas] = useState(false);
+  const [reservasDeletadas, setReservasDeletadas] = useState("");
+  const [historicoReservas, setHistoricoReservas] = useState([]);
+  const [salasDisponiveis, setSalasDisponiveis] = useState([]);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
@@ -34,13 +41,18 @@ function Perfil() {
     senha: "",
   });
 
+  const [customModalOpen, setCustomModalOpen] = useState(false);
+  const [customModalTitle, setCustomModalTitle] = useState("");
+  const [customModalMessage, setCustomModalMessage] = useState("");
+  const [customModalType, setCustomModalType] = useState("info");
+
   useEffect(() => {
     const fetchDados = async () => {
       try {
         const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
         if (!idUsuarioStr) return;
 
-        const idUsuario = Number(idUsuarioStr); 
+        const idUsuario = Number(idUsuarioStr);
         if (isNaN(idUsuario)) {
           console.error("ID do usuário não é um número válido");
           return;
@@ -49,23 +61,49 @@ function Perfil() {
         setUsuario(responseUsuario.data.usuario);
 
         const responseReservas = await api.getUsuarioReservasById(idUsuario);
-        setReservas(responseReservas.data.reservas || []);
+
+        function parseDataHora(dataStr, horaStr) {
+          const [dia, mes, ano] = dataStr.split("-");
+          const [hora, min, seg] = horaStr.split(":");
+          return new Date(
+            parseInt(ano),
+            parseInt(mes) - 1,
+            parseInt(dia),
+            parseInt(hora),
+            parseInt(min),
+            parseInt(seg)
+          );
+        }
+
+        const agora = new Date();
+
+        const reservasFuturas = (responseReservas.data.reservas || []).filter(
+          (reserva) => {
+            const dataHoraInicio = parseDataHora(
+              reserva.data,
+              reserva.hora_inicio
+            );
+            return dataHoraInicio > agora;
+          }
+        );
+
+        setReservas(reservasFuturas);
+
+        // BUSCAR AS SALAS AQUI
+        const responseSalas = await api.getSalas(); // Chame sua função API para obter as salas
+        // Assumindo que a resposta da sua API de salas vem em response.data.salas
+        setSalasDisponiveis(responseSalas.data.salas || []);
       } catch (error) {
-        console.error("Erro ao buscar dados:", error);
+        console.error("Erro ao buscar dados iniciais:", error);
       }
     };
 
     fetchDados();
-  }, []);
+  }, []); // O array vazio [] garante que isso só execute uma vez ao montar o componente
 
   const handleReservaSelecionada = (reserva) => {
     setReservaSelecionada(reserva);
     setMostrarListaReservas(false);
-  };
-
-  const abrirModalAtualizar = (reserva) => {
-    setReservaSelecionada(reserva);
-    setModalAtualizarAberto(true);
   };
 
   const fecharModalEditar = () => {
@@ -73,19 +111,74 @@ function Perfil() {
     setReservaSelecionada(null);
   };
 
-  const [customModalOpen, setCustomModalOpen] = useState(false);
-  const [customModalTitle, setCustomModalTitle] = useState("");
-  const [customModalMessage, setCustomModalMessage] = useState("");
-  const [customModalType, setCustomModalType] = useState("info");
+  const handleAbrirHistorico = async () => {
+    await handleCarregarHistorico();
+    setMostrarHistorico(true);
+  };
 
+  const fecharModalHistorico = () => {
+    setMostrarHistorico(false);
+  };
+
+  const handleAbrirDeletadas = async () => {
+    await handleReservasDeletadas();
+    setMostrarDeletadas(true);
+  };
+
+  const handleFecharDeletadas = async () => {
+    setMostrarDeletadas(false);
+  };
+
+  const handleCarregarHistorico = async () => {
+    try {
+      const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+      if (!idUsuarioStr) return;
+
+      const idUsuario = Number(idUsuarioStr);
+      if (isNaN(idUsuario)) return;
+
+      const responseHistorico = await api.getHistoricoReservasById(idUsuario);
+
+      console.log(
+        "Dados do histórico de reservas da API:",
+        responseHistorico.data.historico
+      );
+
+      setHistoricoReservas(responseHistorico.data.historico || []);
+    } catch (error) {
+      console.error("Erro ao buscar histórico de reservas:", error);
+    }
+  };
+
+  const handleReservasDeletadas = async () => {
+    try {
+      const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+      if (!idUsuarioStr) return;
+  
+      const idUsuario = Number(idUsuarioStr);
+      if (isNaN(idUsuario)) return;
+  
+      const response = await api.getUsuarioHistoricoReservasDelecaobyId(
+        idUsuario
+      );
+      // console.log(response.data); // Mantenha este log para depuração
+  
+      // AQUI É A CORREÇÃO PRINCIPAL:
+      // Acesse a propriedade 'historicoDelecao' do objeto de resposta
+      setReservasDeletadas(response.data.historicoDelecao || []); 
+  
+    } catch (error) {
+      console.error("Erro ao buscar histórico de reservas deletadas:", error);
+    }
+  };
   const handleDeletarReserva = async (reserva) => {
     try {
       console.log(reserva);
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
-      if (!idUsuarioStr) return; // não existe
-      
-      const idUsuario = Number(idUsuarioStr); // converte para número
-      
+      if (!idUsuarioStr) return;
+  
+      const idUsuario = Number(idUsuarioStr);
+  
       if (isNaN(idUsuario)) {
         console.error("idUsuario não é um número válido");
         return;
@@ -97,17 +190,48 @@ function Perfil() {
         setCustomModalOpen(true);
         return;
       }
-
+  
       await api.deleteReserva(reserva.id_reserva, idUsuario);
-
+  
       setCustomModalTitle("Sucesso");
       setCustomModalMessage("Reserva apagada com sucesso!");
       setCustomModalType("success");
       setCustomModalOpen(true);
-
-      // Atualizar lista de reservas após deletar (opcional)
+  
+      // --- Início da Correção ---
+      // 1. Busque todas as reservas novamente
       const responseReservas = await api.getUsuarioReservasById(idUsuario);
-      setReservas(responseReservas.data.reservas || []);
+  
+      // 2. Reaplique a lógica de filtragem de reservas futuras
+      function parseDataHora(dataStr, horaStr) {
+        const [dia, mes, ano] = dataStr.split("-");
+        const [hora, min, seg] = horaStr.split(":");
+        return new Date(
+          parseInt(ano),
+          parseInt(mes) - 1,
+          parseInt(dia),
+          parseInt(hora),
+          parseInt(min),
+          parseInt(seg)
+        );
+      }
+  
+      const agora = new Date();
+  
+      const reservasFuturasAtualizadas = (responseReservas.data.reservas || []).filter(
+        (r) => { // Use 'r' para não confundir com 'reserva' do argumento da função
+          const dataHoraInicio = parseDataHora(
+            r.data,
+            r.hora_inicio
+          );
+          return dataHoraInicio > agora;
+        }
+      );
+  
+      // 3. Defina as reservas filtradas no estado
+      setReservas(reservasFuturasAtualizadas);
+      // --- Fim da Correção ---
+  
     } catch (error) {
       console.error("Erro ao apagar reserva:", error);
       setCustomModalTitle("Erro");
@@ -202,6 +326,8 @@ function Perfil() {
                 setMostrarEdiçãoReserva(true);
               }}
               onApagarReserva={handleDeletarReserva}
+              onHistorico={handleAbrirHistorico}
+              onDeletadas={handleAbrirDeletadas}
             />
 
             {reservaSelecionada && (
@@ -218,6 +344,20 @@ function Perfil() {
               title={customModalTitle}
               message={customModalMessage}
               type={customModalType}
+            />
+
+            <HistoricoReservasModal
+              visible={mostrarHistorico}
+              reservas={historicoReservas}
+              salas={salasDisponiveis}
+              onClose={fecharModalHistorico}
+            />
+
+            <ReservasDeletadas
+              visible={mostrarDeletadas}
+              reservas={reservasDeletadas}
+              salas={salasDisponiveis}
+              onClose={handleFecharDeletadas}
             />
           </View>
         </View>

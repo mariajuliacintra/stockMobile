@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   View,
@@ -14,6 +14,8 @@ const ReservasUsuarioModal = ({
   visible,
   onClose,
   onApagarReserva,
+  onHistorico,
+  onDeletadas,
   reservas = [],
   onSelecionar,
 }) => {
@@ -89,10 +91,10 @@ const ReservasUsuarioModal = ({
             </ScrollView>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <TouchableOpacity onPress={onClose} style={styles.historicoButton}>
+              <TouchableOpacity onPress={onHistorico} style={styles.historicoButton}>
                 <Text style={styles.fecharText}>HISTÓRICO</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={onClose} style={styles.deletadasButton}>
+              <TouchableOpacity onPress={onDeletadas} style={styles.deletadasButton}>
                 <Text style={styles.fecharText}>DELETADAS</Text>
               </TouchableOpacity>
             </View>
