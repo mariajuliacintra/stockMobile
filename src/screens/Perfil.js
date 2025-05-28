@@ -154,19 +154,18 @@ function Perfil() {
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
       if (!idUsuarioStr) return;
-  
+
       const idUsuario = Number(idUsuarioStr);
       if (isNaN(idUsuario)) return;
-  
+
       const response = await api.getUsuarioHistoricoReservasDelecaobyId(
         idUsuario
       );
       // console.log(response.data); // Mantenha este log para depuração
-  
+
       // AQUI É A CORREÇÃO PRINCIPAL:
       // Acesse a propriedade 'historicoDelecao' do objeto de resposta
-      setReservasDeletadas(response.data.historicoDelecao || []); 
-  
+      setReservasDeletadas(response.data.historicoDelecao || []);
     } catch (error) {
       console.error("Erro ao buscar histórico de reservas deletadas:", error);
     }
@@ -176,9 +175,9 @@ function Perfil() {
       console.log(reserva);
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
       if (!idUsuarioStr) return;
-  
+
       const idUsuario = Number(idUsuarioStr);
-  
+
       if (isNaN(idUsuario)) {
         console.error("idUsuario não é um número válido");
         return;
@@ -190,18 +189,18 @@ function Perfil() {
         setCustomModalOpen(true);
         return;
       }
-  
+
       await api.deleteReserva(reserva.id_reserva, idUsuario);
-  
+
       setCustomModalTitle("Sucesso");
       setCustomModalMessage("Reserva apagada com sucesso!");
       setCustomModalType("success");
       setCustomModalOpen(true);
-  
+
       // --- Início da Correção ---
       // 1. Busque todas as reservas novamente
       const responseReservas = await api.getUsuarioReservasById(idUsuario);
-  
+
       // 2. Reaplique a lógica de filtragem de reservas futuras
       function parseDataHora(dataStr, horaStr) {
         const [dia, mes, ano] = dataStr.split("-");
@@ -215,23 +214,20 @@ function Perfil() {
           parseInt(seg)
         );
       }
-  
+
       const agora = new Date();
-  
-      const reservasFuturasAtualizadas = (responseReservas.data.reservas || []).filter(
-        (r) => { // Use 'r' para não confundir com 'reserva' do argumento da função
-          const dataHoraInicio = parseDataHora(
-            r.data,
-            r.hora_inicio
-          );
-          return dataHoraInicio > agora;
-        }
-      );
-  
+
+      const reservasFuturasAtualizadas = (
+        responseReservas.data.reservas || []
+      ).filter((r) => {
+        // Use 'r' para não confundir com 'reserva' do argumento da função
+        const dataHoraInicio = parseDataHora(r.data, r.hora_inicio);
+        return dataHoraInicio > agora;
+      });
+
       // 3. Defina as reservas filtradas no estado
       setReservas(reservasFuturasAtualizadas);
       // --- Fim da Correção ---
-  
     } catch (error) {
       console.error("Erro ao apagar reserva:", error);
       setCustomModalTitle("Erro");
@@ -241,6 +237,43 @@ function Perfil() {
     }
   };
 
+  const handleAtualizarUsuario = async () => {
+    try {
+      const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+      if (!idUsuarioStr) return;
+
+      const idUsuario = Number(idUsuarioStr);
+      if (isNaN(idUsuario)) {
+        setCustomModalTitle("Erro");
+        setCustomModalMessage("ID do usuário inválido.");
+        setCustomModalType("error");
+        setCustomModalOpen(true);
+        return;
+      }
+      const dadosAtualizados = {
+        nome: usuario.nome,
+        email: usuario.email,
+        senha: usuario.senha,
+      };
+
+      const response = await api.putAtualizarUsuario(idUsuario, dadosAtualizados);
+
+      if (response.status === 200) {
+        setCustomModalTitle("Sucesso");
+        setCustomModalMessage("Perfil atualizado com sucesso!");
+        setCustomModalType("success");
+        setCustomModalOpen(true);
+      } else {
+        throw new Error("Erro na atualização");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      setCustomModalTitle("Erro");
+      setCustomModalMessage("Não foi possível atualizar o perfil.");
+      setCustomModalType("error");
+      setCustomModalOpen(true);
+    }
+  };
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ImageBackground
@@ -265,13 +298,13 @@ function Perfil() {
             <Image source={logo} style={styles.logo} />
             <TextInput
               placeholder="nome"
-              editable={false}
+              onChangeText={(text) => setUsuario((u) => ({ ...u, nome: text }))}
               value={usuario.nome || ""}
               style={styles.textField}
             />
             <TextInput
               placeholder="e-mail"
-              editable={false}
+              onChangeText={(text) => setUsuario((u) => ({ ...u, email: text }))}
               value={usuario.email || ""}
               style={styles.textField}
             />
@@ -279,14 +312,14 @@ function Perfil() {
               placeholder="NIF"
               editable={false}
               value={usuario.NIF || ""}
-              style={styles.textField}
+              style={styles.nifTextField}
             />
 
             <View style={styles.passwordContainer}>
               <TextInput
                 secureTextEntry={!mostrarSenha}
                 placeholder="senha"
-                editable={false}
+                onChangeText={(text) => setUsuario((u) => ({ ...u, senha: text }))}
                 value={usuario.senha || ""}
                 style={styles.passwordInput}
               />
@@ -303,7 +336,7 @@ function Perfil() {
             </View>
             <TouchableOpacity
               style={styles.buttonAtualizar}
-              onPress={() => console.log("Atualizar Perfil")}
+              onPress={handleAtualizarUsuario}
             >
               <Text style={styles.buttonText}>Atualizar Perfil</Text>
             </TouchableOpacity>
@@ -449,6 +482,24 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "center",
     backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "transparent",
+    borderRadius: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    marginBottom: 10,
+    fontSize: 17,
+    color: "gray",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+  nifTextField: {
+    width: "100%",
+    height: 55,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    backgroundColor: "rgb(242, 242, 242)",
     borderWidth: 1,
     borderColor: "transparent",
     borderRadius: 10,
