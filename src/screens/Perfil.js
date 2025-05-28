@@ -32,6 +32,7 @@ function Perfil() {
   const [reservasDeletadas, setReservasDeletadas] = useState("");
   const [historicoReservas, setHistoricoReservas] = useState([]);
   const [salasDisponiveis, setSalasDisponiveis] = useState([]);
+  const [usuarioOriginal, setUsuarioOriginal] = useState(null);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
@@ -40,7 +41,7 @@ function Perfil() {
     NIF: "",
     senha: "",
   });
-
+  
   const [customModalOpen, setCustomModalOpen] = useState(false);
   const [customModalTitle, setCustomModalTitle] = useState("");
   const [customModalMessage, setCustomModalMessage] = useState("");
@@ -59,6 +60,7 @@ function Perfil() {
         }
         const responseUsuario = await api.getUsuarioById(idUsuario);
         setUsuario(responseUsuario.data.usuario);
+        setUsuarioOriginal(responseUsuario.data.usuario);
 
         const responseReservas = await api.getUsuarioReservasById(idUsuario);
 
@@ -241,7 +243,7 @@ function Perfil() {
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
       if (!idUsuarioStr) return;
-
+  
       const idUsuario = Number(idUsuarioStr);
       if (isNaN(idUsuario)) {
         setCustomModalTitle("Erro");
@@ -250,19 +252,36 @@ function Perfil() {
         setCustomModalOpen(true);
         return;
       }
+  
+      // Verificar se houve alteração
+      if (
+        usuario.nome === usuarioOriginal?.nome &&
+        usuario.email === usuarioOriginal?.email &&
+        usuario.senha === usuarioOriginal?.senha
+      ) {
+        setCustomModalTitle("Erro");
+        setCustomModalMessage("Nenhuma alteração detectada nos dados enviados!");
+        setCustomModalType("error");
+        setCustomModalOpen(true);
+        return;
+      }
+  
       const dadosAtualizados = {
         nome: usuario.nome,
         email: usuario.email,
         senha: usuario.senha,
       };
-
+  
       const response = await api.putAtualizarUsuario(idUsuario, dadosAtualizados);
-
+  
       if (response.status === 200) {
         setCustomModalTitle("Sucesso");
         setCustomModalMessage("Perfil atualizado com sucesso!");
         setCustomModalType("success");
         setCustomModalOpen(true);
+  
+        // Atualiza o original com os novos dados
+        setUsuarioOriginal({ ...usuario });
       } else {
         throw new Error("Erro na atualização");
       }
