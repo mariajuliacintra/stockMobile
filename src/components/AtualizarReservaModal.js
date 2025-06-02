@@ -53,7 +53,6 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
         console.error("Erro ao buscar usuário:", error);
       }
     };
-    console.log("Reserva recebida:", reserva);
     buscarIdUsuario();
 
     if (visible && reserva) {
@@ -142,7 +141,6 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
   const handleModalClose = useCallback(() => {
     setModalVisible(false);
     if (modalInfo.type === "success") {
-      navigation.navigate("Principal");
       onClose();
     }
   }, [modalInfo.type, navigation, onClose]); // Depende de valores externos

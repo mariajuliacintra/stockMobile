@@ -141,11 +141,6 @@ function Perfil() {
 
       const responseHistorico = await api.getHistoricoReservasById(idUsuario);
 
-      console.log(
-        "Dados do histórico de reservas da API:",
-        responseHistorico.data.historico
-      );
-
       setHistoricoReservas(responseHistorico.data.historico || []);
     } catch (error) {
       console.error("Erro ao buscar histórico de reservas:", error);
@@ -163,10 +158,7 @@ function Perfil() {
       const response = await api.getUsuarioHistoricoReservasDelecaobyId(
         idUsuario
       );
-      // console.log(response.data); // Mantenha este log para depuração
-
-      // AQUI É A CORREÇÃO PRINCIPAL:
-      // Acesse a propriedade 'historicoDelecao' do objeto de resposta
+      // Acessando a resposta do histórico de deleção
       setReservasDeletadas(response.data.historicoDelecao || []);
     } catch (error) {
       console.error("Erro ao buscar histórico de reservas deletadas:", error);
@@ -174,7 +166,6 @@ function Perfil() {
   };
   const handleDeletarReserva = async (reserva) => {
     try {
-      console.log(reserva);
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
       if (!idUsuarioStr) return;
 
