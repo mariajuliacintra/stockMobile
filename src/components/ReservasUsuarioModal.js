@@ -51,13 +51,19 @@ const ReservasUsuarioModal = ({
       <Modal visible={visible} transparent animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={styles.modalTitle}>Minhas Reservas</Text>
-            <TouchableOpacity onPress={onClose} >
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <Text style={styles.modalTitle}>Minhas Reservas</Text>
+              <TouchableOpacity onPress={onClose}>
                 <AntDesign name="close" size={24} color="red" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.scrollView}>
+            <ScrollView
+              style={[
+                reservas.length > 5 && { height: 250 }, // altura fixa se mais de 5 reservas
+              ]}
+            >
               {reservas.length > 0 ? (
                 reservas.map((reserva) => (
                   <View key={reserva.id_reserva} style={styles.itemReserva}>
@@ -72,7 +78,9 @@ const ReservasUsuarioModal = ({
                         {reserva.sala} - {reserva.data}
                       </Text>
                       <View style={{ flexDirection: "row" }}>
-                        <TouchableOpacity onPress={() => handleEditarReserva(reserva)}>
+                        <TouchableOpacity
+                          onPress={() => handleEditarReserva(reserva)}
+                        >
                           <FontAwesome name="pencil" size={24} color="black" />
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -90,11 +98,19 @@ const ReservasUsuarioModal = ({
               )}
             </ScrollView>
 
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <TouchableOpacity onPress={onHistorico} style={styles.historicoButton}>
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <TouchableOpacity
+                onPress={onHistorico}
+                style={styles.historicoButton}
+              >
                 <Text style={styles.fecharText}>HISTÓRICO</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={onDeletadas} style={styles.deletadasButton}>
+              <TouchableOpacity
+                onPress={onDeletadas}
+                style={styles.deletadasButton}
+              >
                 <Text style={styles.fecharText}>DELETADAS</Text>
               </TouchableOpacity>
             </View>
@@ -110,10 +126,16 @@ const ReservasUsuarioModal = ({
               Tem certeza que deseja apagar esta reserva?
             </Text>
             <View style={styles.confirmActions}>
-              <TouchableOpacity onPress={handleCancelDelete} style={styles.cancelarButton}>
+              <TouchableOpacity
+                onPress={handleCancelDelete}
+                style={styles.cancelarButton}
+              >
                 <Text style={styles.confirmar}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleConfirmApagar} style={styles.deleteButton}>
+              <TouchableOpacity
+                onPress={handleConfirmApagar}
+                style={styles.deleteButton}
+              >
                 <Text style={styles.confirmar}>Apagar</Text>
               </TouchableOpacity>
             </View>
@@ -143,9 +165,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
   },
-  scrollView: {
-    marginBottom: 10,
-  },
+  // scrollView: {
+  //   marginBottom: 5,
+  // },
   itemReserva: {
     padding: 10,
     borderBottomWidth: 1,
@@ -179,7 +201,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
-    fontSize:15,
+    fontSize: 15,
   },
   noReserva: {
     textAlign: "center",

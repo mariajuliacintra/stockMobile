@@ -41,7 +41,7 @@ function Perfil() {
     NIF: "",
     senha: "",
   });
-  
+
   const [customModalOpen, setCustomModalOpen] = useState(false);
   const [customModalTitle, setCustomModalTitle] = useState("");
   const [customModalMessage, setCustomModalMessage] = useState("");
@@ -79,16 +79,24 @@ function Perfil() {
 
         const agora = new Date();
 
+        // Ajusta para UTC-3 (Brasil, horário padrão)
+        const offsetHoras = -3;
+        const agoraAjustado = new Date(
+          agora.getTime() + offsetHoras * 60 * 60 * 1000
+        );
+
+        console.log("Hora ajustada:", agoraAjustado.toLocaleTimeString());
+
         const reservasFuturas = (responseReservas.data.reservas || []).filter(
           (reserva) => {
             const dataHoraInicio = parseDataHora(
               reserva.data,
               reserva.hora_inicio
             );
-            return dataHoraInicio > agora;
+            console.log(dataHoraInicio >= agora);
+            return dataHoraInicio >= agora;
           }
         );
-
         setReservas(reservasFuturas);
 
         // BUSCAR AS SALAS AQUI
@@ -215,7 +223,7 @@ function Perfil() {
       ).filter((r) => {
         // Use 'r' para não confundir com 'reserva' do argumento da função
         const dataHoraInicio = parseDataHora(r.data, r.hora_inicio);
-        return dataHoraInicio > agora;
+        return dataHoraInicio >= agora;
       });
 
       // 3. Defina as reservas filtradas no estado
@@ -234,7 +242,7 @@ function Perfil() {
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
       if (!idUsuarioStr) return;
-  
+
       const idUsuario = Number(idUsuarioStr);
       if (isNaN(idUsuario)) {
         setCustomModalTitle("Erro");
@@ -243,7 +251,7 @@ function Perfil() {
         setCustomModalOpen(true);
         return;
       }
-  
+
       // Verificar se houve alteração
       if (
         usuario.nome === usuarioOriginal?.nome &&
@@ -251,26 +259,31 @@ function Perfil() {
         usuario.senha === usuarioOriginal?.senha
       ) {
         setCustomModalTitle("Erro");
-        setCustomModalMessage("Nenhuma alteração detectada nos dados enviados!");
+        setCustomModalMessage(
+          "Nenhuma alteração detectada nos dados enviados!"
+        );
         setCustomModalType("error");
         setCustomModalOpen(true);
         return;
       }
-  
+
       const dadosAtualizados = {
         nome: usuario.nome,
         email: usuario.email,
         senha: usuario.senha,
       };
-  
-      const response = await api.putAtualizarUsuario(idUsuario, dadosAtualizados);
-  
+
+      const response = await api.putAtualizarUsuario(
+        idUsuario,
+        dadosAtualizados
+      );
+
       if (response.status === 200) {
         setCustomModalTitle("Sucesso");
         setCustomModalMessage("Perfil atualizado com sucesso!");
         setCustomModalType("success");
         setCustomModalOpen(true);
-  
+
         // Atualiza o original com os novos dados
         setUsuarioOriginal({ ...usuario });
       } else {
@@ -314,7 +327,9 @@ function Perfil() {
             />
             <TextInput
               placeholder="e-mail"
-              onChangeText={(text) => setUsuario((u) => ({ ...u, email: text }))}
+              onChangeText={(text) =>
+                setUsuario((u) => ({ ...u, email: text }))
+              }
               value={usuario.email || ""}
               style={styles.textField}
             />
@@ -329,7 +344,9 @@ function Perfil() {
               <TextInput
                 secureTextEntry={!mostrarSenha}
                 placeholder="senha"
-                onChangeText={(text) => setUsuario((u) => ({ ...u, senha: text }))}
+                onChangeText={(text) =>
+                  setUsuario((u) => ({ ...u, senha: text }))
+                }
                 value={usuario.senha || ""}
                 style={styles.passwordInput}
               />
