@@ -78,14 +78,11 @@ function Perfil() {
         }
 
         const agora = new Date();
-
         // Ajusta para UTC-3 (Brasil, horário padrão)
         const offsetHoras = -3;
         const agoraAjustado = new Date(
           agora.getTime() + offsetHoras * 60 * 60 * 1000
         );
-
-        console.log("Hora ajustada:", agoraAjustado.toLocaleTimeString());
 
         const reservasFuturas = (responseReservas.data.reservas || []).filter(
           (reserva) => {
@@ -93,8 +90,7 @@ function Perfil() {
               reserva.data,
               reserva.hora_inicio
             );
-            console.log(dataHoraInicio >= agora);
-            return dataHoraInicio >= agora;
+            return dataHoraInicio >= agoraAjustado;
           }
         );
         setReservas(reservasFuturas);

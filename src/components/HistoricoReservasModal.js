@@ -28,11 +28,15 @@ const formatarDataHora = (dataString) => {
   };
 };
 // NOVO: Adicione 'salas' como uma prop
-const HistoricoReservasModal = ({ visible, onClose, reservas = [], salas = []}) => {
-
+const HistoricoReservasModal = ({
+  visible,
+  onClose,
+  reservas = [],
+  salas = [],
+}) => {
   // Função auxiliar para encontrar o nome da sala pelo ID
   const getNomeSala = (idSala) => {
-    const salaEncontrada = salas.find(sala => sala.id_sala === idSala); // Assumindo que o objeto sala tem 'id_sala' e 'nome'
+    const salaEncontrada = salas.find((sala) => sala.id_sala === idSala); // Assumindo que o objeto sala tem 'id_sala' e 'nome'
     return salaEncontrada ? salaEncontrada.nome : "Sala Desconhecida"; // Assumindo que o nome da sala está na propriedade 'nome'
   };
 
@@ -49,16 +53,23 @@ const HistoricoReservasModal = ({ visible, onClose, reservas = [], salas = []}) 
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.scrollView}>
+          <ScrollView
+            style={[
+              reservas.length > 5 && { height: 200 }, // altura fixa se mais de 5 reservas
+            ]}
+          >
             {reservas.length > 0 ? (
               reservas.map((reserva, index) => {
-                const { data} = formatarDataHora(reserva.data);
+                const { data } = formatarDataHora(reserva.data);
                 const nomeDaSala = getNomeSala(reserva.fk_id_sala); // Use a função auxiliar para obter o nome
-                const key = reserva.id_log || reserva.data_hora_log || `${reserva.id_reserva}-${index}`;
+                const key =
+                  reserva.id_log ||
+                  reserva.data_hora_log ||
+                  `${reserva.id_reserva}-${index}`;
                 return (
                   <View key={key} style={styles.itemReserva}>
                     <Text>
-                      {nomeDaSala} - {data} 
+                      {nomeDaSala} - {data}
                     </Text>
                   </View>
                 );
@@ -90,9 +101,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
-  },
-  scrollView: {
     marginBottom: 10,
   },
   itemReserva: {

@@ -165,9 +165,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
   },
-  // scrollView: {
-  //   marginBottom: 5,
-  // },
   itemReserva: {
     padding: 10,
     borderBottomWidth: 1,

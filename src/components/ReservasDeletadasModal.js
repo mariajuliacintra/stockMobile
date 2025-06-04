@@ -48,7 +48,11 @@ const ReservasDeletadas = ({ visible, onClose, reservas = [], salas = [] }) => {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.scrollView}>
+          <ScrollView
+            style={[
+              reservas.length > 5 && { height: 200 }, // altura fixa se mais de 5 reservas
+            ]}
+          >
             {reservas.length > 0 ? (
               reservas.map((reserva) => {
                 const { data } = formatarDataHora(reserva.data_reserva); // usa data_reserva do backend
@@ -89,9 +93,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
-  },
-  scrollView: {
     marginBottom: 10,
   },
   itemReserva: {
