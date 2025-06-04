@@ -31,6 +31,14 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
 
   // Hook de navegação
   const navigation = useNavigation();
+  
+  const formatarData = useCallback((date) => {
+    if (!(date instanceof Date)) return "";
+    const dia = date.getDate().toString().padStart(2, "0");
+    const mes = (date.getMonth() + 1).toString().padStart(2, "0");
+    const ano = date.getFullYear();
+    return `${dia}/${mes}/${ano}`;
+  }, []);
 
   // Efeito para buscar o ID do usuário ao montar o componente
   useEffect(() => {
@@ -49,6 +57,7 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
 
     buscarIdUsuario();
   }, []); // Executa apenas uma vez na montagem
+
 
   // Função para ajustar a hora de fim automaticamente (1 hora após o início)
   const ajustarHoraFim = useCallback(() => {
@@ -133,7 +142,7 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
               onPress={() => setMostrarDatePicker(true)}
               style={styles.inputFake}
             >
-              <Text>{data.toLocaleDateString()}</Text>
+              <Text>{formatarData(data)}</Text>
             </TouchableOpacity>
             {mostrarDatePicker && (
               <DateTimePicker
