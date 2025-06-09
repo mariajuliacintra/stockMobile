@@ -18,9 +18,11 @@ import AtualizarReservaModal from "../components/AtualizarReservaModal";
 import HistoricoReservasModal from "../components/HistoricoReservasModal";
 import ReservasDeletadas from "../components/ReservasDeletadasModal";
 import CustomModal from "../components/CustomModal";
+import ConfirmarSenhaModal from "../components/ConfirmarSenhaModal"; // Importe o modal
+import ConfirmarDelecaoModal from "../components/ConfirmarDelecao";
 
 import logo from "../img/logo.png";
-import api from "../services/axios"; // Garanta que este import esteja correto
+import api from "../services/axios";
 
 function Perfil() {
   const [reservas, setReservas] = useState([]);
@@ -33,19 +35,21 @@ function Perfil() {
   const [historicoReservas, setHistoricoReservas] = useState([]);
   const [salasDisponiveis, setSalasDisponiveis] = useState([]);
   const [usuarioOriginal, setUsuarioOriginal] = useState(null);
-  const [mostrarSenha, setMostrarSenha] = useState(false);
   const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
     nome: "",
     email: "",
     NIF: "",
-    senha: "",
   });
 
   const [customModalOpen, setCustomModalOpen] = useState(false);
   const [customModalTitle, setCustomModalTitle] = useState("");
   const [customModalMessage, setCustomModalMessage] = useState("");
   const [customModalType, setCustomModalType] = useState("info");
+
+  const [showConfirmarSenhaModal, setShowConfirmarSenhaModal] = useState(false);
+  const [showConfirmarDelecaoModal, setShowConfirmarDelecaoModal] =
+    useState(false);
 
   useEffect(() => {
     const fetchDados = async () => {
@@ -59,8 +63,14 @@ function Perfil() {
           return;
         }
         const responseUsuario = await api.getUsuarioById(idUsuario);
-        setUsuario(responseUsuario.data.usuario);
+
         setUsuarioOriginal(responseUsuario.data.usuario);
+
+        setUsuario({
+          nome: responseUsuario.data.usuario.nome,
+          email: responseUsuario.data.usuario.email,
+          NIF: responseUsuario.data.usuario.NIF,
+        });
 
         const responseReservas = await api.getUsuarioReservasById(idUsuario);
 
@@ -78,7 +88,6 @@ function Perfil() {
         }
 
         const agora = new Date();
-        // Ajusta para UTC-3 (Brasil, horário padrão)
         const offsetHoras = -3;
         const agoraAjustado = new Date(
           agora.getTime() + offsetHoras * 60 * 60 * 1000
@@ -95,9 +104,7 @@ function Perfil() {
         );
         setReservas(reservasFuturas);
 
-        // BUSCAR AS SALAS AQUI
-        const responseSalas = await api.getSalas(); // Chame sua função API para obter as salas
-        // Assumindo que a resposta da sua API de salas vem em response.data.salas
+        const responseSalas = await api.getSalas();
         setSalasDisponiveis(responseSalas.data.salas || []);
       } catch (error) {
         console.error("Erro ao buscar dados iniciais:", error);
@@ -105,7 +112,7 @@ function Perfil() {
     };
 
     fetchDados();
-  }, []); // O array vazio [] garante que isso só execute uma vez ao montar o componente
+  }, []);
 
   const handleReservaSelecionada = (reserva) => {
     setReservaSelecionada(reserva);
@@ -162,12 +169,12 @@ function Perfil() {
       const response = await api.getUsuarioHistoricoReservasDelecaobyId(
         idUsuario
       );
-      // Acessando a resposta do histórico de deleção
       setReservasDeletadas(response.data.historicoDelecao || []);
     } catch (error) {
       console.error("Erro ao buscar histórico de reservas deletadas:", error);
     }
   };
+
   const handleDeletarReserva = async (reserva) => {
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
@@ -194,11 +201,8 @@ function Perfil() {
       setCustomModalType("success");
       setCustomModalOpen(true);
 
-      // --- Início da Correção ---
-      // 1. Busque todas as reservas novamente
       const responseReservas = await api.getUsuarioReservasById(idUsuario);
 
-      // 2. Reaplique a lógica de filtragem de reservas futuras
       function parseDataHora(dataStr, horaStr) {
         const [dia, mes, ano] = dataStr.split("-");
         const [hora, min, seg] = horaStr.split(":");
@@ -217,14 +221,11 @@ function Perfil() {
       const reservasFuturasAtualizadas = (
         responseReservas.data.reservas || []
       ).filter((r) => {
-        // Use 'r' para não confundir com 'reserva' do argumento da função
         const dataHoraInicio = parseDataHora(r.data, r.hora_inicio);
         return dataHoraInicio >= agora;
       });
 
-      // 3. Defina as reservas filtradas no estado
       setReservas(reservasFuturasAtualizadas);
-      // --- Fim da Correção ---
     } catch (error) {
       console.error("Erro ao apagar reserva:", error);
       setCustomModalTitle("Erro");
@@ -234,7 +235,13 @@ function Perfil() {
     }
   };
 
-  const handleAtualizarUsuario = async () => {
+  const handleAbrirConfirmacaoEdicao = () => {
+    setShowConfirmarSenhaModal(true);
+  };
+
+  const handleAtualizarUsuarioAposConfirmacao = async (dadosAtualizados, senhaDigitada) => {
+    setShowConfirmarSenhaModal(false); // Fecha o modal de confirmação
+
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
       if (!idUsuarioStr) return;
@@ -248,31 +255,13 @@ function Perfil() {
         return;
       }
 
-      // Verificar se houve alteração
-      if (
-        usuario.nome === usuarioOriginal?.nome &&
-        usuario.email === usuarioOriginal?.email &&
-        usuario.senha === usuarioOriginal?.senha
-      ) {
-        setCustomModalTitle("Erro");
-        setCustomModalMessage(
-          "Nenhuma alteração detectada nos dados enviados!"
-        );
-        setCustomModalType("error");
-        setCustomModalOpen(true);
-        return;
-      }
+      // IMPORTANTE: A validação da senha atual é feita no ConfirmarSenhaModal.
+      // Aqui você apenas envia os dados para atualização.
+      // Você pode adicionar a senhaDigitada aos dados atualizados para que a API possa fazer a validação final.
+      const dadosParaAPI = { ...dadosAtualizados, senhaAtual: senhaDigitada };
 
-      const dadosAtualizados = {
-        nome: usuario.nome,
-        email: usuario.email,
-        senha: usuario.senha,
-      };
 
-      const response = await api.putAtualizarUsuario(
-        idUsuario,
-        dadosAtualizados
-      );
+      const response = await api.putAtualizarUsuario(idUsuario, dadosParaAPI);
 
       if (response.status === 200) {
         setCustomModalTitle("Sucesso");
@@ -280,8 +269,20 @@ function Perfil() {
         setCustomModalType("success");
         setCustomModalOpen(true);
 
-        // Atualiza o original com os novos dados
-        setUsuarioOriginal({ ...usuario });
+        // Atualiza o estado local do Perfil com os novos dados
+        setUsuario((prev) => ({
+          ...prev,
+          nome: dadosAtualizados.nome,
+          email: dadosAtualizados.email,
+        }));
+
+        // Atualiza o usuarioOriginal para futuras comparações e validações de senha
+        setUsuarioOriginal((prev) => ({
+          ...prev,
+          nome: dadosAtualizados.nome,
+          email: dadosAtualizados.email,
+          senha: dadosAtualizados.senha || prev.senha, // Atualiza a senha original se uma nova foi fornecida
+        }));
       } else {
         throw new Error("Erro na atualização");
       }
@@ -293,6 +294,55 @@ function Perfil() {
       setCustomModalOpen(true);
     }
   };
+
+  const handleAbrirConfirmarDelecao = () => {
+    setShowConfirmarDelecaoModal(true);
+  };
+
+  const handleDeletarConta = async (senhaDigitada) => { // Recebe a senhaDigitada do modal
+    setShowConfirmarDelecaoModal(false); // Fecha o modal de confirmação de deleção
+    try {
+      const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+      if (!idUsuarioStr) {
+        setCustomModalTitle("Erro");
+        setCustomModalMessage("ID do usuário não encontrado.");
+        setCustomModalType("error");
+        setCustomModalOpen(true);
+        return;
+      }
+      const idUsuario = Number(idUsuarioStr);
+
+      // Verificação da senha antes de deletar a conta
+      const responseSenha = await api.verificarSenhaUsuario(idUsuario, { senha: senhaDigitada });
+
+      if (!responseSenha.data.valido) {
+        setCustomModalTitle("Erro de Confirmação");
+        setCustomModalMessage("Senha incorreta. Não foi possível deletar a conta.");
+        setCustomModalType("error");
+        setCustomModalOpen(true);
+        return;
+      }
+
+
+      const deleteResponse = await api.deleteUsuario(idUsuario);
+      setCustomModalTitle("Sucesso");
+      setCustomModalMessage(
+        deleteResponse.data.message || "Sua conta foi deletada com sucesso."
+      );
+      setCustomModalType("success");
+      setCustomModalOpen(true);
+      navigation.navigate("Login");
+    } catch (deleteError) {
+      console.error("Erro ao deletar conta:", deleteError);
+      const deleteErrorMessage =
+        deleteError.response?.data?.error || "Erro ao deletar sua conta.";
+      setCustomModalTitle("Erro");
+      setCustomModalMessage(deleteErrorMessage);
+      setCustomModalType("error");
+      setCustomModalOpen(true);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ImageBackground
@@ -317,17 +367,15 @@ function Perfil() {
             <Image source={logo} style={styles.logo} />
             <TextInput
               placeholder="nome"
-              onChangeText={(text) => setUsuario((u) => ({ ...u, nome: text }))}
               value={usuario.nome || ""}
               style={styles.textField}
+              editable={false}
             />
             <TextInput
               placeholder="e-mail"
-              onChangeText={(text) =>
-                setUsuario((u) => ({ ...u, email: text }))
-              }
               value={usuario.email || ""}
               style={styles.textField}
+              editable={false}
             />
             <TextInput
               placeholder="NIF"
@@ -336,34 +384,21 @@ function Perfil() {
               style={styles.nifTextField}
             />
 
-            <View style={styles.passwordContainer}>
-              <TextInput
-                secureTextEntry={!mostrarSenha}
-                placeholder="senha"
-                onChangeText={(text) =>
-                  setUsuario((u) => ({ ...u, senha: text }))
-                }
-                value={usuario.senha || ""}
-                style={styles.passwordInput}
-              />
+            <View style={{ flexDirection: "row" }}>
               <TouchableOpacity
-                onPress={() => setMostrarSenha((prev) => !prev)}
-                style={styles.visibilityButton}
+                style={styles.buttonAtualizar}
+                onPress={handleAbrirConfirmacaoEdicao}
               >
-                <MaterialIcons
-                  name={mostrarSenha ? "visibility-off" : "visibility"}
-                  size={20}
-                  color="gray"
-                />
+                <Text style={styles.buttonText}>Atualizar Perfil</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.buttonDeletar}
+                onPress={handleAbrirConfirmarDelecao}
+              >
+                <Text style={styles.buttonText}>Deletar Perfil</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.buttonAtualizar}
-              onPress={handleAtualizarUsuario}
-            >
-              <Text style={styles.buttonText}>Atualizar Perfil</Text>
-            </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.buttonMinhasReservas}
               onPress={() => setMostrarListaReservas(true)}
@@ -414,6 +449,20 @@ function Perfil() {
               reservas={reservasDeletadas}
               salas={salasDisponiveis}
               onClose={handleFecharDeletadas}
+            />
+
+            <ConfirmarSenhaModal
+              visible={showConfirmarSenhaModal}
+              onClose={() => setShowConfirmarSenhaModal(false)}
+              usuarioDados={usuario}
+              onConfirm={handleAtualizarUsuarioAposConfirmacao}
+            />
+
+            <ConfirmarDelecaoModal
+              visible={showConfirmarDelecaoModal}
+              onClose={() => setShowConfirmarDelecaoModal(false)}
+              // Removido currentPassword daqui, pois a senha digitada será passada no onConfirm do modal
+              onConfirm={handleDeletarConta}
             />
           </View>
         </View>
@@ -486,25 +535,7 @@ const styles = StyleSheet.create({
   textField: {
     width: "100%",
     height: 55,
-    backgroundColor: "white",
-    borderWidth: 1,
-    borderColor: "transparent",
-    borderRadius: 10,
-    paddingLeft: 10,
-    paddingRight: 10,
-    marginBottom: 10,
-    fontSize: 17,
-    color: "gray",
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 10,
-  },
-  passwordContainer: {
-    width: "100%",
-    height: 55,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    backgroundColor: "white",
+    backgroundColor: "rgb(242, 242, 242)", // Cor de fundo para indicar que não é editável
     borderWidth: 1,
     borderColor: "transparent",
     borderRadius: 10,
@@ -523,6 +554,24 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "center",
     backgroundColor: "rgb(242, 242, 242)",
+    borderWidth: 1,
+    borderColor: "transparent",
+    borderRadius: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    marginBottom: 10,
+    fontSize: 17,
+    color: "gray",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+  },
+  passwordContainer: {
+    width: "100%",
+    height: 55,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    backgroundColor: "white",
     borderWidth: 1,
     borderColor: "transparent",
     borderRadius: 10,
@@ -561,6 +610,17 @@ const styles = StyleSheet.create({
   },
   buttonAtualizar: {
     marginTop: 16,
+    backgroundColor: "rgba(255, 0, 0, 1)",
+    width: 180,
+    backgroundColor: "rgb(199, 0, 0)",
+    width: "50%",
+    height: 45,
+    borderRadius: 15,
+    alignItems: "center",
+  },
+  buttonDeletar: {
+    marginTop: 16,
+    marginLeft: 10,
     backgroundColor: "rgba(255, 0, 0, 1)",
     width: 180,
     backgroundColor: "rgb(199, 0, 0)",

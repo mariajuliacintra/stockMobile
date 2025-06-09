@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useState } from "react";
+
 import {
   Image,
   ImageBackground,
@@ -10,13 +10,20 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from "react-native";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/axios";
+
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import CustomModal from "../components/CustomModal";
+
 import * as SecureStore from "expo-secure-store";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width, height } = Dimensions.get("window");
 
 export default function Cadastro() {
   const navigation = useNavigation();
@@ -27,10 +34,11 @@ export default function Cadastro() {
     senha: "",
     showSenha: true,
   });
+  const [confirmarSenha, setConfirmarSenha] = useState(""); // Novo estado para confirmarSenha
 
-  const [modalVisible, setModalVisible] = useState(false); // Controle de visibilidade do modal
-  const [modalMessage, setModalMessage] = useState(""); // Mensagem do modal
-  const [modalType, setModalType] = useState("info"); // Tipo do modal ('success', 'error')
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState("info");
 
   async function armazenarDados(idUsuario, token) {
     try {
@@ -42,26 +50,35 @@ export default function Cadastro() {
   }
 
   async function handleCadastro() {
-    await api.postCadastro(usuario).then(
+    // Remove o campo `showSenha` antes de enviar
+    const usuarioParaEnviar = {
+      nome: usuario.nome,
+      email: usuario.email,
+      NIF: usuario.NIF,
+      senha: usuario.senha,
+      confirmarSenha: confirmarSenha,
+    };
+
+  
+    await api.postCadastro(usuarioParaEnviar).then(
       (response) => {
         setModalMessage(response.data.message);
         setModalType("success");
-        setModalVisible(true); // Exibe o modal de sucesso
-
-        const idUsuario = response.data.usuario.id_usuario;  // Extrai o id_usuario da resposta
-        const token = response.data.token;  // Extrai o token da resposta
+        setModalVisible(true);
   
-        // Armazena o id e o token no SecureStorage
-        armazenarDados(idUsuario, token);  
-
+        const idUsuario = response.data.usuario.id_usuario;
+        const token = response.data.token;
+  
+        armazenarDados(idUsuario, token);
+  
         setTimeout(() => {
           navigation.navigate("Principal");
-        }, 700); // Aguarda o modal ser fechado antes de navegar
+        }, 700);
       },
       (error) => {
-        setModalMessage(error.response.data.error);
+        setModalMessage(error.response?.data?.error || "Erro ao cadastrar.");
         setModalType("error");
-        setModalVisible(true); // Exibe o modal de erro
+        setModalVisible(true);
       }
     );
   }
@@ -76,12 +93,7 @@ export default function Cadastro() {
         <Header />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-          }}
+          style={styles.keyboardAvoidingView}
         >
           <View style={styles.body}>
             <View style={styles.form}>
@@ -93,6 +105,7 @@ export default function Cadastro() {
                   setUsuario({ ...usuario, nome: value });
                 }}
                 style={styles.input}
+                placeholderTextColor="gray"
               />
               <TextInput
                 placeholder=" e-mail"
@@ -101,6 +114,7 @@ export default function Cadastro() {
                   setUsuario({ ...usuario, email: value });
                 }}
                 style={styles.input}
+                placeholderTextColor="gray"
               />
               <TextInput
                 placeholder=" NIF"
@@ -109,6 +123,7 @@ export default function Cadastro() {
                   setUsuario({ ...usuario, NIF: value });
                 }}
                 style={styles.input}
+                placeholderTextColor="gray"
               />
               <View style={styles.senhaForm}>
                 <TextInput
@@ -119,19 +134,47 @@ export default function Cadastro() {
                   onChangeText={(value) => {
                     setUsuario({ ...usuario, senha: value });
                   }}
+                  placeholderTextColor="gray"
                 />
                 <TouchableOpacity
                   onPress={() =>
                     setUsuario({ ...usuario, showSenha: !usuario.showSenha })
                   }
+                  style={styles.eyeIcon}
                 >
                   <Ionicons
                     name={usuario.showSenha ? "eye-off" : "eye"}
-                    size={24}
+                    size={width * 0.06}
                     color="gray"
                   />
                 </TouchableOpacity>
               </View>
+
+              {/* Novo campo para confirmar senha */}
+              <View style={styles.senhaForm}>
+                <TextInput
+                  style={styles.inputSenha}
+                  placeholder=" confirmar senha"
+                  value={confirmarSenha}
+                  secureTextEntry={usuario.showSenha} // Use o mesmo showSenha para ambos
+                  onChangeText={(value) => setConfirmarSenha(value)}
+                  placeholderTextColor="gray"
+                />
+                <TouchableOpacity
+                  onPress={() =>
+                    setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+                  }
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={usuario.showSenha ? "eye-off" : "eye"}
+                    size={width * 0.06}
+                    color="gray"
+                  />
+                </TouchableOpacity>
+              </View>
+              {/* Fim do novo campo */}
+
               <TouchableOpacity
                 onPress={handleCadastro}
                 style={styles.buttonCadastrar}
@@ -150,13 +193,12 @@ export default function Cadastro() {
         <Footer />
       </View>
 
-      {/* Modal de feedback */}
       <CustomModal
         open={modalVisible}
-        onClose={() => setModalVisible(false)} // Fecha o modal ao clicar no botão
+        onClose={() => setModalVisible(false)}
         title={modalType === "success" ? "Cadastro Concluído" : "Erro"}
         message={modalMessage}
-        type={modalType} // Determina o tipo do modal: sucesso ou erro
+        type={modalType}
       />
     </ImageBackground>
   );
@@ -174,15 +216,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: "100%",
   },
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+  },
   body: {
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
+    flex: 1,
   },
   form: {
-    width: "70%",
-    height: "auto",
-    paddingVertical: 15,
+    width: width * 0.82,
+    height: height * 0.65,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(255, 238, 238, 0.82)",
@@ -192,66 +240,72 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     resizeMode: "contain",
-    width: "70%",
-    height: "12%",
-    marginBottom: "8%",
-    marginTop: "2%",
+    width: width * 0.6,
+    height: height * 0.08,
+    marginBottom: height * 0.02,
+    marginTop: height * 0.01,
     borderRadius: 8,
     borderColor: "white",
     borderWidth: 4,
   },
   input: {
     width: "85%",
-    height: "9.5%",
+    height: height * 0.055,
     borderWidth: 0,
-    marginBottom: 20,
-    paddingHorizontal: 10,
+    marginBottom: height * 0.015,
+    paddingHorizontal: width * 0.025,
     borderRadius: 12,
     backgroundColor: "white",
+    fontSize: width * 0.04,
+    color: "#333",
   },
   inputSenha: {
     flex: 1,
+    fontSize: width * 0.04,
+    color: "#333",
   },
   senhaForm: {
     flexDirection: "row",
     alignItems: "center",
-    alignItems: "center",
     width: "85%",
-    height: "9.5%",
+    height: height * 0.055,
     backgroundColor: "white",
     borderRadius: 12,
-    marginBottom: 20,
-    paddingHorizontal: 10,
+    marginBottom: height * 0.015,
+    paddingHorizontal: width * 0.025,
+  },
+  eyeIcon: {
+    padding: width * 0.01,
   },
   buttonCadastrar: {
     backgroundColor: "rgb(250, 24, 24)",
-    paddingVertical: 10,
-    paddingHorizontal: 22,
+    paddingVertical: height * 0.018,
+    paddingHorizontal: width * 0.004,
     borderRadius: 8,
     borderWidth: 0,
     alignItems: "center",
-    margin: 5,
-    marginBottom: 2,
+    margin: width * 0.01,
+    marginTop: height * 0.01,
+    width: width * 0.28,
   },
   textButtonCadastrar: {
-    fontSize: 16,
+    fontSize: width * 0.04,
     color: "white",
-    fontWeight: 700,
+    fontWeight: "700",
   },
   buttonToLogin: {
     backgroundColor: "transparent",
-    paddingVertical: 5,
-    paddingHorizontal: 20,
+    paddingVertical: height * 0.01,
+    paddingHorizontal: width * 0.04,
     borderRadius: 8,
     borderWidth: 0,
     alignItems: "center",
-    marginTop: 10,
-    color: "white",
+    marginTop: height * 0.01,
   },
   textButtonToLogin: {
-    fontSize: 15.5,
+    fontSize: width * 0.04,
     color: "rgb(152, 0, 0)",
-    fontWeight: 600,
+    fontWeight: "600",
     borderBottomWidth: 1.3,
     borderBottomColor: "rgb(152, 0, 0)",
   },

@@ -22,18 +22,20 @@ api.interceptors.request.use(
 
 const sheets = {
   postLogin: (usuario) => api.post("login/", usuario),
-  getPerfil: (usuario) => api.get("/usuario/perfil/:id_usuario", usuario),
+  getPerfil: (id_usuario) => api.get(`usuario/perfil/${id_usuario}`),
   postCadastro: (usuario) => api.post("cadastro/", usuario),
-  getSalas: (sala) => api.get("salas/", sala),
+  getSalas: () => api.get("salas"),
   getSalasDisponivelHorario: (sala) => api.post(`salasdisponivelhorario/`, sala),
   getUsuarioById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}`),
   getUsuarioReservasById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}/reservas`),
+  verificarSenhaUsuario: (id_usuario, confirmarSenha) => api.post(`usuario/verificarsenha/${id_usuario}`, confirmarSenha),
   postReserva: (reserva) => api.post("reserva/", reserva),
   putAtualizarReserva: (id_reserva, reservaAtualizada) => api.put(`/reserva/${id_reserva}`, reservaAtualizada),
   putAtualizarUsuario:(id_usuario, dadosAtualizados) => api.put(`/usuario/${id_usuario}`, dadosAtualizados),
   deleteReserva: (id_reserva, id_usuario) => api.delete(`reserva/${id_reserva}/${id_usuario}`),
   getHistoricoReservasById: (id_usuario) => api.get(`/usuario/historico/${id_usuario}`),
   getUsuarioHistoricoReservasDelecaobyId: (id_usuario) => api.get(`/usuario/historico/delecao/${id_usuario}`),
+  deleteUsuario: (id_usuario) => api.delete(`/usuario/${id_usuario}`),
 };
 
 
