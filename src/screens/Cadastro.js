@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import {
   Image,
   ImageBackground,
@@ -16,9 +15,9 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/axios";
 
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import CustomModal from "../components/CustomModal";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
+import CustomModal from "../components/mod/CustomModal";
 
 import * as SecureStore from "expo-secure-store";
 import { Ionicons } from "@expo/vector-icons";

@@ -10,16 +10,13 @@ import {
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import CustomModal from "./CustomModal";
 import * as SecureStore from "expo-secure-store";
-import api from "../services/axios";
+import api from "../../services/axios";
 
-const ConfirmarDelecaoModal = ({
-  visible,
-  onClose,
-  onConfirm, 
-}) => {
+const ConfirmarDelecaoModal = ({ visible, onClose, onConfirm }) => {
   const [senhaDigitada, setSenhaDigitada] = useState("");
   const [mostrarSenhaDigitada, setMostrarSenhaDigitada] = useState(false);
-  // Removi o estado `EtapaConfirmacao` pois ele não é necessário para este modal de uma etapa.
+  const [modalConfirmarExclusao, setModalConfirmarExclusao] = useState(false);
+
   const [modalInfo, setModalInfo] = useState({
     type: "info",
     title: "",
@@ -29,12 +26,12 @@ const ConfirmarDelecaoModal = ({
 
   useEffect(() => {
     if (visible) {
-      setSenhaDigitada(""); // Limpa a senha digitada ao abrir o modal
+      setSenhaDigitada("");
       setMostrarSenhaDigitada(false);
     }
   }, [visible]);
 
-  const handleConfirmar = async () => {
+  const handleConfirmarSenha = async () => {
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
       const idUsuario = Number(idUsuarioStr);
@@ -49,16 +46,12 @@ const ConfirmarDelecaoModal = ({
         return;
       }
 
-      // 1. Verificar a senha atual com a API
       const response = await api.verificarSenhaUsuario(idUsuario, {
         senha: senhaDigitada,
       });
 
       if (response.data.valido) {
-        // Se a senha estiver correta, chame a função onConfirm do componente pai
-        // passando a senha digitada.
-        onConfirm(senhaDigitada);
-        onClose(); // Fecha o modal após a confirmação bem-sucedida
+        setModalConfirmarExclusao(true); // Abre segundo modal de confirmação
       } else {
         setModalInfo({
           type: "error",
@@ -68,28 +61,33 @@ const ConfirmarDelecaoModal = ({
         setIsCustomModalVisible(true);
       }
     } catch (error) {
-      console.error("Erro ao verificar senha para deleção:", error); // Log mais específico
       setModalInfo({
         type: "error",
         title: "Erro",
         message:
           "Erro ao verificar a senha. Tente novamente mais tarde. " +
-          (error.response?.data?.error || ""), // Adiciona mensagem de erro do backend se disponível
+          (error.response?.data?.error || ""),
       });
       setIsCustomModalVisible(true);
     }
   };
 
+  const handleDeletarUsuario = () => {
+    setModalConfirmarExclusao(false);
+    onClose(); // Fecha o modal principal
+    onConfirm(senhaDigitada); // Chama função de deleção
+    setModalConfirmarExclusao(false);
+
+  };
+
   return (
     <>
+      {/* Modal de senha */}
       <Modal visible={visible} transparent animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.title}>
-              Para confirmar a exclusão do seu perfil, digite sua senha:
-            </Text>
-            <Text style={styles.SubTitle}>
-              Suas reservas serão deletadas automaticamente!
+              Confirmar senha atual
             </Text>
             <View style={styles.inputContainer}>
               <TextInput
@@ -117,8 +115,39 @@ const ConfirmarDelecaoModal = ({
               >
                 <Text style={styles.buttonText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={handleConfirmar}>
-                <Text style={styles.buttonText}>Confirmar</Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleConfirmarSenha}
+              >
+                <Text style={styles.buttonText}>Continuar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal final de confirmação */}
+      <Modal visible={modalConfirmarExclusao} transparent animationType="fade">
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.title}>
+              Confirmação de Deleção
+            </Text>
+            <Text style={styles.SubTitle}>
+              Tem certeza que deseja deletar sua conta? Essa ação é irreversível e removerá suas reservas.
+            </Text>
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalConfirmarExclusao(false)}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleDeletarUsuario}
+              >
+                <Text style={styles.buttonText}>Excluir</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -156,7 +185,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-  SubTitle:{
+  SubTitle: {
     fontSize: 15,
     marginBottom: 20,
     textAlign: "center",

@@ -12,8 +12,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import * as SecureStore from "expo-secure-store";
-import ReservarModal from "../components/ReservarModal";
-import CustomModal from "../components/CustomModal";
+import ReservarModal from "../components/mod/ReservarModal";
+import CustomModal from "../components/mod/CustomModal";
 import api from "../services/axios";
 
 function Principal({ navigation }) {

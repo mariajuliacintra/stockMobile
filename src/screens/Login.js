@@ -11,12 +11,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
 import api from "../services/axios";
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
-import CustomModal from "../components/CustomModal";
+import CustomModal from "../components/mod/CustomModal";
 
 export default function Login() {
   const navigation = useNavigation();

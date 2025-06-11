@@ -10,7 +10,7 @@ import {
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import CustomModal from "./CustomModal";
 import * as SecureStore from "expo-secure-store";
-import api from "../services/axios";
+import api from "../../services/axios";
 
 const ConfirmarSenhaModal = ({
   visible,
@@ -85,7 +85,7 @@ const ConfirmarSenhaModal = ({
         setIsCustomModalVisible(true);
       }
     } catch (error) {
-      console.error("Erro ao verificar senha:", error);
+      console.log("Erro ao verificar senha:", error);
       setModalInfo({
         type: "error",
         title: "Erro",
@@ -292,7 +292,7 @@ const ConfirmarSenhaModal = ({
                     style={[styles.button, styles.cancelButton]}
                     onPress={() => setEtapaConfirmacao(true)}
                   >
-                    <Text style={styles.buttonText}>Voltar</Text>
+                    <Text style={styles.buttonText}>Cancelar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.button}

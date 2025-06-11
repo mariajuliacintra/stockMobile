@@ -13,13 +13,13 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "@react-navigation/native";
 
-import ReservasUsuarioModal from "../components/ReservasUsuarioModal";
-import AtualizarReservaModal from "../components/AtualizarReservaModal";
-import HistoricoReservasModal from "../components/HistoricoReservasModal";
-import ReservasDeletadas from "../components/ReservasDeletadasModal";
-import CustomModal from "../components/CustomModal";
-import ConfirmarSenhaModal from "../components/ConfirmarSenhaModal"; // Importe o modal
-import ConfirmarDelecaoModal from "../components/ConfirmarDelecao";
+import ReservasUsuarioModal from "../components/mod/ReservasUsuarioModal";
+import AtualizarReservaModal from "../components/mod/AtualizarReservaModal";
+import HistoricoReservasModal from "../components/mod/HistoricoReservasModal";
+import ReservasDeletadas from "../components/mod/ReservasDeletadasModal";
+import CustomModal from "../components/mod/CustomModal";
+import ConfirmarSenhaModal from "../components/mod/ConfirmarSenhaModal"; // Importe o modal
+import ConfirmarDelecaoModal from "../components/mod/ConfirmarDelecao";
 
 import logo from "../img/logo.png";
 import api from "../services/axios";
@@ -154,7 +154,8 @@ function Perfil() {
 
       setHistoricoReservas(responseHistorico.data.historico || []);
     } catch (error) {
-      console.error("Erro ao buscar histórico de reservas:", error);
+      // console.error("Erro ao buscar histórico de reservas:", error);
+      console.log(error);
     }
   };
 
