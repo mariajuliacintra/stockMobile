@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getToday } from "../utils/dateUtils";
 import api from "../services/axios";
@@ -14,7 +8,6 @@ import * as SecureStore from "expo-secure-store";
 import CustomModal from "./CustomModal";
 
 const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
-
   if (!reserva) {
     console.error("Reserva inválida:", reserva);
     return;
@@ -34,7 +27,11 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
 
   // Estados para o modal de feedback
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalInfo, setModalInfo] = useState({ type: "success", title: "", message: "" });
+  const [modalInfo, setModalInfo] = useState({
+    type: "success",
+    title: "",
+    message: "",
+  });
 
   // Hook de navegação
   const navigation = useNavigation();
@@ -119,7 +116,10 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
     };
 
     try {
-      const response = await api.putAtualizarReserva(reserva.id_reserva, dadosReserva);
+      const response = await api.putAtualizarReserva(
+        reserva.id_reserva,
+        dadosReserva
+      );
       setModalInfo({
         type: "success",
         title: "Sucesso",
@@ -135,7 +135,16 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
       setModalVisible(true);
       console.log(error);
     }
-  }, [ajustarHoraFim, data, formatarHoraComSegundosZero, horaFim, horaInicio, idUsuario, visible, reserva]); // Depende de todos os valores usados dentro
+  }, [
+    ajustarHoraFim,
+    data,
+    formatarHoraComSegundosZero,
+    horaFim,
+    horaInicio,
+    idUsuario,
+    visible,
+    reserva,
+  ]); // Depende de todos os valores usados dentro
 
   // Função para lidar com o fechamento do modal de feedback
   const handleModalClose = useCallback(() => {
@@ -148,7 +157,6 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
   return (
     <>
       <Modal visible={visible} transparent animationType="fade">
-
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.title}>Atualizar Reserva</Text>

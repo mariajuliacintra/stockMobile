@@ -15,8 +15,7 @@ import api from "../services/axios";
 const ConfirmarDelecaoModal = ({
   visible,
   onClose,
-  onConfirm, // Esta função será chamada com a senhaDigitada
-  // A prop currentPassword foi removida daqui, pois não é utilizada
+  onConfirm, 
 }) => {
   const [senhaDigitada, setSenhaDigitada] = useState("");
   const [mostrarSenhaDigitada, setMostrarSenhaDigitada] = useState(false);
@@ -89,6 +88,9 @@ const ConfirmarDelecaoModal = ({
             <Text style={styles.title}>
               Para confirmar a exclusão do seu perfil, digite sua senha:
             </Text>
+            <Text style={styles.SubTitle}>
+              Suas reservas serão deletadas automaticamente!
+            </Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
@@ -152,6 +154,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 20,
     fontWeight: "bold",
+    textAlign: "center",
+  },
+  SubTitle:{
+    fontSize: 15,
+    marginBottom: 20,
     textAlign: "center",
   },
   inputContainer: {

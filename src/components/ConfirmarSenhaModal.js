@@ -135,8 +135,7 @@ const ConfirmarSenhaModal = ({
     const dadosParaAtualizar = {
       nome: nomeEditado,
       email: emailEditado,
-      // Se estiver editando a senha, enviamos a nova senha, caso contrário, não enviamos a senha para o backend
-      // para evitar re-hashear senhas já hasheadas sem necessidade.
+      // adicionar o campo senha ao objeto dadosParaAtualizar somente se editandoSenha for verdadeiro
       ...(editandoSenha && { senha: novaSenha }),
     };
 

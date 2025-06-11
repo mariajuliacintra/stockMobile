@@ -34,7 +34,7 @@ function Perfil() {
   const [reservasDeletadas, setReservasDeletadas] = useState("");
   const [historicoReservas, setHistoricoReservas] = useState([]);
   const [salasDisponiveis, setSalasDisponiveis] = useState([]);
-  const [usuarioOriginal, setUsuarioOriginal] = useState(null);
+  const [usuarioOriginal, setUsuarioOriginal] = useState("null");
   const navigation = useNavigation();
   const [usuario, setUsuario] = useState({
     nome: "",
@@ -299,7 +299,7 @@ function Perfil() {
     setShowConfirmarDelecaoModal(true);
   };
 
-  const handleDeletarConta = async (senhaDigitada) => { // Recebe a senhaDigitada do modal
+  const handleDeletarConta = async () => { 
     setShowConfirmarDelecaoModal(false); // Fecha o modal de confirmação de deleção
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
@@ -311,17 +311,6 @@ function Perfil() {
         return;
       }
       const idUsuario = Number(idUsuarioStr);
-
-      // Verificação da senha antes de deletar a conta
-      const responseSenha = await api.verificarSenhaUsuario(idUsuario, { senha: senhaDigitada });
-
-      if (!responseSenha.data.valido) {
-        setCustomModalTitle("Erro de Confirmação");
-        setCustomModalMessage("Senha incorreta. Não foi possível deletar a conta.");
-        setCustomModalType("error");
-        setCustomModalOpen(true);
-        return;
-      }
 
 
       const deleteResponse = await api.deleteUsuario(idUsuario);
