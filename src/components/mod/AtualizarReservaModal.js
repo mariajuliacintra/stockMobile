@@ -79,9 +79,8 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
   }, [reserva, visible]); // Executa apenas uma vez na montagem
 
   const formatarData = (data) => {
-    if (!(data instanceof Date)) return "";
-    return data.toLocaleDateString("pt-BR");
-  };
+    if (!(data instanceof Date)) return ""; // verifica se o parâmetro data não é uma instância de Date
+    return data.toLocaleDateString("pt-BR"); // Se data for uma data válida
 
   // Função para ajustar a hora de fim automaticamente (1 hora após o início)
   const ajustarHoraFim = useCallback(() => {
@@ -302,6 +301,8 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
-});
+})
+
+}
 
 export default AtualizarReservaModal;
