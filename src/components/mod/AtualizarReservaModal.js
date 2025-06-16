@@ -81,7 +81,7 @@ const AtualizarReservaModal = ({ visible, onClose, reserva }) => {
   const formatarData = (data) => {
     if (!(data instanceof Date)) return ""; // verifica se o parâmetro data não é uma instância de Date
     return data.toLocaleDateString("pt-BR"); // Se data for uma data válida
-
+  }
   // Função para ajustar a hora de fim automaticamente (1 hora após o início)
   const ajustarHoraFim = useCallback(() => {
     setHoraFim(new Date(horaInicio.getTime() + 60 * 60 * 1000));
@@ -303,6 +303,6 @@ const styles = StyleSheet.create({
   },
 })
 
-}
+
 
 export default AtualizarReservaModal;
