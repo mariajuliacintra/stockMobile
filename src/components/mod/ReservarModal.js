@@ -1,27 +1,26 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getToday } from "../../utils/dateUtils";
 import api from "../../services/axios";
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import CustomModal from "./CustomModal";
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
+
+const { width, height } = Dimensions.get("window");
 
 const ReservarModal = ({ isOpen, onClose, idSala }) => {
-  // Estados para data e hora
   const [data, setData] = useState(new Date());
   const [horaInicio, setHoraInicio] = useState(new Date());
-  const [horaFim, setHoraFim] = useState(new Date());
+  const [horaFim, setHoraFim] = useState(new Date(new Date().getTime() + 60 * 60 * 1000));
 
-  // Estados para controlar a visibilidade dos pickers
   const [mostrarDatePicker, setMostrarDatePicker] = useState(false);
   const [mostrarStartTimePicker, setMostrarStartTimePicker] = useState(false);
   const [mostrarEndTimePicker, setMostrarEndTimePicker] = useState(false);
 
-  // Estado para o ID do usuário
   const [idUsuario, setIdUsuario] = useState("");
 
-  // Estados para o modal de feedback
   const [modalVisible, setModalVisible] = useState(false);
   const [modalInfo, setModalInfo] = useState({
     type: "success",
@@ -29,10 +28,9 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
     message: "",
   });
 
-  // Hook de navegação
   const navigation = useNavigation();
-  
-  const formatarData = useCallback((date) => {
+
+  const formatarDataExibicao = useCallback((date) => {
     if (!(date instanceof Date)) return "";
     const dia = date.getDate().toString().padStart(2, "0");
     const mes = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -40,31 +38,36 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
     return `${dia}/${mes}/${ano}`;
   }, []);
 
-  // Efeito para buscar o ID do usuário ao montar o componente
+  const formatarHoraExibicao = useCallback((date) => {
+    if (!(date instanceof Date)) {
+      return "";
+    }
+    const horas = date.getHours().toString().padStart(2, "0");
+    const minutos = date.getMinutes().toString().padStart(2, "0");
+    return `${horas}:${minutos}`;
+  }, []);
+
   useEffect(() => {
     const buscarIdUsuario = async () => {
       try {
         const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
         if (idUsuarioStr) {
-          const idUsuario = Number(idUsuarioStr);
-          const response = await api.getUsuarioById(idUsuario);
+          const id = Number(idUsuarioStr);
+          const response = await api.getUsuarioById(id);
           setIdUsuario(response.data.usuario.id_usuario);
         }
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
       }
     };
-
     buscarIdUsuario();
-  }, []); // Executa apenas uma vez na montagem
+  }, []);
 
+  const ajustarHoraFim = useCallback((newHoraInicio) => {
+    const adjustedTime = new Date(newHoraInicio.getTime() + 60 * 60 * 1000);
+    setHoraFim(adjustedTime);
+  }, []);
 
-  // Função para ajustar a hora de fim automaticamente (1 hora após o início)
-  const ajustarHoraFim = useCallback(() => {
-    setHoraFim(new Date(horaInicio.getTime() + 60 * 60 * 1000));
-  }, [horaInicio]); // Depende de horaInicio para recriar se horaInicio mudar
-
-  // Função para formatar a hora com segundos zerados
   const formatarHoraComSegundosZero = useCallback((date) => {
     if (!(date instanceof Date)) {
       return "";
@@ -72,12 +75,17 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
     const horas = date.getHours().toString().padStart(2, "0");
     const minutos = date.getMinutes().toString().padStart(2, "0");
     return `${horas}:${minutos}:00`;
-  }, []); // Não tem dependências, pode ser criada uma vez
+  }, []);
 
-  // Função assíncrona para lidar com a reserva
   const handleReserva = useCallback(async () => {
-    if (horaFim <= horaInicio) {
-      ajustarHoraFim();
+    if (horaFim.getTime() <= horaInicio.getTime()) {
+      setModalInfo({
+        type: "error",
+        title: "Erro de Hora",
+        message: "A Hora de Fim deve ser posterior à Hora de Início.",
+      });
+      setModalVisible(true);
+      return;
     }
 
     const formattedData = data.toISOString().split("T")[0];
@@ -92,7 +100,7 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       fk_id_sala: idSala,
     };
 
-    // console.log("Objeto reserva:", reserva);
+    console.log("Objeto reserva:", reserva);
 
     try {
       const response = await api.postReserva(reserva);
@@ -106,116 +114,255 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       setModalInfo({
         type: "error",
         title: "Erro",
-        message: error.response?.data?.error || "Erro desconhecido",
+        message: error.response?.data?.error || "Erro desconhecido ao reservar sala.",
       });
       setModalVisible(true);
       console.log(error);
     }
   }, [
-    ajustarHoraFim,
     data,
     formatarHoraComSegundosZero,
     horaFim,
     horaInicio,
     idSala,
     idUsuario,
-  ]); // Depende de todos os valores usados dentro
+  ]);
 
-  // Função para lidar com o fechamento do modal de feedback
   const handleModalClose = useCallback(() => {
     setModalVisible(false);
     if (modalInfo.type === "success") {
       navigation.navigate("Principal");
       onClose();
     }
-  }, [modalInfo.type, navigation, onClose]); // Depende de valores externos
+  }, [modalInfo.type, navigation, onClose]);
+
+
+  const dynamicStyles = StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.7)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modal: {
+      backgroundColor: "white",
+      padding: width * 0.06,
+      borderRadius: 15,
+      width: width * 0.85,
+      maxWidth: 400,
+      alignItems: 'center',
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
+      elevation: 10,
+    },
+    closeButton: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      padding: 5,
+      zIndex: 1,
+    },
+    headerIcon: {
+      marginBottom: height * 0.02,
+      color: 'rgb(177, 16, 16)',
+    },
+    title: {
+      fontSize: width * 0.06,
+      fontWeight: "bold",
+      color: '#333',
+      marginBottom: height * 0.02,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: width * 0.04,
+      color: '#666',
+      marginBottom: height * 0.03,
+      textAlign: 'center',
+    },
+    inputRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginBottom: height * 0.025,
+      gap: width * 0.02,
+    },
+    inputGroup: {
+      flex: 1,
+      alignItems: 'flex-start',
+    },
+    inputTitle: {
+      fontSize: width * 0.035,
+      marginBottom: height * 0.005,
+      fontWeight: "500",
+      color: '#555',
+    },
+    inputFake: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: "#ddd",
+      backgroundColor: "#f5f5f5",
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.03,
+      borderRadius: 8,
+      width: '100%',
+      justifyContent: 'space-between',
+    },
+    inputFakeText: {
+      fontSize: width * 0.04,
+      color: '#333',
+    },
+    summaryContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#f0f0f0',
+      borderRadius: 10,
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.04,
+      marginBottom: height * 0.03,
+      width: '100%',
+    },
+    summaryIcon: {
+      marginRight: width * 0.025,
+      color: 'rgb(177, 16, 16)',
+    },
+    summaryText: {
+      fontSize: width * 0.038,
+      color: '#333',
+      fontWeight: '500',
+    },
+    confirmButton: {
+      backgroundColor: "rgb(177, 16, 16)",
+      paddingVertical: height * 0.02,
+      paddingHorizontal: width * 0.08,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 5,
+      elevation: 6,
+    },
+    confirmButtonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: width * 0.045,
+      marginLeft: width * 0.02,
+    },
+  });
 
   return (
     <>
-      <Modal visible={isOpen} transparent animationType="fade">
-        <View style={styles.overlay}>
-          <View style={styles.modal}>
-            <Text style={styles.title}>Reservar</Text>
-
-            <Text style={styles.inputTitle}>Data</Text>
-            <TouchableOpacity
-              onPress={() => setMostrarDatePicker(true)}
-              style={styles.inputFake}
-            >
-              <Text>{formatarData(data)}</Text>
+      <Modal visible={isOpen} transparent animationType="fade" onRequestClose={onClose}>
+        <View style={dynamicStyles.overlay}>
+          <View style={dynamicStyles.modal}>
+            <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
+              <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
             </TouchableOpacity>
-            {mostrarDatePicker && (
-              <DateTimePicker
-                mode="date"
-                value={data}
-                minimumDate={getToday()}
-                onChange={(e, selected) => {
-                  if (selected) setData(selected);
-                  setMostrarDatePicker(false);
-                }}
-              />
-            )}
 
-            <Text style={styles.inputTitle}>Hora de Início</Text>
-            <TouchableOpacity
-              onPress={() => setMostrarStartTimePicker(true)}
-              style={styles.inputFake}
-            >
-              <Text>{formatarHoraComSegundosZero(horaInicio)}</Text>
-            </TouchableOpacity>
-            {mostrarStartTimePicker && (
-              <DateTimePicker
-                mode="time"
-                display="spinner"
-                is24Hour={true}
-                ampm={false}
-                value={horaInicio}
-                onChange={(e, selected) => {
-                  if (selected) {
-                    const newHoraInicio = new Date(selected);
-                    newHoraInicio.setSeconds(0);
-                    setHoraInicio(newHoraInicio);
-                    ajustarHoraFim();
-                  }
-                  setMostrarStartTimePicker(false);
-                }}
-              />
-            )}
+            <Ionicons name="calendar" size={width * 0.12} style={dynamicStyles.headerIcon} />
+            <Text style={dynamicStyles.title}>Reservar Sala</Text>
 
-            <Text style={styles.inputTitle}>Hora de Fim</Text>
-            <TouchableOpacity
-              onPress={() => setMostrarEndTimePicker(true)}
-              style={styles.inputFake}
-            >
-              <Text>{formatarHoraComSegundosZero(horaFim)}</Text>
-            </TouchableOpacity>
-            {mostrarEndTimePicker && (
-              <DateTimePicker
-                mode="time"
-                display="spinner"
-                is24Hour={true}
-                ampm={false}
-                value={horaFim}
-                minimumDate={new Date(horaInicio.getTime() + 60 * 60 * 1000)}
-                onChange={(e, selected) => {
-                  if (selected) {
-                    const newHoraFim = new Date(selected);
-                    newHoraFim.setSeconds(0);
-                    setHoraFim(newHoraFim);
-                  }
-                  setMostrarEndTimePicker(false);
-                }}
-              />
-            )}
-
-            <View style={styles.actions}>
-              <TouchableOpacity style={styles.button} onPress={onClose}>
-                <Text style={styles.buttonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={handleReserva}>
-                <Text style={styles.buttonText}>Reservar</Text>
-              </TouchableOpacity>
+            <View style={dynamicStyles.inputRow}>
+              <View style={dynamicStyles.inputGroup}>
+                <Text style={dynamicStyles.inputTitle}>Data</Text>
+                <TouchableOpacity
+                  onPress={() => setMostrarDatePicker(true)}
+                  style={dynamicStyles.inputFake}
+                >
+                  <Text style={dynamicStyles.inputFakeText}>{formatarDataExibicao(data)}</Text>
+                  <FontAwesome name="calendar" size={width * 0.04} color="#888" />
+                </TouchableOpacity>
+                {mostrarDatePicker && (
+                  <DateTimePicker
+                    mode="date"
+                    value={data}
+                    minimumDate={getToday()}
+                    onChange={(e, selected) => {
+                      if (selected) setData(selected);
+                      setMostrarDatePicker(false);
+                    }}
+                  />
+                )}
+              </View>
             </View>
+
+            <View style={dynamicStyles.inputRow}>
+              <View style={dynamicStyles.inputGroup}>
+                <Text style={dynamicStyles.inputTitle}>Início</Text>
+                <TouchableOpacity
+                  onPress={() => setMostrarStartTimePicker(true)}
+                  style={dynamicStyles.inputFake}
+                >
+                  <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaInicio)}</Text>
+                  <Ionicons name="time-outline" size={width * 0.04} color="#888" />
+                </TouchableOpacity>
+                {mostrarStartTimePicker && (
+                  <DateTimePicker
+                    mode="time"
+                    display="spinner"
+                    is24Hour={true}
+                    value={horaInicio}
+                    onChange={(e, selected) => {
+                      if (selected) {
+                        const newHoraInicio = new Date(selected);
+                        newHoraInicio.setSeconds(0);
+                        newHoraInicio.setMilliseconds(0);
+                        setHoraInicio(newHoraInicio);
+                        ajustarHoraFim(newHoraInicio);
+                      }
+                      setMostrarStartTimePicker(false);
+                    }}
+                  />
+                )}
+              </View>
+
+              <View style={dynamicStyles.inputGroup}>
+                <Text style={dynamicStyles.inputTitle}>Fim</Text>
+                <TouchableOpacity
+                  onPress={() => setMostrarEndTimePicker(true)}
+                  style={dynamicStyles.inputFake}
+                >
+                  <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaFim)}</Text>
+                  <Ionicons name="time-outline" size={width * 0.04} color="#888" />
+                </TouchableOpacity>
+                {mostrarEndTimePicker && (
+                  <DateTimePicker
+                    mode="time"
+                    display="spinner"
+                    is24Hour={true}
+                    value={horaFim}
+                    minimumDate={new Date(horaInicio.getTime() + 60 * 60 * 1000)}
+                    onChange={(e, selected) => {
+                      if (selected) {
+                        const newHoraFim = new Date(selected);
+                        newHoraFim.setSeconds(0);
+                        newHoraFim.setMilliseconds(0);
+                        setHoraFim(newHoraFim);
+                      }
+                      setMostrarEndTimePicker(false);
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={dynamicStyles.summaryContainer}>
+              <FontAwesome name="calendar" size={width * 0.045} style={dynamicStyles.summaryIcon} />
+              <Text style={dynamicStyles.summaryText}>
+                {formatarDataExibicao(data)} das {formatarHoraExibicao(horaInicio)} às {formatarHoraExibicao(horaFim)}
+              </Text>
+            </View>
+
+            <TouchableOpacity style={dynamicStyles.confirmButton} onPress={handleReserva}>
+              <FontAwesome name="check-circle" size={width * 0.05} color="white" />
+              <Text style={dynamicStyles.confirmButtonText}>CONFIRMAR RESERVA</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -230,53 +377,5 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modal: {
-    backgroundColor: "rgb(227, 227, 227)",
-    padding: 20,
-    borderRadius: 8,
-    width: 300,
-  },
-  title: {
-    fontSize: 20,
-    marginBottom: 15,
-    fontWeight: "bold",
-  },
-  inputTitle: {
-    fontSize: 12.5,
-    marginBottom: 5,
-    fontWeight: "bold",
-  },
-  inputFake: {
-    borderWidth: 2,
-    borderColor: "#ccc",
-    backgroundColor: "white",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-  button: {
-    backgroundColor: "rgba(177, 16, 16, 1)",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-});
 
 export default ReservarModal;
