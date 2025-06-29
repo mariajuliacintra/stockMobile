@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Modal,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   useWindowDimensions,
@@ -10,126 +11,7 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-
-// Componente separado para o modal de seleção de dias da semana
-const DaySelectionModal = ({ visible, onClose, validDays, selectedDays, toggleDay, diasSemanaMap }) => {
-  const { width, height } = useWindowDimensions();
-
-  const dayModalStyles = StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    },
-    content: {
-      width: width * 0.7,
-      maxHeight: height * 0.6, // Limita a altura do modal de seleção de dias
-      backgroundColor: 'white',
-      borderRadius: 10,
-      padding: 20,
-      alignItems: 'center',
-    },
-    title: {
-      fontSize: width * 0.05,
-      fontWeight: '600',
-      marginBottom: 15,
-      color: '#333',
-    },
-    scrollView: {
-        width: '100%',
-    },
-    checkboxItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 5,
-      width: '100%', // Garante que o item ocupe a largura total
-    },
-    checkboxText: {
-      fontSize: width * 0.04,
-      color: '#333',
-      marginLeft: 10,
-      flexShrink: 1, // Permite que o texto quebre a linha se for muito longo
-    },
-    checkboxTextDisabled: {
-      color: '#a0a0a0',
-    },
-    checkboxIcon: {
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderRadius: 4,
-        borderColor: '#555',
-    },
-    checkboxIconChecked: {
-        backgroundColor: 'rgb(177, 16, 16)',
-        borderColor: 'rgb(177, 16, 16)',
-    },
-    closeButton: {
-      marginTop: 20,
-      backgroundColor: "rgb(250, 24, 24)",
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      borderRadius: 5,
-    },
-    closeButtonText: {
-      color: 'white',
-      fontWeight: 'bold',
-      fontSize: width * 0.04,
-    }
-  });
-
-  return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={dayModalStyles.overlay}>
-        <View style={dayModalStyles.content}>
-          <Text style={dayModalStyles.title}>Selecione os Dias da Semana</Text>
-          <ScrollView style={dayModalStyles.scrollView} showsVerticalScrollIndicator={false}>
-            {Object.entries(diasSemanaMap).map(([key, value]) => {
-              const dayNum = Number(key);
-              const isSelected = selectedDays.includes(dayNum);
-              const isDisabled = !validDays.includes(dayNum);
-
-              return (
-                <TouchableOpacity
-                  key={dayNum}
-                  style={dayModalStyles.checkboxItem}
-                  onPress={() => !isDisabled && toggleDay(dayNum)}
-                  disabled={isDisabled}
-                >
-                  <View style={[
-                    dayModalStyles.checkboxIcon,
-                    isSelected && dayModalStyles.checkboxIconChecked
-                  ]}>
-                    {isSelected && <Ionicons name="checkmark-outline" size={18} color="white" />}
-                  </View>
-                  <Text style={[
-                    dayModalStyles.checkboxText,
-                    isDisabled && dayModalStyles.checkboxTextDisabled
-                  ]}>
-                    {value}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-          <TouchableOpacity onPress={onClose} style={dayModalStyles.closeButton}>
-            <Text style={dayModalStyles.closeButtonText}>Fechar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
+import DiasModal from "../mod/DiasModal"; // Importa o DiasModal externo
 
 function FiltroModal({ visible, onClose, onApplyFilters }) {
   const { width, height } = useWindowDimensions();
@@ -146,7 +28,7 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
 
   const [selectedDays, setSelectedDays] = useState([]);
   const [validDays, setValidDays] = useState([]);
-  const [showDaySelectionModal, setShowDaySelectionModal] = useState(false); // Controla a visibilidade do NOVO modal de dias
+  const [showDaySelectionModal, setShowDaySelectionModal] = useState(false);
 
   const diasSemanaMap = {
     1: "Segunda-feira",
@@ -158,7 +40,7 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
   };
   const diasSemanaKeys = Object.keys(diasSemanaMap).map(Number);
 
-  const getDaysInRange = (startDate, endDate) => {
+  const getDaysInRange = useCallback((startDate, endDate) => {
     const days = new Set();
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
@@ -174,15 +56,28 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
       current.setDate(current.getDate() + 1);
     }
     return Array.from(days).sort((a, b) => a - b);
-  };
+  }, [diasSemanaKeys]);
 
   useEffect(() => {
-    const newValidDays = getDaysInRange(dataInicio, dataFim);
-    setValidDays(newValidDays);
-    setSelectedDays((prevSelectedDays) =>
-      prevSelectedDays.filter((day) => newValidDays.includes(day))
-    );
-  }, [dataInicio, dataFim]);
+    const newCalculatedValidDays = getDaysInRange(dataInicio, dataFim);
+
+    const areValidDaysEqual = validDays.length === newCalculatedValidDays.length &&
+                              validDays.every((val, index) => val === newCalculatedValidDays[index]);
+
+    if (!areValidDaysEqual) {
+      setValidDays(newCalculatedValidDays);
+
+      setSelectedDays((prevSelectedDays) => {
+        const filteredDays = prevSelectedDays.filter((day) => newCalculatedValidDays.includes(day));
+        const areSelectedDaysEqual = filteredDays.length === prevSelectedDays.length &&
+                                     filteredDays.every((val, index) => val === prevSelectedDays[index]);
+        if (!areSelectedDaysEqual) {
+          return filteredDays;
+        }
+        return prevSelectedDays;
+      });
+    }
+  }, [dataInicio, dataFim, getDaysInRange, validDays]);
 
   const toggleDay = (dayNum) => {
     setSelectedDays((prevSelectedDays) => {
@@ -242,72 +137,87 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
   };
 
   const dynamicStyles = StyleSheet.create({
-    modalOverlay: {
+    overlay: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-      width: width * 0.85,
-      maxHeight: height * 0.9,
-      backgroundColor: "white",
-      borderRadius: 10,
-      paddingVertical: height * 0.04,
+      backgroundColor: "rgba(0,0,0,0.7)",
+      justifyContent: "center",
       alignItems: "center",
+    },
+    modal: {
+      backgroundColor: "white",
+      padding: width * 0.06,
+      borderRadius: 15,
+      width: width * 0.85,
+      maxWidth: 400,
+      alignItems: 'center',
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 5,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
+      elevation: 10,
     },
     closeButton: {
       position: 'absolute',
-      top: 15,
-      right: 15,
-      zIndex: 1,
+      top: 10,
+      right: 10,
       padding: 5,
+      zIndex: 1,
     },
-    modalTitle: {
+    headerIcon: {
+      marginBottom: height * 0.02,
+      color: 'white',
+      backgroundColor: 'rgb(177, 16, 16)',
+      padding: width * 0.03,
+      borderRadius: (width * 0.11 + width * 0.03 * 2) / 2,
+    },
+    title: {
       fontSize: width * 0.06,
-      fontWeight: '600',
-      marginBottom: height * 0.03,
+      fontWeight: "bold",
       color: '#333',
+      marginBottom: height * 0.02,
+      textAlign: 'center',
     },
-    inputContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      width: width * 0.7,
-      backgroundColor: "white",
-      borderRadius: 5,
-      marginBottom: height * 0.015,
-      paddingHorizontal: width * 0.03,
-      height: height * 0.06,
+    inputFake: {
+      flexDirection: 'row',
+      alignItems: 'center',
       borderWidth: 1,
-      borderColor: '#ccc',
+      borderColor: "#ddd",
+      backgroundColor: "#f5f5f5",
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.03,
+      borderRadius: 8,
+      width: '100%',
+      justifyContent: 'flex-start',
+      marginBottom: height * 0.025,
+    },
+    inputFakeText: {
+      fontSize: width * 0.04,
+      color: '#333',
+      flex: 1,
     },
     iconStyle: {
       marginRight: width * 0.02,
     },
-    inputField: {
-      flex: 1,
-      fontSize: width * 0.04,
-      color: 'black',
-      paddingVertical: 0,
+    confirmButton: {
+      backgroundColor: "rgb(177, 16, 16)",
+      paddingVertical: height * 0.02,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: "center",
+      width: '50%',
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 5,
+      elevation: 6,
     },
-    buttonApply: {
-      backgroundColor: "rgb(250, 24, 24)",
-      paddingVertical: height * 0.018,
-      paddingHorizontal: width * 0.1,
-      borderRadius: 5,
-      alignItems: "center",
-      marginTop: height * 0.03,
-      width: width * 0.7,
-    },
-    textButtonApply: {
-      fontSize: width * 0.045,
+    confirmButtonText: {
       color: "white",
       fontWeight: "bold",
+      fontSize: width * 0.04,
+      marginRight: width * 0.05,
     },
   });
 
@@ -318,18 +228,19 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={dynamicStyles.modalOverlay}>
-        <View style={dynamicStyles.modalContent}>
+      <View style={dynamicStyles.overlay}>
+        <View style={dynamicStyles.modal}>
           <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
-            <Ionicons name="close-circle-outline" size={width * 0.07} color="gray" />
+            <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
           </TouchableOpacity>
 
-          <Text style={dynamicStyles.modalTitle}>Filtrar Salas</Text>
+          <Ionicons name="options-outline" size={width * 0.11} color="white" style={dynamicStyles.headerIcon} />
+          <Text style={dynamicStyles.title}>Filtrar Salas</Text>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{alignItems: 'center'}}>
-            <TouchableOpacity onPress={() => setShowDataInicioPicker(true)} style={dynamicStyles.inputContainer}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{width: '100%', alignItems: 'center'}}>
+            <TouchableOpacity onPress={() => setShowDataInicioPicker(true)} style={dynamicStyles.inputFake}>
               <Ionicons name="calendar-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-              <Text style={dynamicStyles.inputField}>
+              <Text style={dynamicStyles.inputFakeText}>
                 Data Início: {dataInicio.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
               </Text>
             </TouchableOpacity>
@@ -345,9 +256,9 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
               />
             )}
 
-            <TouchableOpacity onPress={() => setShowDataFimPicker(true)} style={dynamicStyles.inputContainer}>
+            <TouchableOpacity onPress={() => setShowDataFimPicker(true)} style={dynamicStyles.inputFake}>
               <Ionicons name="calendar-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-              <Text style={dynamicStyles.inputField}>
+              <Text style={dynamicStyles.inputFakeText}>
                 Data Fim: {dataFim.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
               </Text>
             </TouchableOpacity>
@@ -363,9 +274,9 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
               />
             )}
 
-            <TouchableOpacity onPress={() => setShowHoraInicioPicker(true)} style={dynamicStyles.inputContainer}>
+            <TouchableOpacity onPress={() => setShowHoraInicioPicker(true)} style={dynamicStyles.inputFake}>
               <Ionicons name="time-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-              <Text style={dynamicStyles.inputField}>
+              <Text style={dynamicStyles.inputFakeText}>
                 Hora Início: {horaInicio.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
               </Text>
             </TouchableOpacity>
@@ -373,7 +284,7 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
               <DateTimePicker
                 value={horaInicio}
                 mode="time"
-                display="default"
+                display="spinner"
                 is24Hour={true}
                 onChange={(_, selected) => {
                   setShowHoraInicioPicker(false);
@@ -382,9 +293,9 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
               />
             )}
 
-            <TouchableOpacity onPress={() => setShowHoraFimPicker(true)} style={dynamicStyles.inputContainer}>
+            <TouchableOpacity onPress={() => setShowHoraFimPicker(true)} style={dynamicStyles.inputFake}>
               <Ionicons name="time-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-              <Text style={dynamicStyles.inputField}>
+              <Text style={dynamicStyles.inputFakeText}>
                 Hora Fim: {horaFim.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
               </Text>
             </TouchableOpacity>
@@ -392,7 +303,7 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
               <DateTimePicker
                 value={horaFim}
                 mode="time"
-                display="default"
+                display="spinner"
                 is24Hour={true}
                 onChange={(_, selected) => {
                   setShowHoraFimPicker(false);
@@ -401,26 +312,24 @@ function FiltroModal({ visible, onClose, onApplyFilters }) {
               />
             )}
 
-            {/* Input que abre o modal de seleção de Dias da Semana */}
             <TouchableOpacity
-              style={dynamicStyles.inputContainer}
+              style={dynamicStyles.inputFake}
               onPress={() => setShowDaySelectionModal(true)}
             >
               <Ionicons name="checkbox-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-              <Text style={dynamicStyles.inputField}>
+              <Text style={dynamicStyles.inputFakeText}>
                 Dias da Semana: {getSelectedDaysText()}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleApply} style={dynamicStyles.buttonApply}>
-              <Text style={dynamicStyles.textButtonApply}>Aplicar Filtros</Text>
+            <TouchableOpacity onPress={handleApply} style={dynamicStyles.confirmButton}>
+              <Text style={dynamicStyles.confirmButtonText}>Aplicar Filtros</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
       </View>
 
-      {/* Renderiza o modal de seleção de dias da semana separadamente */}
-      <DaySelectionModal
+      <DiasModal // Usando o DiasModal importado
         visible={showDaySelectionModal}
         onClose={() => setShowDaySelectionModal(false)}
         validDays={validDays}

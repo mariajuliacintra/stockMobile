@@ -8,8 +8,8 @@ import {
   View,
   Dimensions,
   TextInput,
-  Platform, // Importar Platform
-  KeyboardAvoidingView, // Importar KeyboardAvoidingView
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -18,6 +18,8 @@ import * as SecureStore from "expo-secure-store";
 import ReservarModal from "../components/mod/ReservarModal";
 import CustomModal from "../components/mod/CustomModal";
 import FiltroModal from "../components/layout/FiltroModal";
+import PerfilModal from "../components/layout/Perfil";
+
 import api from "../services/axios";
 
 const { width, height } = Dimensions.get("window");
@@ -29,6 +31,7 @@ function Principal({ navigation }) {
   const [salaSelecionada, setSalaSelecionada] = useState(null);
 
   const [isFiltroModalVisible, setFiltroModalVisible] = useState(false);
+  const [isPerfilModalVisible, setPerfilModalVisible] = useState(false);
   const [expandedSalaId, setExpandedSalaId] = useState(null);
 
   const [filtroDataInicio, setFiltroDataInicio] = useState(new Date());
@@ -59,8 +62,6 @@ function Principal({ navigation }) {
     setFiltroDataFim(new Date(filters.data_fim));
     setFiltroHoraInicio(new Date(`2000-01-01T${filters.hora_inicio}`));
     setFiltroHoraFim(new Date(`2000-01-01T${filters.hora_fim}`));
-
-    console.log("Dados enviados para a API:", filters);
 
     try {
       const response = await api.getSalasDisponivelHorario(filters);
@@ -184,18 +185,20 @@ function Principal({ navigation }) {
       alignItems: "center",
       paddingHorizontal: width * 0.05,
     },
-    buttonToProfile: {
-      marginTop: 5,
-    },
-    buttonToHome: {
-      marginTop: 5,
+    buttonIconContainer: {
+      width: height * 0.06,
+      height: height * 0.06,
+      borderRadius: (height * 0.06) / 2,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: width * 0.03,
     },
     body: {
       paddingHorizontal: width * 0.04,
       paddingVertical: height * 0.02,
       width: width,
-      // Removido height fixo para permitir que KeyboardAvoidingView gerencie
-      flex: 1, // Usar flex para que o body ocupe o espaço disponível
+      flex: 1,
       backgroundColor: '#D3D3D3',
     },
     searchAndFilterContainer: {
@@ -290,7 +293,7 @@ function Principal({ navigation }) {
       width: '70%',
     },
     reservarButton: {
-      backgroundColor: "rgb(250, 24, 24)",
+      backgroundColor: "rgb(227, 17, 17)",
       paddingVertical: height * 0.012,
       paddingHorizontal: width * 0.05,
       borderRadius: 5,
@@ -313,35 +316,32 @@ function Principal({ navigation }) {
       >
         <View style={dynamicStyles.container}>
           <View style={dynamicStyles.header}>
-            <View style={{ flexDirection: "row", gap: 15 }}>
+            <View style={{ flexDirection: "row", gap: 1 }}>
               <TouchableOpacity
-                style={dynamicStyles.buttonToProfile}
-                onPress={() => navigation.navigate("Perfil")}
+                style={dynamicStyles.buttonIconContainer}
+                onPress={() => setPerfilModalVisible(true)}
               >
-                <FontAwesome6 name="user-circle" size={35} color="white" style={{marginTop:10}} />
+                <FontAwesome6 name="user" size={width * 0.06} color="white" solid />
               </TouchableOpacity>
               <TouchableOpacity
-                style={dynamicStyles.buttonToHome}
+                style={dynamicStyles.buttonIconContainer}
                 onPress={async () => {
                   await SecureStore.deleteItemAsync("tokenUsuario");
                   navigation.navigate("Home");
                 }}
               >
                 <MaterialCommunityIcons
-                  name="exit-to-app"
-                  size={38}
+                  name="logout"
+                  size={width * 0.07}
                   color="white"
-                  style={{marginTop:10}}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* KeyboardAvoidingView para evitar que o input seja coberto pelo teclado */}
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={dynamicStyles.body}
-            // O offset deve ser a altura da barra superior para iOS, ou 0 para Android
             keyboardVerticalOffset={Platform.OS === "ios" ? height * 0.08 : 0}
           >
             <View style={dynamicStyles.searchAndFilterContainer}>
@@ -349,7 +349,7 @@ function Principal({ navigation }) {
                 <Ionicons name="search-outline" size={width * 0.05} color="gray" style={{marginRight: width * 0.02}} />
                 <TextInput
                   style={dynamicStyles.searchInput}
-                  placeholder="Pesquisar por Tipo"
+                  placeholder="Pesquisar por Tipo (ex: Laboratório)"
                   placeholderTextColor="gray"
                   value={searchTerm}
                   onChangeText={setSearchTerm}
@@ -359,7 +359,7 @@ function Principal({ navigation }) {
                 style={dynamicStyles.filtroButton}
                 onPress={() => setFiltroModalVisible(true)}
               >
-                <Text style={dynamicStyles.filtroButtonText}>Filtrar</Text>
+                <Text style={dynamicStyles.filtroButtonText}>Filtros Avançados</Text>
               </TouchableOpacity>
             </View>
 
@@ -399,6 +399,11 @@ function Principal({ navigation }) {
         initialDataFim={filtroDataFim}
         initialHoraInicio={filtroHoraInicio}
         initialHoraFim={filtroHoraFim}
+      />
+
+      <PerfilModal
+        visible={isPerfilModalVisible}
+        onClose={() => setPerfilModalVisible(false)}
       />
     </>
   );

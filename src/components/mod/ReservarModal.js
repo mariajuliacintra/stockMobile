@@ -1,23 +1,45 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getToday } from "../../utils/dateUtils";
 import api from "../../services/axios";
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import CustomModal from "./CustomModal";
+import DiasModal from "./DiasModal";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
 const ReservarModal = ({ isOpen, onClose, idSala }) => {
-  const [data, setData] = useState(new Date());
+  const [currentMode, setCurrentMode] = useState('simples');
+
+  const [dataSimples, setDataSimples] = useState(new Date());
+
+  const [dataInicioPeriodica, setDataInicioPeriodica] = useState(new Date());
+  const [dataFimPeriodica, setDataFimPeriodica] = useState(new Date());
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [validDays, setValidDays] = useState([]);
+  const [showDaySelectionModal, setShowDaySelectionModal] = useState(false);
+
   const [horaInicio, setHoraInicio] = useState(new Date());
   const [horaFim, setHoraFim] = useState(new Date(new Date().getTime() + 60 * 60 * 1000));
 
   const [mostrarDatePicker, setMostrarDatePicker] = useState(false);
+  const [mostrarDataInicioPickerPeriodica, setMostrarDataInicioPickerPeriodica] = useState(false);
+  const [mostrarDataFimPickerPeriodica, setMostrarDataFimPickerPeriodica] = useState(false);
   const [mostrarStartTimePicker, setMostrarStartTimePicker] = useState(false);
   const [mostrarEndTimePicker, setMostrarEndTimePicker] = useState(false);
+
+  const diasSemanaMap = {
+    1: "Segunda-feira",
+    2: "Terça-feira",
+    3: "Quarta-feira",
+    4: "Quinta-feira",
+    5: "Sexta-feira",
+    6: "Sábado",
+  };
+  const diasSemanaKeys = Object.keys(diasSemanaMap).map(Number);
 
   const [idUsuario, setIdUsuario] = useState("");
 
@@ -29,6 +51,63 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
   });
 
   const navigation = useNavigation();
+
+  const getDaysInRange = useCallback((startDate, endDate) => {
+    const days = new Set();
+    const current = new Date(startDate);
+    current.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+
+    while (current <= end) {
+      const dayOfWeek = current.getDay();
+      if (diasSemanaKeys.includes(dayOfWeek)) {
+        days.add(dayOfWeek);
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return Array.from(days).sort((a, b) => a - b);
+  }, [diasSemanaKeys]);
+
+  useEffect(() => {
+    if (currentMode === 'periodica') {
+      const newCalculatedValidDays = getDaysInRange(dataInicioPeriodica, dataFimPeriodica);
+
+      const areValidDaysEqual = validDays.length === newCalculatedValidDays.length &&
+                                validDays.every((val, index) => val === newCalculatedValidDays[index]);
+
+      if (!areValidDaysEqual) {
+        setValidDays(newCalculatedValidDays);
+
+        setSelectedDays((prevSelectedDays) => {
+          const filteredDays = prevSelectedDays.filter((day) => newCalculatedValidDays.includes(day));
+          const areSelectedDaysEqual = filteredDays.length === prevSelectedDays.length &&
+                                       filteredDays.every((val, index) => val === prevSelectedDays[index]);
+          if (!areSelectedDaysEqual) {
+            return filteredDays;
+          }
+          return prevSelectedDays;
+        });
+      }
+    }
+  }, [dataInicioPeriodica, dataFimPeriodica, currentMode, getDaysInRange, validDays]);
+
+  useEffect(() => {
+    const buscarIdUsuario = async () => {
+      try {
+        const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
+        if (idUsuarioStr) {
+          const id = Number(idUsuarioStr);
+          const response = await api.getUsuarioById(id);
+          setIdUsuario(response.data.usuario.id_usuario);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+      }
+    };
+    buscarIdUsuario();
+  }, []);
 
   const formatarDataExibicao = useCallback((date) => {
     if (!(date instanceof Date)) return "";
@@ -47,22 +126,6 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
     return `${horas}:${minutos}`;
   }, []);
 
-  useEffect(() => {
-    const buscarIdUsuario = async () => {
-      try {
-        const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
-        if (idUsuarioStr) {
-          const id = Number(idUsuarioStr);
-          const response = await api.getUsuarioById(id);
-          setIdUsuario(response.data.usuario.id_usuario);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar usuário:", error);
-      }
-    };
-    buscarIdUsuario();
-  }, []);
-
   const ajustarHoraFim = useCallback((newHoraInicio) => {
     const adjustedTime = new Date(newHoraInicio.getTime() + 60 * 60 * 1000);
     setHoraFim(adjustedTime);
@@ -77,6 +140,23 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
     return `${horas}:${minutos}:00`;
   }, []);
 
+  const toggleDay = useCallback((dayNum) => {
+    setSelectedDays((prevSelectedDays) => {
+      if (prevSelectedDays.includes(dayNum)) {
+        return prevSelectedDays.filter((day) => day !== dayNum);
+      } else {
+        return [...prevSelectedDays, dayNum];
+      }
+    });
+  }, []);
+
+  const getSelectedDaysText = useCallback(() => {
+    if (selectedDays.length === 0) {
+      return "Selecione os dias";
+    }
+    return selectedDays.map(dayNum => diasSemanaMap[dayNum]).join(", ");
+  }, [selectedDays, diasSemanaMap]);
+
   const handleReserva = useCallback(async () => {
     if (horaFim.getTime() <= horaInicio.getTime()) {
       setModalInfo({
@@ -88,44 +168,111 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       return;
     }
 
-    const formattedData = data.toISOString().split("T")[0];
-    const formattedHoraInicio = formatarHoraComSegundosZero(horaInicio);
-    const formattedHoraFim = formatarHoraComSegundosZero(horaFim);
+    let reservaPayload;
+    if (currentMode === 'simples') {
+      const formattedData = dataSimples.toISOString().split("T")[0];
+      const formattedHoraInicio = formatarHoraComSegundosZero(horaInicio);
+      const formattedHoraFim = formatarHoraComSegundosZero(horaFim);
 
-    const reserva = {
-      data: formattedData,
-      hora_inicio: formattedHoraInicio,
-      hora_fim: formattedHoraFim,
-      fk_id_usuario: idUsuario,
-      fk_id_sala: idSala,
-    };
+      reservaPayload = {
+        data: formattedData,
+        hora_inicio: formattedHoraInicio,
+        hora_fim: formattedHoraFim,
+        fk_id_usuario: idUsuario,
+        fk_id_sala: idSala,
+      };
 
-    console.log("Objeto reserva:", reserva);
+      try {
+        const response = await api.postReserva(reservaPayload);
+        setModalInfo({
+          type: "success",
+          title: "Sucesso",
+          message: response.data.message,
+        });
+        setModalVisible(true);
+      } catch (error) {
+        setModalInfo({
+          type: "error",
+          title: "Erro",
+          message: error.response?.data?.error || "Erro desconhecido ao reservar sala.",
+        });
+        setModalVisible(true);
+        console.log(error);
+      }
 
-    try {
-      const response = await api.postReserva(reserva);
-      setModalInfo({
-        type: "success",
-        title: "Sucesso",
-        message: response.data.message,
-      });
-      setModalVisible(true);
-    } catch (error) {
-      setModalInfo({
-        type: "error",
-        title: "Erro",
-        message: error.response?.data?.error || "Erro desconhecido ao reservar sala.",
-      });
-      setModalVisible(true);
-      console.log(error);
+    } else { // currentMode === 'periodica'
+      if (dataFimPeriodica.getTime() < dataInicioPeriodica.getTime()) {
+        setModalInfo({
+          type: "error",
+          title: "Erro de Data",
+          message: "A Data de Fim deve ser posterior ou igual à Data de Início.",
+        });
+        setModalVisible(true);
+        return;
+      }
+      if (selectedDays.length === 0) {
+        setModalInfo({
+          type: "error",
+          title: "Erro de Dias da Semana",
+          message: "Selecione pelo menos um dia da semana para a reserva periódica.",
+        });
+        setModalVisible(true);
+        return;
+      }
+
+      const formattedDataInicio = dataInicioPeriodica.toISOString().split("T")[0];
+      const formattedDataFim = dataFimPeriodica.toISOString().split("T")[0];
+      const formattedHoraInicio = formatarHoraComSegundosZero(horaInicio);
+      const formattedHoraFim = formatarHoraComSegundosZero(horaFim);
+
+      let diasSemanaToSend = null;
+      if (selectedDays.length > 0) {
+        if (selectedDays.length === 1) {
+          diasSemanaToSend = selectedDays[0];
+        } else {
+          diasSemanaToSend = selectedDays;
+        }
+      }
+
+      reservaPayload = {
+        data_inicio: formattedDataInicio,
+        data_fim: formattedDataFim,
+        hora_inicio: formattedHoraInicio,
+        hora_fim: formattedHoraFim,
+        fk_id_usuario: idUsuario,
+        fk_id_sala: idSala,
+        dias_semana: diasSemanaToSend,
+      };
+
+      try {
+        const response = await api.postReservaPeriodica(reservaPayload);
+        setModalInfo({
+          type: "success",
+          title: "Sucesso",
+          message: response.data.message,
+        });
+        setModalVisible(true);
+      } catch (error) {
+        setModalInfo({
+          type: "error",
+          title: "Erro",
+          message: error.response?.data?.error || "Erro desconhecido ao reservar sala periodicamente.",
+        });
+        setModalVisible(true);
+        console.log(error);
+      }
     }
   }, [
-    data,
+    currentMode,
+    dataSimples,
+    dataInicioPeriodica,
+    dataFimPeriodica,
     formatarHoraComSegundosZero,
     horaFim,
     horaInicio,
     idSala,
     idUsuario,
+    selectedDays,
   ]);
 
   const handleModalClose = useCallback(() => {
@@ -181,6 +328,34 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       marginBottom: height * 0.03,
       textAlign: 'center',
     },
+    modeToggleContainer: {
+      flexDirection: 'row',
+      width: '100%',
+      justifyContent: 'center',
+      marginBottom: height * 0.025,
+      backgroundColor: '#f0f0f0',
+      borderRadius: 10,
+      overflow: 'hidden',
+    },
+    modeToggleButton: {
+      flex: 1,
+      paddingVertical: height * 0.015,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#e0e0e0',
+    },
+    modeToggleButtonActive: {
+      backgroundColor: 'rgb(177, 16, 16)',
+      borderColor: 'rgb(177, 16, 16)',
+    },
+    modeButtonText: {
+      fontSize: width * 0.04,
+      fontWeight: 'bold',
+      color: '#555',
+    },
+    modeButtonTextActive: {
+      color: 'white',
+    },
     inputRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -232,6 +407,8 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
       fontSize: width * 0.038,
       color: '#333',
       fontWeight: '500',
+      flexShrink: 1,
+      flexWrap: 'wrap',
     },
     confirmButton: {
       backgroundColor: "rgb(177, 16, 16)",
@@ -268,96 +445,241 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
             <Ionicons name="calendar" size={width * 0.12} style={dynamicStyles.headerIcon} />
             <Text style={dynamicStyles.title}>Reservar Sala</Text>
 
-            <View style={dynamicStyles.inputRow}>
-              <View style={dynamicStyles.inputGroup}>
-                <Text style={dynamicStyles.inputTitle}>Data</Text>
-                <TouchableOpacity
-                  onPress={() => setMostrarDatePicker(true)}
-                  style={dynamicStyles.inputFake}
-                >
-                  <Text style={dynamicStyles.inputFakeText}>{formatarDataExibicao(data)}</Text>
-                  <FontAwesome name="calendar" size={width * 0.04} color="#888" />
-                </TouchableOpacity>
-                {mostrarDatePicker && (
-                  <DateTimePicker
-                    mode="date"
-                    value={data}
-                    minimumDate={getToday()}
-                    onChange={(e, selected) => {
-                      if (selected) setData(selected);
-                      setMostrarDatePicker(false);
-                    }}
-                  />
-                )}
-              </View>
+            <View style={dynamicStyles.modeToggleContainer}>
+              <TouchableOpacity
+                style={[dynamicStyles.modeToggleButton, currentMode === 'simples' && dynamicStyles.modeToggleButtonActive]}
+                onPress={() => setCurrentMode('simples')}
+              >
+                <Text style={[dynamicStyles.modeButtonText, currentMode === 'simples' && dynamicStyles.modeButtonTextActive]}>Reserva Simples</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[dynamicStyles.modeToggleButton, currentMode === 'periodica' && dynamicStyles.modeToggleButtonActive]}
+                onPress={() => setCurrentMode('periodica')}
+              >
+                <Text style={[dynamicStyles.modeButtonText, currentMode === 'periodica' && dynamicStyles.modeButtonTextActive]}>Reserva Periódica</Text>
+              </TouchableOpacity>
             </View>
 
-            <View style={dynamicStyles.inputRow}>
-              <View style={dynamicStyles.inputGroup}>
-                <Text style={dynamicStyles.inputTitle}>Início</Text>
-                <TouchableOpacity
-                  onPress={() => setMostrarStartTimePicker(true)}
-                  style={dynamicStyles.inputFake}
-                >
-                  <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaInicio)}</Text>
-                  <Ionicons name="time-outline" size={width * 0.04} color="#888" />
-                </TouchableOpacity>
-                {mostrarStartTimePicker && (
-                  <DateTimePicker
-                    mode="time"
-                    display="spinner"
-                    is24Hour={true}
-                    value={horaInicio}
-                    onChange={(e, selected) => {
-                      if (selected) {
-                        const newHoraInicio = new Date(selected);
-                        newHoraInicio.setSeconds(0);
-                        newHoraInicio.setMilliseconds(0);
-                        setHoraInicio(newHoraInicio);
-                        ajustarHoraFim(newHoraInicio);
-                      }
-                      setMostrarStartTimePicker(false);
-                    }}
-                  />
-                )}
-              </View>
+            {currentMode === 'simples' ? (
+              <>
+                <View style={dynamicStyles.inputRow}>
+                  <View style={dynamicStyles.inputGroup}>
+                    <Text style={dynamicStyles.inputTitle}>Data</Text>
+                    <TouchableOpacity
+                      onPress={() => setMostrarDatePicker(true)}
+                      style={dynamicStyles.inputFake}
+                    >
+                      <Text style={dynamicStyles.inputFakeText}>{formatarDataExibicao(dataSimples)}</Text>
+                      <FontAwesome name="calendar" size={width * 0.04} color="#888" />
+                    </TouchableOpacity>
+                    {mostrarDatePicker && (
+                      <DateTimePicker
+                        mode="date"
+                        value={dataSimples}
+                        minimumDate={getToday()}
+                        onChange={(e, selected) => {
+                          if (selected) setDataSimples(selected);
+                          setMostrarDatePicker(false);
+                        }}
+                      />
+                    )}
+                  </View>
+                </View>
 
-              <View style={dynamicStyles.inputGroup}>
-                <Text style={dynamicStyles.inputTitle}>Fim</Text>
-                <TouchableOpacity
-                  onPress={() => setMostrarEndTimePicker(true)}
-                  style={dynamicStyles.inputFake}
-                >
-                  <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaFim)}</Text>
-                  <Ionicons name="time-outline" size={width * 0.04} color="#888" />
-                </TouchableOpacity>
-                {mostrarEndTimePicker && (
-                  <DateTimePicker
-                    mode="time"
-                    display="spinner"
-                    is24Hour={true}
-                    value={horaFim}
-                    minimumDate={new Date(horaInicio.getTime() + 60 * 60 * 1000)}
-                    onChange={(e, selected) => {
-                      if (selected) {
-                        const newHoraFim = new Date(selected);
-                        newHoraFim.setSeconds(0);
-                        newHoraFim.setMilliseconds(0);
-                        setHoraFim(newHoraFim);
-                      }
-                      setMostrarEndTimePicker(false);
-                    }}
-                  />
-                )}
-              </View>
-            </View>
+                <View style={dynamicStyles.inputRow}>
+                  <View style={dynamicStyles.inputGroup}>
+                    <Text style={dynamicStyles.inputTitle}>Início</Text>
+                    <TouchableOpacity
+                      onPress={() => setMostrarStartTimePicker(true)}
+                      style={dynamicStyles.inputFake}
+                    >
+                      <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaInicio)}</Text>
+                      <Ionicons name="time-outline" size={width * 0.04} color="#888" />
+                    </TouchableOpacity>
+                    {mostrarStartTimePicker && (
+                      <DateTimePicker
+                        mode="time"
+                        display="spinner"
+                        is24Hour={true}
+                        value={horaInicio}
+                        onChange={(e, selected) => {
+                          if (selected) {
+                            const newHoraInicio = new Date(selected);
+                            newHoraInicio.setSeconds(0);
+                            newHoraInicio.setMilliseconds(0);
+                            setHoraInicio(newHoraInicio);
+                            ajustarHoraFim(newHoraInicio);
+                          }
+                          setMostrarStartTimePicker(false);
+                        }}
+                      />
+                    )}
+                  </View>
 
-            <View style={dynamicStyles.summaryContainer}>
-              <FontAwesome name="calendar" size={width * 0.045} style={dynamicStyles.summaryIcon} />
-              <Text style={dynamicStyles.summaryText}>
-                {formatarDataExibicao(data)} das {formatarHoraExibicao(horaInicio)} às {formatarHoraExibicao(horaFim)}
-              </Text>
-            </View>
+                  <View style={dynamicStyles.inputGroup}>
+                    <Text style={dynamicStyles.inputTitle}>Fim</Text>
+                    <TouchableOpacity
+                      onPress={() => setMostrarEndTimePicker(true)}
+                      style={dynamicStyles.inputFake}
+                    >
+                      <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaFim)}</Text>
+                      <Ionicons name="time-outline" size={width * 0.04} color="#888" />
+                    </TouchableOpacity>
+                    {mostrarEndTimePicker && (
+                      <DateTimePicker
+                        mode="time"
+                        display="spinner"
+                        is24Hour={true}
+                        value={horaFim}
+                        minimumDate={new Date(horaInicio.getTime() + 60 * 60 * 1000)}
+                        onChange={(e, selected) => {
+                          if (selected) {
+                            const newHoraFim = new Date(selected);
+                            newHoraFim.setSeconds(0);
+                            newHoraFim.setMilliseconds(0);
+                            setHoraFim(newHoraFim);
+                          }
+                          setMostrarEndTimePicker(false);
+                        }}
+                      />
+                    )}
+                  </View>
+                </View>
+
+                <View style={dynamicStyles.summaryContainer}>
+                  <FontAwesome name="calendar" size={width * 0.045} style={dynamicStyles.summaryIcon} />
+                  <Text style={dynamicStyles.summaryText}>
+                    {formatarDataExibicao(dataSimples)} das {formatarHoraExibicao(horaInicio)} às {formatarHoraExibicao(horaFim)}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={dynamicStyles.inputRow}>
+                  <View style={dynamicStyles.inputGroup}>
+                    <Text style={dynamicStyles.inputTitle}>Data Início</Text>
+                    <TouchableOpacity
+                      onPress={() => setMostrarDataInicioPickerPeriodica(true)}
+                      style={dynamicStyles.inputFake}
+                    >
+                      <Text style={dynamicStyles.inputFakeText}>{formatarDataExibicao(dataInicioPeriodica)}</Text>
+                      <FontAwesome name="calendar" size={width * 0.04} color="#888" />
+                    </TouchableOpacity>
+                    {mostrarDataInicioPickerPeriodica && (
+                      <DateTimePicker
+                        mode="date"
+                        value={dataInicioPeriodica}
+                        minimumDate={getToday()}
+                        onChange={(e, selected) => {
+                          if (selected) setDataInicioPeriodica(selected);
+                          setMostrarDataInicioPickerPeriodica(false);
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  <View style={dynamicStyles.inputGroup}>
+                    <Text style={dynamicStyles.inputTitle}>Data Fim</Text>
+                    <TouchableOpacity
+                      onPress={() => setMostrarDataFimPickerPeriodica(true)}
+                      style={dynamicStyles.inputFake}
+                    >
+                      <Text style={dynamicStyles.inputFakeText}>{formatarDataExibicao(dataFimPeriodica)}</Text>
+                      <FontAwesome name="calendar" size={width * 0.04} color="#888" />
+                    </TouchableOpacity>
+                    {mostrarDataFimPickerPeriodica && (
+                      <DateTimePicker
+                        mode="date"
+                        value={dataFimPeriodica}
+                        minimumDate={dataInicioPeriodica}
+                        onChange={(e, selected) => {
+                          if (selected) setDataFimPeriodica(selected);
+                          setMostrarDataFimPickerPeriodica(false);
+                        }}
+                      />
+                    )}
+                  </View>
+                </View>
+
+                <View style={dynamicStyles.inputRow}>
+                  <View style={dynamicStyles.inputGroup}>
+                    <Text style={dynamicStyles.inputTitle}>Início</Text>
+                    <TouchableOpacity
+                      onPress={() => setMostrarStartTimePicker(true)}
+                      style={dynamicStyles.inputFake}
+                    >
+                      <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaInicio)}</Text>
+                      <Ionicons name="time-outline" size={width * 0.04} color="#888" />
+                    </TouchableOpacity>
+                    {mostrarStartTimePicker && (
+                      <DateTimePicker
+                        mode="time"
+                        display="spinner"
+                        is24Hour={true}
+                        value={horaInicio}
+                        onChange={(e, selected) => {
+                          if (selected) {
+                            const newHoraInicio = new Date(selected);
+                            newHoraInicio.setSeconds(0);
+                            newHoraInicio.setMilliseconds(0);
+                            setHoraInicio(newHoraInicio);
+                            ajustarHoraFim(newHoraInicio);
+                          }
+                          setMostrarStartTimePicker(false);
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  <View style={dynamicStyles.inputGroup}>
+                    <Text style={dynamicStyles.inputTitle}>Fim</Text>
+                    <TouchableOpacity
+                      onPress={() => setMostrarEndTimePicker(true)}
+                      style={dynamicStyles.inputFake}
+                    >
+                      <Text style={dynamicStyles.inputFakeText}>{formatarHoraExibicao(horaFim)}</Text>
+                      <Ionicons name="time-outline" size={width * 0.04} color="#888" />
+                    </TouchableOpacity>
+                    {mostrarEndTimePicker && (
+                      <DateTimePicker
+                        mode="time"
+                        display="spinner"
+                        is24Hour={true}
+                        value={horaFim}
+                        minimumDate={new Date(horaInicio.getTime() + 60 * 60 * 1000)}
+                        onChange={(e, selected) => {
+                          if (selected) {
+                            const newHoraFim = new Date(selected);
+                            newHoraFim.setSeconds(0);
+                            newHoraFim.setMilliseconds(0);
+                            setHoraFim(newHoraFim);
+                          }
+                          setMostrarEndTimePicker(false);
+                        }}
+                      />
+                    )}
+                  </View>
+                </View>
+
+                <View style={{ width: '100%', marginBottom: height * 0.025 }}>
+                  <Text style={dynamicStyles.inputTitle}>Dias da Semana</Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDaySelectionModal(true)}
+                    style={dynamicStyles.inputFake}
+                  >
+                    <Text style={dynamicStyles.inputFakeText}>{getSelectedDaysText()}</Text>
+                    <Ionicons name="chevron-down-outline" size={width * 0.04} color="#888" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={dynamicStyles.summaryContainer}>
+                  <FontAwesome name="calendar" size={width * 0.045} style={dynamicStyles.summaryIcon} />
+                  <Text style={dynamicStyles.summaryText}>
+                    De {formatarDataExibicao(dataInicioPeriodica)} a {formatarDataExibicao(dataFimPeriodica)}, na(s) {getSelectedDaysText()}, das {formatarHoraExibicao(horaInicio)} às {formatarHoraExibicao(horaFim)}
+                  </Text>
+                </View>
+              </>
+            )}
 
             <TouchableOpacity style={dynamicStyles.confirmButton} onPress={handleReserva}>
               <FontAwesome name="check-circle" size={width * 0.05} color="white" />
@@ -374,6 +696,17 @@ const ReservarModal = ({ isOpen, onClose, idSala }) => {
         message={modalInfo.message}
         type={modalInfo.type}
       />
+
+      {currentMode === 'periodica' && (
+        <DiasModal
+          visible={showDaySelectionModal}
+          onClose={() => setShowDaySelectionModal(false)}
+          validDays={validDays}
+          selectedDays={selectedDays}
+          toggleDay={toggleDay}
+          diasSemanaMap={diasSemanaMap}
+        />
+      )}
     </>
   );
 };

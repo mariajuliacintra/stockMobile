@@ -8,6 +8,7 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
   useWindowDimensions,
 } from "react-native";
 
@@ -19,9 +20,12 @@ import * as SecureStore from "expo-secure-store";
 import api from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
 
+const { width, height } = Dimensions.get("window");
+
 function Login({ visible, onClose, onOpenCadastro }) {
   const navigation = useNavigation();
-  const { width, height } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
 
   const [usuario, setUsuario] = useState({
     email: "",
@@ -45,7 +49,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
   async function handleLogin() {
     try {
       const response = await api.postLogin(usuario);
-      console.log(response.data.message);
       setInternalModalMessage(response.data.message);
       setInternalModalType("success");
       setInternalModalVisible(true);
@@ -67,72 +70,124 @@ function Login({ visible, onClose, onOpenCadastro }) {
   }
 
   const dynamicStyles = StyleSheet.create({
-    modalOverlay: {
+    overlay: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-      width: width * 0.84,
-      maxHeight: height * 0.8,
-      backgroundColor: "white",
-      borderRadius: 10,
-      paddingVertical: height * 0.05,
+      backgroundColor: "rgba(0,0,0,0.7)",
+      justifyContent: "center",
       alignItems: "center",
+    },
+    modal: {
+      backgroundColor: "white",
+      padding: width * 0.06,
+      borderRadius: 15,
+      width: width * 0.85,
+      maxWidth: 400,
+      alignItems: 'center',
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 5,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
+      elevation: 10,
     },
     closeButton: {
       position: 'absolute',
-      top: 20,
-      right: 20,
-      zIndex: 1,
+      top: 10,
+      right: 10,
       padding: 5,
+      zIndex: 1,
     },
-    modalTitle: {
-      fontSize: width * 0.062,
-      fontWeight: '600',
-      marginBottom: height * 0.04,
+    headerIcon: {
+      marginBottom: height * 0.02,
+      color: "white",
+      backgroundColor: 'rgb(177, 16, 16)',
+      padding: 10,
+      borderRadius: 50
+    },
+    title: {
+      fontSize: width * 0.06,
+      fontWeight: "bold",
+      color: '#333',
+      marginBottom: height * 0.02,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: width * 0.04,
+      color: '#666',
+      marginBottom: height * 0.03,
+      textAlign: 'center',
+    },
+    inputRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginBottom: height * 0.025,
+      gap: width * 0.02,
+    },
+    inputGroup: {
+      flex: 1,
+      alignItems: 'flex-start',
+    },
+    inputTitle: {
+      fontSize: width * 0.035,
+      marginBottom: height * 0.005,
+      fontWeight: "500",
+      color: '#555',
+    },
+    inputFake: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: "#ddd",
+      backgroundColor: "#f5f5f5",
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.03,
+      borderRadius: 8,
+      width: '100%',
+      justifyContent: 'space-between',
+    },
+    inputFakeText: {
+      fontSize: width * 0.04,
       color: '#333',
     },
-    inputContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      width: width * 0.7,
-      backgroundColor: "white",
-      borderRadius: 5,
-      marginBottom: height * 0.02,
-      paddingHorizontal: width * 0.03,
-      height: height * 0.06,
-      borderWidth: 1,
-      borderColor: '#ccc',
+    summaryContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#f0f0f0',
+      borderRadius: 10,
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.04,
+      marginBottom: height * 0.03,
+      width: '100%',
     },
-    iconStyle: {
-      marginRight: width * 0.02,
+    summaryIcon: {
+      marginRight: width * 0.025,
+      color: 'rgb(177, 16, 16)',
     },
-    inputField: {
-      flex: 1,
-      fontSize: width * 0.04,
-      color: 'black',
-      paddingVertical: 0,
+    summaryText: {
+      fontSize: width * 0.038,
+      color: '#333',
+      fontWeight: '500',
     },
-    buttonEntrar: {
-      backgroundColor: "rgb(250, 24, 24)",
-      paddingVertical: height * 0.018,
-      paddingHorizontal: width * 0.1,
-      borderRadius: 5,
-      alignItems: "center",
-      marginTop: height * 0.03,
-      width: width * 0.7,
+    confirmButton: {
+      backgroundColor: "rgb(177, 16, 16)",
+      paddingVertical: height * 0.02,
+      paddingHorizontal: width * 0.08,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 5,
+      elevation: 6,
     },
-    textButtonEntrar: {
-      fontSize: width * 0.045,
+    confirmButtonText: {
       color: "white",
       fontWeight: "bold",
+      fontSize: width * 0.045,
+      marginLeft: width * 0.02,
     },
     separator: {
       height: 1,
@@ -147,7 +202,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
       borderRadius: 8,
       alignItems: "center",
       marginTop: height * 0.015,
-      width: width * 0.7,
+      width: '100%',
     },
     textButtonToCadastro: {
       fontSize: width * 0.045,
@@ -159,7 +214,25 @@ function Login({ visible, onClose, onOpenCadastro }) {
       fontSize: width * 0.039,
       color: 'gray',
       marginBottom: height * 0.001,
-    }
+    },
+    loginInputContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        width: '100%',
+        borderWidth: 1,
+        borderColor: "#ddd",
+        backgroundColor: "#f5f5f5",
+        paddingVertical: height * 0.015,
+        paddingHorizontal: width * 0.03,
+        borderRadius: 8,
+        marginBottom: height * 0.025,
+    },
+    loginInputField: {
+        flex: 1,
+        fontSize: width * 0.04,
+        color: '#333',
+        paddingVertical: 0,
+    },
   });
 
   return (
@@ -169,19 +242,20 @@ function Login({ visible, onClose, onOpenCadastro }) {
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={dynamicStyles.modalOverlay}>
+      <View style={dynamicStyles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
         >
-          <View style={dynamicStyles.modalContent}>
+          <View style={dynamicStyles.modal}>
             <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
-              <Ionicons name="close-circle-outline" size={width * 0.07} color="gray" />
+              <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
             </TouchableOpacity>
 
-            <Text style={dynamicStyles.modalTitle}>Login</Text>
+            <Ionicons name="log-in" size={width * 0.11} style={dynamicStyles.headerIcon} />
+            <Text style={dynamicStyles.title}>Login</Text>
 
-            <View style={dynamicStyles.inputContainer}>
+            <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="person-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
                 <TextInput
                     placeholder="e-mail"
@@ -189,15 +263,15 @@ function Login({ visible, onClose, onOpenCadastro }) {
                     onChangeText={(value) => {
                         setUsuario({ ...usuario, email: value });
                     }}
-                    style={dynamicStyles.inputField}
+                    style={dynamicStyles.loginInputField}
                     placeholderTextColor="gray"
                 />
             </View>
 
-            <View style={dynamicStyles.inputContainer}>
+            <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
                 <TextInput
-                    style={dynamicStyles.inputField}
+                    style={dynamicStyles.loginInputField}
                     placeholder="senha"
                     value={usuario.senha}
                     secureTextEntry={usuario.showSenha}
@@ -219,8 +293,8 @@ function Login({ visible, onClose, onOpenCadastro }) {
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity onPress={handleLogin} style={dynamicStyles.buttonEntrar}>
-              <Text style={dynamicStyles.textButtonEntrar}>Login</Text>
+            <TouchableOpacity onPress={handleLogin} style={dynamicStyles.confirmButton}>
+              <Text style={dynamicStyles.confirmButtonText}>Login</Text>
             </TouchableOpacity>
 
             <View style={dynamicStyles.separator} />
@@ -231,9 +305,9 @@ function Login({ visible, onClose, onOpenCadastro }) {
                 onPress={() => {
                     onClose();
                     if (onOpenCadastro) {
-                      onOpenCadastro();
+                        onOpenCadastro();
                     } else {
-                      navigation.navigate("Cadastro");
+                        navigation.navigate("Cadastro");
                     }
                 }}
             >

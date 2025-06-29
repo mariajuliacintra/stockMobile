@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Modal,
-  Image,
   StyleSheet,
   Text,
   TextInput,
@@ -9,6 +8,7 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
   useWindowDimensions,
 } from "react-native";
 
@@ -20,9 +20,11 @@ import * as SecureStore from "expo-secure-store";
 import api from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
 
+const { width, height } = Dimensions.get("window");
+
 function Cadastro({ visible, onClose, onOpenLogin }) {
   const navigation = useNavigation();
-  const { width, height } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   const [usuario, setUsuario] = useState({
     nome: "",
@@ -78,99 +80,169 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
   }
 
   const dynamicStyles = StyleSheet.create({
-    modalOverlay: {
+    overlay: {
       flex: 1,
+      backgroundColor: "rgba(0,0,0,0.7)",
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
-    modalContent: {
-      width: width * 0.85,
-      maxHeight: height * 0.9,
+    modal: {
       backgroundColor: "white",
-      borderRadius: 10,
-      paddingVertical: height * 0.04,
-      alignItems: "center",
+      padding: width * 0.06,
+      borderRadius: 15,
+      width: width * 0.85,
+      maxWidth: 400,
+      alignItems: 'center',
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 5,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
+      elevation: 10,
     },
     closeButton: {
       position: 'absolute',
-      top: 20,
-      right: 20,
-      zIndex: 1,
+      top: 10,
+      right: 10,
       padding: 5,
+      zIndex: 1,
     },
-    modalTitle: {
+    headerIcon: {
+      marginBottom: height * 0.02,
+      color: 'white',
+      backgroundColor: 'rgb(177, 16, 16)',
+      padding: width * 0.03, // Ajustado para ser responsivo
+      borderRadius: (width * 0.11 + width * 0.03 * 2) / 2, // Ajustado para ser responsivo e circular
+    },
+    title: {
       fontSize: width * 0.06,
-      fontWeight: '600',
-      marginBottom: height * 0.04,
+      fontWeight: "bold",
+      color: '#333',
+      marginBottom: height * 0.02,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontSize: width * 0.04,
+      color: '#666',
+      marginBottom: height * 0.03,
+      textAlign: 'center',
+    },
+    inputRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginBottom: height * 0.025,
+      gap: width * 0.02,
+    },
+    inputGroup: {
+      flex: 1,
+      alignItems: 'flex-start',
+    },
+    inputTitle: {
+      fontSize: width * 0.035,
+      marginBottom: height * 0.005,
+      fontWeight: "500",
+      color: '#555',
+    },
+    inputFake: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: "#ddd",
+      backgroundColor: "#f5f5f5",
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.03,
+      borderRadius: 8,
+      width: '100%',
+      justifyContent: 'space-between',
+    },
+    inputFakeText: {
+      fontSize: width * 0.04,
       color: '#333',
     },
-    inputContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      width: width * 0.7,
-      backgroundColor: "white",
-      borderRadius: 5,
-      marginBottom: height * 0.02,
-      paddingHorizontal: width * 0.03,
-      height: height * 0.06,
-      borderWidth: 1,
-      borderColor: '#ccc',
+    summaryContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#f0f0f0',
+      borderRadius: 10,
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.04,
+      marginBottom: height * 0.03,
+      width: '100%',
     },
-    iconStyle: {
-      marginRight: width * 0.02,
+    summaryIcon: {
+      marginRight: width * 0.025,
+      color: 'rgb(177, 16, 16)',
     },
-    inputField: {
-      flex: 1,
-      fontSize: width * 0.04,
-      color: 'black',
-      paddingVertical: 0,
+    summaryText: {
+      fontSize: width * 0.038,
+      color: '#333',
+      fontWeight: '500',
     },
-    buttonCadastrar: {
-      backgroundColor: "rgb(250, 24, 24)",
-      paddingVertical: height * 0.018,
-      paddingHorizontal: width * 0.1,
-      borderRadius: 5,
-      alignItems: "center",
-      marginTop: height * 0.03,
-      width: width * 0.7,
+    confirmButton: {
+      backgroundColor: "rgb(177, 16, 16)",
+      paddingVertical: height * 0.02,
+      paddingHorizontal: width * 0.08,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 5,
+      elevation: 6,
     },
-    textButtonCadastrar: {
-      fontSize: width * 0.045,
+    confirmButtonText: {
       color: "white",
       fontWeight: "bold",
+      fontSize: width * 0.045,
+      marginLeft: width * 0.02,
     },
     separator: {
       height: 1,
       width: '80%',
       backgroundColor: '#eee',
-      marginVertical: height * 0.03,
+      marginVertical: height * 0.018,
     },
-    buttonToLogin: {
+    buttonToCadastro: {
       backgroundColor: "transparent",
-      paddingVertical: height * 0.001,
+      paddingVertical: height * 0.0001,
       paddingHorizontal: width * 0.05,
       borderRadius: 8,
       alignItems: "center",
       marginTop: height * 0.015,
-      width: width * 0.7,
+      width: '100%',
     },
-    textButtonToLogin: {
+    textButtonToCadastro: {
       fontSize: width * 0.045,
       color: "rgb(152, 0, 0)",
       fontWeight: "bold",
       textDecorationLine: 'underline',
     },
-    alreadyHaveAccountText: {
+    createAccountText: {
       fontSize: width * 0.039,
       color: 'gray',
-      marginBottom: height * 0.01,
-    }
+      marginBottom: height * 0.001,
+    },
+    loginInputContainer: { // Reutilizado e renomeado para 'formInputContainer' no Cadastro
+        flexDirection: "row",
+        alignItems: "center",
+        width: '100%',
+        borderWidth: 1,
+        borderColor: "#ddd",
+        backgroundColor: "#f5f5f5",
+        paddingVertical: height * 0.015,
+        paddingHorizontal: width * 0.03,
+        borderRadius: 8,
+        marginBottom: height * 0.025,
+    },
+    loginInputField: { // Reutilizado e renomeado para 'formInputField' no Cadastro
+        flex: 1,
+        fontSize: width * 0.04,
+        color: '#333',
+        paddingVertical: 0,
+    },
   });
 
   return (
@@ -180,19 +252,20 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={dynamicStyles.modalOverlay}>
+      <View style={dynamicStyles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
         >
-          <View style={dynamicStyles.modalContent}>
+          <View style={dynamicStyles.modal}>
             <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
-              <Ionicons name="close-circle-outline" size={width * 0.07} color="gray" />
+              <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
             </TouchableOpacity>
 
-            <Text style={dynamicStyles.modalTitle}>Cadastre-se</Text>
-            
-            <View style={dynamicStyles.inputContainer}>
+            <Ionicons name="person-add-outline" size={width * 0.09} color="white" style={dynamicStyles.headerIcon} />
+            <Text style={dynamicStyles.title}>Cadastre-se</Text>
+
+            <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="person-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
                 <TextInput
                     placeholder="nome"
@@ -200,12 +273,12 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
                     onChangeText={(value) => {
                         setUsuario({ ...usuario, nome: value });
                     }}
-                    style={dynamicStyles.inputField}
+                    style={dynamicStyles.loginInputField}
                     placeholderTextColor="gray"
                 />
             </View>
 
-            <View style={dynamicStyles.inputContainer}>
+            <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="mail-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
                 <TextInput
                     placeholder="e-mail"
@@ -213,12 +286,12 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
                     onChangeText={(value) => {
                         setUsuario({ ...usuario, email: value });
                     }}
-                    style={dynamicStyles.inputField}
+                    style={dynamicStyles.loginInputField}
                     placeholderTextColor="gray"
                 />
             </View>
 
-            <View style={dynamicStyles.inputContainer}>
+            <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="document-text-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
                 <TextInput
                     placeholder="NIF"
@@ -226,15 +299,15 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
                     onChangeText={(value) => {
                         setUsuario({ ...usuario, NIF: value });
                     }}
-                    style={dynamicStyles.inputField}
+                    style={dynamicStyles.loginInputField}
                     placeholderTextColor="gray"
                 />
             </View>
             
-            <View style={dynamicStyles.inputContainer}>
+            <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
                 <TextInput
-                    style={dynamicStyles.inputField}
+                    style={dynamicStyles.loginInputField}
                     placeholder="senha"
                     value={usuario.senha}
                     secureTextEntry={usuario.showSenha}
@@ -256,10 +329,10 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
                 </TouchableOpacity>
             </View>
 
-            <View style={dynamicStyles.inputContainer}>
+            <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
                 <TextInput
-                    style={dynamicStyles.inputField}
+                    style={dynamicStyles.loginInputField}
                     placeholder="confirmar senha"
                     value={confirmarSenha}
                     secureTextEntry={usuario.showSenha}
@@ -281,16 +354,16 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
 
             <TouchableOpacity
               onPress={handleCadastro}
-              style={dynamicStyles.buttonCadastrar}
+              style={dynamicStyles.confirmButton}
             >
-              <Text style={dynamicStyles.textButtonCadastrar}>Cadastrar-se</Text>
+              <Text style={dynamicStyles.confirmButtonText}>Cadastrar-se</Text>
             </TouchableOpacity>
             
             <View style={dynamicStyles.separator} />
 
-            <Text style={dynamicStyles.alreadyHaveAccountText}>Já tem uma conta?</Text>
+            <Text style={dynamicStyles.createAccountText}>Já tem uma conta?</Text>
             <TouchableOpacity
-              style={dynamicStyles.buttonToLogin}
+              style={dynamicStyles.buttonToCadastro} // Mantendo o nome do estilo para reuso
               onPress={() => {
                 onClose();
                 if (onOpenLogin) {
@@ -300,7 +373,7 @@ function Cadastro({ visible, onClose, onOpenLogin }) {
                 }
               }}
             >
-              <Text style={dynamicStyles.textButtonToLogin}>Login</Text>
+              <Text style={dynamicStyles.textButtonToCadastro}>Login</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

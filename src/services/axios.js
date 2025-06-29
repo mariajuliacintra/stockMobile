@@ -29,17 +29,18 @@ const sheets = {
 
   getPerfil: (id_usuario) => api.get(`usuario/perfil/${id_usuario}`),
   getUsuarioById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}`),
-  getUsuarioReservasById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}/reservas/simples`),
+  getUsuarioReservasById: (id_usuario) => api.get(`usuario/perfil/${id_usuario}/reservas`),
 
   verificarSenhaUsuario: (id_usuario, confirmarSenha) => api.post(`usuario/verificarsenha/${id_usuario}`, confirmarSenha),
   
   postReserva: (reserva) => api.post("reserva/simples/", reserva),
+  postReservaPeriodica: (reserva) => api.post("reserva/periodica/", reserva),
   putAtualizarReserva: (id_reserva, reservaAtualizada) => api.put(`/reserva/${id_reserva}`, reservaAtualizada),
   putAtualizarUsuario:(id_usuario, dadosAtualizados) => api.put(`/usuario/${id_usuario}`, dadosAtualizados),
   deleteReserva: (id_reserva, id_usuario) => api.delete(`reserva/${id_reserva}/${id_usuario}`),
   
   getHistoricoReservasById: (id_usuario) => api.get(`/usuario/historico/${id_usuario}`),
-  getUsuarioHistoricoReservasDelecaobyId: (id_usuario) => api.get(`/usuario/historico/delecao/${id_usuario}`),
+  getReservasDeletadasByID: (id_usuario) => api.get(`/usuario/historico/delecao/${id_usuario}`),
   deleteUsuario: (id_usuario) => api.delete(`/usuario/${id_usuario}`),
 };
 
