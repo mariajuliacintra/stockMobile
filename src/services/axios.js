@@ -35,7 +35,8 @@ const sheets = {
   
   postReserva: (reserva) => api.post("reserva/simples/", reserva),
   postReservaPeriodica: (reserva) => api.post("reserva/periodica/", reserva),
-  putAtualizarReserva: (id_reserva, reservaAtualizada) => api.put(`/reserva/${id_reserva}`, reservaAtualizada),
+  putReserva: (id_reserva, reservaAtualizada) => api.put(`/reserva/simples/${id_reserva}`, reservaAtualizada),
+  putReservaPeriodica: (id_reserva, reservaAtualizada) => api.put(`/reserva/periodica/${id_reserva}`, reservaAtualizada),
   putAtualizarUsuario:(id_usuario, dadosAtualizados) => api.put(`/usuario/${id_usuario}`, dadosAtualizados),
   deleteReserva: (id_reserva, id_usuario) => api.delete(`reserva/${id_reserva}/${id_usuario}`),
   

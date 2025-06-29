@@ -6,18 +6,16 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import CustomModal from "./CustomModal";
 import * as SecureStore from "expo-secure-store";
 import api from "../../services/axios";
 
-const ConfirmarSenhaModal = ({
-  visible,
-  onClose,
-  onConfirm, // Esta função agora receberá os dados atualizados E a senha digitada para a validação no pai (se você mantiver a validação no pai)
-  usuarioDados,
-}) => {
+const { width, height } = Dimensions.get("window");
+
+const AtualizarPerfilModal = ({ visible, onClose, onConfirm, usuarioDados }) => {
   const [senhaDigitada, setSenhaDigitada] = useState("");
   const [mostrarSenhaDigitada, setMostrarSenhaDigitada] = useState(false);
   const [etapaConfirmacao, setEtapaConfirmacao] = useState(true);
@@ -69,13 +67,12 @@ const ConfirmarSenhaModal = ({
         return;
       }
 
-      // Verificação da senha atual com a API
       const response = await api.verificarSenhaUsuario(idUsuario, {
         senha: senhaDigitada,
       });
 
       if (response.data.valido) {
-        setEtapaConfirmacao(false); // Avança para a etapa de edição
+        setEtapaConfirmacao(false);
       } else {
         setModalInfo({
           type: "error",
@@ -120,7 +117,7 @@ const ConfirmarSenhaModal = ({
     const houveAlteracao =
       nomeEditado !== usuarioDados?.nome ||
       emailEditado !== usuarioDados?.email ||
-      (editandoSenha && novaSenha.trim() !== ""); // Considera alteração se a nova senha foi digitada
+      (editandoSenha && novaSenha.trim() !== "");
 
     if (!houveAlteracao) {
       setModalInfo({
@@ -135,13 +132,10 @@ const ConfirmarSenhaModal = ({
     const dadosParaAtualizar = {
       nome: nomeEditado,
       email: emailEditado,
-      // adicionar o campo senha ao objeto dadosParaAtualizar somente se editandoSenha for verdadeiro
       ...(editandoSenha && { senha: novaSenha }),
     };
 
-    // Chama a função onConfirm do componente pai com os dados atualizados
-    // A senha atual (senhaDigitada) é necessária para a API no back-end para validação final.
-    onConfirm(dadosParaAtualizar, senhaDigitada); 
+    onConfirm(dadosParaAtualizar, senhaDigitada);
     onClose();
   };
 
@@ -150,14 +144,17 @@ const ConfirmarSenhaModal = ({
       <Modal visible={visible} transparent animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
+            <View style={styles.lockIconContainer}>
+              <MaterialIcons name="lock" size={width * 0.08} color="white" />
+            </View>
+
             {etapaConfirmacao ? (
-              // Etapa 1: Confirmar Senha Atual
               <>
-                <Text style={styles.title}>Confirme sua senha atual:</Text>
+                <Text style={styles.title}>Confirme Senha Atual:</Text>
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={styles.input}
-                    placeholder="Sua senha atual"
+                    placeholder="Senha Atual"
                     value={senhaDigitada}
                     secureTextEntry={!mostrarSenhaDigitada}
                     onChangeText={setSenhaDigitada}
@@ -167,8 +164,10 @@ const ConfirmarSenhaModal = ({
                     style={styles.visibilityButton}
                   >
                     <MaterialIcons
-                      name={mostrarSenhaDigitada ? "visibility-off" : "visibility"}
-                      size={24}
+                      name={
+                        mostrarSenhaDigitada ? "visibility-off" : "visibility"
+                      }
+                      size={width * 0.06}
                       color="gray"
                     />
                   </TouchableOpacity>
@@ -189,7 +188,6 @@ const ConfirmarSenhaModal = ({
                 </View>
               </>
             ) : (
-              // Etapa 2: Editar Dados do Perfil
               <>
                 <Text style={styles.title}>Atualizar Perfil:</Text>
                 <View style={styles.inputContainer}>
@@ -210,7 +208,6 @@ const ConfirmarSenhaModal = ({
                   />
                 </View>
 
-                {/* Campo de Senha */}
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={styles.input}
@@ -234,14 +231,19 @@ const ConfirmarSenhaModal = ({
                     style={styles.visibilityButton}
                   >
                     <MaterialIcons
-                      name={editandoSenha ? (mostrarNovaSenha ? "visibility-off" : "visibility") : "edit"}
-                      size={24}
+                      name={
+                        editandoSenha
+                          ? mostrarNovaSenha
+                            ? "visibility-off"
+                            : "visibility"
+                          : "edit"
+                      }
+                      size={width * 0.06}
                       color="gray"
                     />
                   </TouchableOpacity>
                 </View>
 
-                {/* Campo de Confirmar Nova Senha - Só aparece se 'editandoSenha' for true */}
                 {editandoSenha && (
                   <View style={styles.inputContainer}>
                     <TextInput
@@ -263,13 +265,12 @@ const ConfirmarSenhaModal = ({
                             ? "visibility-off"
                             : "visibility"
                         }
-                        size={24}
+                        size={width * 0.06}
                         color="gray"
                       />
                     </TouchableOpacity>
                   </View>
                 )}
-                {/* Botão para cancelar edição da senha, se estiver ativa */}
                 {editandoSenha && (
                   <TouchableOpacity
                     onPress={() => {
@@ -327,14 +328,32 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: "white",
-    padding: 20,
-    width: "85%",
+    paddingHorizontal: width * 0.05,
+    paddingTop: height * 0.12,
+    paddingBottom: height * 0.04,
+    width: "75%",
+    maxWidth: 400,
     borderRadius: 10,
     alignItems: "center",
+    marginTop: height * 0.05,
+    position: "relative",
+  },
+  lockIconContainer: {
+    position: "absolute",
+    top: (width * 0.04),
+    alignSelf: "center",
+    width: width * 0.15,
+    height: width * 0.15,
+    borderRadius: (width * 0.15) / 2,
+    backgroundColor: "#8B0000",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+    elevation: 5,
   },
   title: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: width * 0.05,
+    marginBottom: height * 0.025,
     fontWeight: "bold",
     textAlign: "center",
   },
@@ -344,30 +363,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: 15,
+    paddingHorizontal: width * 0.03,
+    marginBottom: height * 0.02,
     width: "100%",
     backgroundColor: "white",
   },
   input: {
     flex: 1,
-    height: 50,
-    fontSize: 16,
+    height: height * 0.06,
+    fontSize: width * 0.04,
     color: "gray",
   },
   visibilityButton: {
-    padding: 5,
+    padding: width * 0.015,
   },
   actions: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "100%",
-    marginTop: 10,
+    marginTop: height * 0.015,
   },
   button: {
     backgroundColor: "rgba(177, 16, 16, 1)",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
+    paddingVertical: height * 0.015,
+    paddingHorizontal: width * 0.06,
     borderRadius: 8,
   },
   cancelButton: {
@@ -376,20 +395,20 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: width * 0.04,
   },
   cancelEditButton: {
-    marginTop: -10,
-    marginBottom: 15,
+    marginTop: -height * 0.01,
+    marginBottom: height * 0.02,
     alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: width * 0.03,
+    paddingVertical: height * 0.005,
   },
   cancelEditText: {
     color: "rgb(155, 0, 0)",
-    fontSize: 14,
+    fontSize: width * 0.035,
     textDecorationLine: "underline",
   },
 });
 
-export default ConfirmarSenhaModal;
+export default AtualizarPerfilModal;

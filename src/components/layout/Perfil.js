@@ -16,7 +16,7 @@ import ReservasUsuarioModal from "../mod/ReservasUsuarioModal";
 import ReservasHistoricoModal from "../mod/ReservasHistoricoModal";
 import ReservasDeletadas from "../mod/ReservasDeletadasModal";
 import CustomModal from "../mod/CustomModal";
-import ConfirmarSenhaModal from "../mod/ConfirmarSenhaModal";
+import AtualizarPerfilModal from "../mod/AtualizarPerfilModal";
 import ConfirmarDelecaoModal from "../mod/ConfirmarDelecaoModal";
 
 import api from "../../services/axios";
@@ -154,7 +154,7 @@ function PerfilModal({ visible, onClose }) {
       );
       setCustomModalType("success");
       setCustomModalOpen(true);
-      navigation.navigate("Login");
+      navigation.navigate("Home");
     } catch (deleteError) {
       console.error("Erro ao deletar conta:", deleteError);
       const deleteErrorMessage =
@@ -372,7 +372,7 @@ function PerfilModal({ visible, onClose }) {
               onClose={() => setMostrarDeletadas(false)}
             />
 
-            <ConfirmarSenhaModal
+            <AtualizarPerfilModal
               visible={showConfirmarSenhaModal}
               onClose={() => setShowConfirmarSenhaModal(false)}
               usuarioDados={usuario}
