@@ -14,11 +14,11 @@ import api from "../../services/axios";
 
 const { width, height } = Dimensions.get("window");
 
-function ReservasDeletadasModal({
+function ReservasHistoricoModal({
   visible,
   onClose,
 }) {
-  const [reservasDeletadas, setReservasDeletadas] = useState([]);
+  const [historicoReservas, setHistoricoReservas] = useState([]);
   const [activeTab, setActiveTab] = useState("simples");
   const [expandedDaysMap, setExpandedDaysMap] = useState({});
 
@@ -32,7 +32,7 @@ function ReservasDeletadasModal({
     "6": "Sábado",
   };
 
-  const fetchReservasDeletadas = useCallback(async () => {
+  const fetchHistorico = useCallback(async () => {
     if (!visible) return;
     try {
       const idUsuarioStr = await SecureStore.getItemAsync("idUsuario");
@@ -47,30 +47,30 @@ function ReservasDeletadasModal({
         return;
       }
 
-      const response = await api.getReservasDeletadasByID(idUsuario);
-      setReservasDeletadas(response.data.reservasDeletadas || []);
+      const responseHistorico = await api.getHistoricoReservasById(idUsuario);
+      setHistoricoReservas(responseHistorico.data.historico || []);
     } catch (error) {
-      console.error("Erro ao buscar reservas deletadas:", error);
+      console.error("Erro ao buscar histórico de reservas:", error);
     }
   }, [visible]);
 
   useEffect(() => {
-    fetchReservasDeletadas();
-  }, [fetchReservasDeletadas]);
-
-  const simplesReservasDeletadas = reservasDeletadas.filter(
-    (reserva) => typeof reserva.tipo === 'string' && reserva.tipo.toLowerCase().includes("simples")
-  );
-  const periodicasReservasDeletadas = reservasDeletadas.filter(
-    (reserva) => typeof reserva.tipo === 'string' && reserva.tipo.toLowerCase().includes("periodica")
-  );
+    fetchHistorico();
+  }, [fetchHistorico]);
 
   const toggleDayExpansion = useCallback((reservaId) => {
-    setExpandedDaysMap((prevState) => ({
+    setExpandedDaysMap(prevState => ({
       ...prevState,
-      [reservaId]: !prevState[reservaId],
+      [reservaId]: !prevState[reservaId]
     }));
   }, []);
+
+  const simplesHistorico = historicoReservas.filter(
+    (reserva) => typeof reserva.tipo === 'string' && reserva.tipo.toLowerCase().includes("simples")
+  );
+  const periodicasHistorico = historicoReservas.filter(
+    (reserva) => typeof reserva.tipo === 'string' && reserva.tipo.toLowerCase().includes("periodica")
+  );
 
   const dynamicStyles = StyleSheet.create({
     overlay: {
@@ -101,6 +101,13 @@ function ReservasDeletadasModal({
       right: 10,
       padding: 5,
       zIndex: 1,
+    },
+    headerIcon: {
+      marginBottom: height * 0.02,
+      color: 'white',
+      backgroundColor: 'rgb(177, 16, 16)',
+      padding: width * 0.03,
+      borderRadius: (width * 0.12 + width * 0.03 * 2) / 2,
     },
     modalTitle: {
       fontSize: width * 0.06,
@@ -186,7 +193,7 @@ function ReservasDeletadasModal({
       fontSize: width * 0.035,
       fontWeight: "600",
       color: "#555",
-      marginRight: width * 0.005,
+      marginRight: width * 0.01,
       flexBasis: "auto",
       flexShrink: 0,
     },
@@ -195,12 +202,10 @@ function ReservasDeletadasModal({
       color: "#777",
       flex: 1,
       flexWrap: "wrap",
-      flexGrow: 1,
-      flexShrink: 1,
     },
     detailValueExpandable: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: 'row',
+      alignItems: 'center',
       flex: 1,
     },
     dayListContainer: {
@@ -209,7 +214,7 @@ function ReservasDeletadasModal({
     },
     singleDayText: {
       fontSize: width * 0.035,
-      color: "#777",
+      color: '#777',
       marginBottom: height * 0.002,
     },
     noReserva: {
@@ -220,17 +225,17 @@ function ReservasDeletadasModal({
     },
   });
 
-  const renderReservasList = (reservaList) => {
+  const renderHistoricoList = (historicoList) => {
     return (
       <ScrollView
         style={{ flex: 1, width: '100%' }}
-        contentContainerStyle={reservaList.length === 0 ? dynamicStyles.scrollViewEmptyContent : dynamicStyles.scrollViewFilledContent}
+        contentContainerStyle={historicoList.length === 0 ? dynamicStyles.scrollViewEmptyContent : dynamicStyles.scrollViewFilledContent}
         showsVerticalScrollIndicator={false}
       >
-        {reservaList.length === 0 ? (
+        {historicoList.length === 0 ? (
           <Text style={dynamicStyles.noReserva}>Nenhuma reserva encontrada</Text>
         ) : (
-          reservaList.map((reserva, index) => {
+          historicoList.map((reserva, index) => {
             const isExpanded = expandedDaysMap[reserva.id_reserva];
             const formattedDaysArray =
               reserva.dias_semana && Array.isArray(reserva.dias_semana)
@@ -245,7 +250,7 @@ function ReservasDeletadasModal({
                   ? `- ${formattedDaysArray[0]}...`
                   : `- ${formattedDaysArray[0]}`
                 : "N/A";
-
+            
             const showExpandToggle = formattedDaysArray.length > 1;
 
             return (
@@ -274,15 +279,6 @@ function ReservasDeletadasModal({
                       <Text style={dynamicStyles.detailLabel}>Hora Fim:</Text>
                       <Text style={dynamicStyles.detailValue}>
                         {String(reserva.hora_fim).substring(0, 5)}
-                      </Text>
-                    </View>
-                    <View style={dynamicStyles.detailRow}>
-                      <Text style={dynamicStyles.detailLabel}>Dia da Semana:</Text>
-                      <Text style={dynamicStyles.detailValue}>
-                        {reserva.dias_semana && reserva.dias_semana.length > 0
-                          ? `- ${diasSemanaMap[String(reserva.dias_semana[0])]}` || "N/A"
-                          : "N/A"
-                        }
                       </Text>
                     </View>
                   </View>
@@ -373,7 +369,8 @@ function ReservasDeletadasModal({
               />
             </TouchableOpacity>
 
-            <Text style={dynamicStyles.modalTitle}>Reservas Deletadas</Text>
+            <Ionicons name="time-outline" size={width * 0.12} style={dynamicStyles.headerIcon} />
+            <Text style={dynamicStyles.modalTitle}>Histórico de Reservas</Text>
 
             <View style={dynamicStyles.tabContainer}>
               <TouchableOpacity
@@ -411,10 +408,10 @@ function ReservasDeletadasModal({
               </TouchableOpacity>
             </View>
 
-            <View style={{ flex: 1, width: '100%', minHeight: height * 0.15 }}>
+            <View style={{ flex: 1, width: '100%' }}>
               {activeTab === "simples"
-                ? renderReservasList(simplesReservasDeletadas)
-                : renderReservasList(periodicasReservasDeletadas)}
+                ? renderHistoricoList(simplesHistorico)
+                : renderHistoricoList(periodicasHistorico)}
             </View>
           </View>
         </View>
@@ -423,4 +420,4 @@ function ReservasDeletadasModal({
   );
 }
 
-export default ReservasDeletadasModal;
+export default ReservasHistoricoModal;

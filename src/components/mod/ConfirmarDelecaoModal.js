@@ -6,11 +6,14 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import CustomModal from "./CustomModal";
 import * as SecureStore from "expo-secure-store";
 import api from "../../services/axios";
+
+const { width, height } = Dimensions.get("window");
 
 const ConfirmarDelecaoModal = ({ visible, onClose, onConfirm }) => {
   const [senhaDigitada, setSenhaDigitada] = useState("");
@@ -51,7 +54,7 @@ const ConfirmarDelecaoModal = ({ visible, onClose, onConfirm }) => {
       });
 
       if (response.data.valido) {
-        setModalConfirmarExclusao(true); // Abre segundo modal de confirmação
+        setModalConfirmarExclusao(true);
       } else {
         setModalInfo({
           type: "error",
@@ -74,25 +77,24 @@ const ConfirmarDelecaoModal = ({ visible, onClose, onConfirm }) => {
 
   const handleDeletarUsuario = () => {
     setModalConfirmarExclusao(false);
-    onClose(); // Fecha o modal principal
-    onConfirm(senhaDigitada); // Chama função de deleção
+    onClose();
+    onConfirm(senhaDigitada);
     setModalConfirmarExclusao(false);
-
   };
 
   return (
     <>
-      {/* Modal de senha */}
       <Modal visible={visible} transparent animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.title}>
-              Confirmar senha atual
-            </Text>
+            <View style={styles.lockIconContainer}>
+              <MaterialIcons name="lock" size={width * 0.08} color="white" />
+            </View>
+            <Text style={styles.title}>Confirmar Senha Atual</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Sua senha"
+                placeholder="Senha Atual"
                 value={senhaDigitada}
                 secureTextEntry={!mostrarSenhaDigitada}
                 onChangeText={setSenhaDigitada}
@@ -103,7 +105,7 @@ const ConfirmarDelecaoModal = ({ visible, onClose, onConfirm }) => {
               >
                 <MaterialIcons
                   name={mostrarSenhaDigitada ? "visibility-off" : "visibility"}
-                  size={24}
+                  size={width * 0.06}
                   color="gray"
                 />
               </TouchableOpacity>
@@ -126,15 +128,16 @@ const ConfirmarDelecaoModal = ({ visible, onClose, onConfirm }) => {
         </View>
       </Modal>
 
-      {/* Modal final de confirmação */}
       <Modal visible={modalConfirmarExclusao} transparent animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.title}>
-              Confirmação de Deleção
-            </Text>
+            <View style={styles.lockIconContainer}>
+              <MaterialIcons name="lock" size={width * 0.08} color="white" />
+            </View>
+            <Text style={styles.title}>Confirmação de Deleção</Text>
             <Text style={styles.SubTitle}>
-              Tem certeza que deseja deletar sua conta? Essa ação é irreversível e removerá suas reservas.
+              Tem certeza que deseja deletar sua conta? Essa ação é irreversível
+              e removerá suas reservas.
             </Text>
             <View style={styles.actions}>
               <TouchableOpacity
@@ -174,20 +177,38 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: "white",
-    padding: 20,
-    width: "85%",
+    paddingHorizontal: width * 0.06,
+    paddingTop: height * 0.12,
+    paddingBottom: height * 0.04,
+    width: "75%",
+    maxWidth: 400,
     borderRadius: 10,
     alignItems: "center",
+    marginTop: height * 0.05,
+    position: "relative",
+  },
+  lockIconContainer: {
+    position: "absolute",
+    top: (width * 0.04),
+    alignSelf: "center",
+    width: width * 0.15,
+    height: width * 0.15,
+    borderRadius: (width * 0.15) / 2,
+    backgroundColor: "#8B0000",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1,
+    elevation: 5,
   },
   title: {
-    fontSize: 18,
-    marginBottom: 20,
+    fontSize: width * 0.05,
+    marginBottom: height * 0.025,
     fontWeight: "bold",
     textAlign: "center",
   },
   SubTitle: {
-    fontSize: 15,
-    marginBottom: 20,
+    fontSize: width * 0.04,
+    marginBottom: height * 0.025,
     textAlign: "center",
   },
   inputContainer: {
@@ -196,30 +217,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
-    paddingHorizontal: 10,
-    marginBottom: 15,
+    paddingHorizontal: width * 0.03,
+    marginBottom: height * 0.02,
     width: "100%",
     backgroundColor: "white",
   },
   input: {
     flex: 1,
-    height: 50,
-    fontSize: 16,
+    height: height * 0.06,
+    fontSize: width * 0.04,
     color: "gray",
   },
   visibilityButton: {
-    padding: 5,
+    padding: width * 0.015,
   },
   actions: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "100%",
-    marginTop: 10,
+    marginTop: height * 0.015,
   },
   button: {
     backgroundColor: "rgba(177, 16, 16, 1)",
-    paddingVertical: 12,
-    paddingHorizontal: 25,
+    paddingVertical: height * 0.015,
+    paddingHorizontal: width * 0.06,
     borderRadius: 8,
   },
   cancelButton: {
@@ -228,7 +249,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: width * 0.04,
   },
 });
 
