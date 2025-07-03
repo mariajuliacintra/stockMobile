@@ -76,13 +76,13 @@ function Home() {
     },
     body: {
       height: height * 0.83,
-      width: width * 0.9,
-      alignItems: "center",
+      width: width * 0.8,
+      alignItems: "flex-start",
       justifyContent: "center",
     },
     textBody: {
       color: "white",
-      fontSize: Math.min(width * 0.25, height * 0.25),
+      fontSize: Math.min(width * 0.244, height * 0.25),
       fontWeight: "bold",
       textAlign: "start",
     },
@@ -125,7 +125,7 @@ function Home() {
       </View>
       <View style={dynamicStyles.body}>
         <Text style={dynamicStyles.textBody}>
-          Seja Bem-vindo ao site de Reservas do SENAI
+          Seja Bem Vindo ao app de Reservas do SENAI
         </Text>
       </View>
       <View style={dynamicStyles.footer}>

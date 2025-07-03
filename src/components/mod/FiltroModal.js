@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-import DiasModal from "../mod/DiasModal"; // Importa o DiasModal externo
+import DiasModal from "./DiasModal"; // Importa o DiasModal externo
 
 function FiltroModal({ visible, onClose, onApplyFilters }) {
   const { width, height } = useWindowDimensions();
