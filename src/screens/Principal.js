@@ -17,7 +17,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import * as SecureStore from "expo-secure-store";
 import ReservarModal from "../components/mod/ReservarModal";
 import CustomModal from "../components/mod/CustomModal";
-import FiltroModal from "../components/layout/FiltroModal";
+import FiltroModal from "../components/mod/FiltroModal";
 import PerfilModal from "../components/layout/Perfil";
 
 import api from "../services/axios";

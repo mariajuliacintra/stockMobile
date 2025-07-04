@@ -15,7 +15,7 @@ import api from "../../services/axios";
 
 const { width, height } = Dimensions.get("window");
 
-const AtualizarPerfilModal = ({ visible, onClose, onConfirm, usuarioDados }) => {
+const AtualizarUsuarioModal = ({ visible, onClose, onConfirm, usuarioDados }) => {
   const [senhaDigitada, setSenhaDigitada] = useState("");
   const [mostrarSenhaDigitada, setMostrarSenhaDigitada] = useState(false);
   const [etapaConfirmacao, setEtapaConfirmacao] = useState(true);
@@ -411,4 +411,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AtualizarPerfilModal;
+export default AtualizarUsuarioModal;

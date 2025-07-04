@@ -286,9 +286,6 @@ const AtualizarReservaModal = ({ visible, onClose, reserva, onUpdateSuccess }) =
           fk_id_sala: reserva.fk_id_sala,
           dias_semana: diasSemanaToSend,
         };
-
-        // Log the payload for periodic reservation update
-        console.log("Payload para api.putReservaPeriodica (Periódica):", reservaPayload);
         const response = await api.putReservaPeriodica(reserva.id_reserva, reservaPayload);
         setModalInfo({
           type: "success",

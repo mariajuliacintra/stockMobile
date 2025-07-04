@@ -47,8 +47,8 @@ function ReservasHistoricoModal({
         return;
       }
 
-      const responseHistorico = await api.getHistoricoReservasById(idUsuario);
-      setHistoricoReservas(responseHistorico.data.historico || []);
+      const responseHistorico = await api.getReservasHistoricoById(idUsuario);
+      setHistoricoReservas(responseHistorico.data.reservasHistorico || []);
     } catch (error) {
       console.error("Erro ao buscar histórico de reservas:", error);
     }

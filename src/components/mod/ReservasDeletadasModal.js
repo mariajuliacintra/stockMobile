@@ -47,7 +47,7 @@ function ReservasDeletadasModal({
         return;
       }
 
-      const response = await api.getReservasDeletadasByID(idUsuario);
+      const response = await api.getReservasDeletadasById(idUsuario);
       setReservasDeletadas(response.data.reservasDeletadas || []);
     } catch (error) {
       console.error("Erro ao buscar reservas deletadas:", error);
