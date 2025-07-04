@@ -16,7 +16,7 @@ import ReservasUsuarioModal from "../mod/ReservasUsuarioModal";
 import ReservasHistoricoModal from "../mod/ReservasHistoricoModal";
 import ReservasDeletadas from "../mod/ReservasDeletadasModal";
 import CustomModal from "../mod/CustomModal";
-import AtualizarPerfilModal from "../mod/AtualizarPerfilModal";
+import AtualizarUsuarioModal from "../mod/AtualizarUsuarioModal";
 import ConfirmarDelecaoModal from "../mod/ConfirmarDelecaoModal";
 
 import api from "../../services/axios";
@@ -372,7 +372,7 @@ function PerfilModal({ visible, onClose }) {
               onClose={() => setMostrarDeletadas(false)}
             />
 
-            <AtualizarPerfilModal
+            <AtualizarUsuarioModal
               visible={showConfirmarSenhaModal}
               onClose={() => setShowConfirmarSenhaModal(false)}
               usuarioDados={usuario}

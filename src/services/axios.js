@@ -40,8 +40,8 @@ const sheets = {
   putAtualizarUsuario:(id_usuario, dadosAtualizados) => api.put(`/usuario/${id_usuario}`, dadosAtualizados),
   deleteReserva: (id_reserva, id_usuario) => api.delete(`reserva/${id_reserva}/${id_usuario}`),
   
-  getHistoricoReservasById: (id_usuario) => api.get(`/usuario/historico/${id_usuario}`),
-  getReservasDeletadasByID: (id_usuario) => api.get(`/usuario/historico/delecao/${id_usuario}`),
+  getReservasHistoricoById: (id_usuario) => api.get(`/usuario/historico/${id_usuario}`),
+  getReservasDeletadasById: (id_usuario) => api.get(`/usuario/deletadas/${id_usuario}`),
   deleteUsuario: (id_usuario) => api.delete(`/usuario/${id_usuario}`),
 };
 
