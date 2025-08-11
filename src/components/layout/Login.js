@@ -10,6 +10,7 @@ import {
   Platform,
   Dimensions,
   useWindowDimensions,
+  Image, 
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +26,6 @@ const { width, height } = Dimensions.get("window");
 function Login({ visible, onClose, onOpenCadastro }) {
   const navigation = useNavigation();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-
 
   const [usuario, setUsuario] = useState({
     email: "",
@@ -77,7 +77,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
       alignItems: "center",
     },
     modal: {
-      backgroundColor: "white",
+      backgroundColor: "rgba(255, 255, 255, 1)",
       padding: width * 0.06,
       borderRadius: 15,
       width: width * 0.85,
@@ -96,12 +96,11 @@ function Login({ visible, onClose, onOpenCadastro }) {
       padding: 5,
       zIndex: 1,
     },
-    headerIcon: {
+    headerImage: {
+      width: width * 0.6, 
+      height: width * 0.25,
+      resizeMode: 'contain', // "contain" para caber na área, "cover" para preencher
       marginBottom: height * 0.02,
-      color: "white",
-      backgroundColor: 'rgb(177, 16, 16)',
-      padding: 10,
-      borderRadius: 50
     },
     title: {
       fontSize: width * 0.06,
@@ -252,8 +251,10 @@ function Login({ visible, onClose, onOpenCadastro }) {
               <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
             </TouchableOpacity>
 
-            <Ionicons name="log-in" size={width * 0.11} style={dynamicStyles.headerIcon} />
-            <Text style={dynamicStyles.title}>Login</Text>
+            <Image
+              source={require("../../img/logo.png")}
+              style={dynamicStyles.headerImage}
+            />
 
             <View style={dynamicStyles.loginInputContainer}>
                 <Ionicons name="person-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />

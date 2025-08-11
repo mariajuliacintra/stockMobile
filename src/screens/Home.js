@@ -20,7 +20,9 @@ function Home() {
   const [isCadastroModalVisible, setCadastroModalVisible] = useState(false);
 
   const dynamicStyles = StyleSheet.create({
-    background: { flex: 1, justifyContent: "center", alignItems: "center" },
+    background: {
+      flex: 1,
+    },
     header: {
       backgroundColor: "rgba(177, 16, 16, 1)",
       height: height * 0.1,
@@ -29,7 +31,7 @@ function Home() {
       flexDirection: "row",
       justifyContent: "flex-end",
       alignItems: "center",
-      width: width,
+      width: width, 
     },
     logo: {
       justifyContent: "center",
@@ -74,32 +76,19 @@ function Home() {
       color: "white",
       fontWeight: "bold",
     },
+
     body: {
-      height: height * 0.83,
+      flex: 1, 
       width: width * 0.8,
-      alignItems: "flex-start",
-      justifyContent: "center",
+      alignItems: "center", 
+      justifyContent: "center", 
     },
     textBody: {
       color: "white",
-      fontSize: Math.min(width * 0.244, height * 0.25),
+      fontSize: Math.min(width * 0.188, height * 0.9),
       fontWeight: "bold",
-      textAlign: "start",
-    },
-    footer: {
-      backgroundColor: "rgba(177, 16, 16, 1)",
-      height: height * 0.07,
-      borderTopColor: "white",
-      borderTopWidth: 3,
-      justifyContent: "center",
-      alignItems: "center",
-      width: width,
-    },
-    textDesenvolvido: {
-      color: "white",
-      fontWeight: "bold",
-      fontSize: width * 0.035,
-    },
+      textAlign: "left", 
+    }
   });
 
   return (
@@ -125,12 +114,7 @@ function Home() {
       </View>
       <View style={dynamicStyles.body}>
         <Text style={dynamicStyles.textBody}>
-          Seja Bem Vindo ao app de Reservas do SENAI
-        </Text>
-      </View>
-      <View style={dynamicStyles.footer}>
-        <Text style={dynamicStyles.textDesenvolvido}>
-          &copy; Desenvolvido por: Vinicius Fogaça, Maria Júlia e Maria Fernanda
+          Seja Bem Vindo ao Site de Estoque do SENAI
         </Text>
       </View>
 
