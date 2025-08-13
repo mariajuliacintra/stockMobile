@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.91:5000/reservas/v1/",
+  baseURL: "http://10.89.240.91:5000/stock/",
   headers: {
     accept: "application/json",
   },
@@ -22,7 +22,8 @@ api.interceptors.request.use(
 
 const sheets = {
   postLogin: (usuario) => api.post("login/", usuario),
-  postCadastro: (usuario) => api.post("cadastro/", usuario),
+  postEnviarCodigoVerificacao: (user) => api.post("user/register/", user),
+  postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
 
   getSalas: () => api.get("salas"),
   getSalasDisponivelHorario: (sala) => api.post(`salasdisponivelhorario/`, sala),

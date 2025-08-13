@@ -1,310 +1,295 @@
 import React, { useState } from "react";
 import {
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions,
-  useWindowDimensions,
-  Image
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+  Image,
+  ActivityIndicator,
 } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import * as SecureStore from "expo-secure-store";
 import api from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
+import VerificationModal from "./VerificationModal";
 
 const { width, height } = Dimensions.get("window");
 
-function Cadastro({ visible, onClose, onOpenLogin }) {
-  const navigation = useNavigation();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+// Componente reutilizável para os campos de entrada
+const InputField = ({ iconName, placeholder, value, onChangeText, secureTextEntry, onToggleSecureEntry }) => (
+  <View style={styles.inputContainer}>
+    <Ionicons name={iconName} size={width * 0.05} color="gray" />
+    <TextInput
+      style={styles.inputField}
+      placeholder={placeholder}
+      value={value}
+      onChangeText={onChangeText}
+      secureTextEntry={secureTextEntry}
+      placeholderTextColor="gray"
+    />
+    {onToggleSecureEntry && (
+      <TouchableOpacity onPress={onToggleSecureEntry}>
+        <Ionicons
+          name={secureTextEntry ? "eye-off-outline" : "eye-outline"}
+          size={width * 0.05}
+          color="gray"
+        />
+      </TouchableOpacity>
+    )}
+  </View>
+);
 
-  const [usuario, setUsuario] = useState({
-    name: "",
-    email: "",
-    password: "",
-    showPassword: true,
-  });
-  const [confirmPassword, setConfirmPassword] = useState("");
+export default function Cadastro({ visible, onClose, onOpenLogin }) {
+  const navigation = useNavigation();
 
-  const [internalModalVisible, setInternalModalVisible] = useState(false);
-  const [internalModalMessage, setInternalModalMessage] = useState("");
-  const [internalModalType, setInternalModalType] = useState("info");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [showPassword, setShowPassword] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isVerificationModalVisible, setIsVerificationModalVisible] = useState(false);
 
-  async function armazenarDados(idUsuario, token) {
-    try {
-      await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
-      await SecureStore.setItemAsync("tokenUsuario", token.toString());
-    } catch (erro) {
-      console.error("Erro ao armazenar dados:", erro);
-    }
-  }
+  const [internalModalVisible, setInternalModalVisible] = useState(false);
+  const [internalModalMessage, setInternalModalMessage] = useState("");
+  const [internalModalType, setInternalModalType] = useState("info");
 
-  async function handleCadastro() {
-    // CORREÇÃO: os nomes das chaves aqui agora correspondem aos nomes que sua API espera.
-    const usuarioParaEnviar = {
-      name: usuario.name,
-      email: usuario.email,
-      password: usuario.password,
-      confirmPassword: confirmPassword,
-    };
+  function handleChange(field, value) {
+    setFormData(prevData => ({ ...prevData, [field]: value }));
+  }
 
-    try {
-      const response = await api.postCadastro(usuarioParaEnviar);
-      setInternalModalMessage(response.data.message);
-      setInternalModalType("success");
-      setInternalModalVisible(true);
+  async function handleCadastro() {
+    setIsLoading(true);
+    if (formData.password !== formData.confirmPassword) {
+      setInternalModalMessage("As senhas não coincidem.");
+      setInternalModalType("error");
+      setInternalModalVisible(true);
+      setIsLoading(false);
+      return;
+    }
 
-      const idUsuario = response.data.usuario.id_usuario;
-      const token = response.data.token;
+    try {
+      // CORREÇÃO: Enviando o objeto formData completo.
+      // Isso garante que todos os campos, incluindo confirmPassword, sejam enviados.
+      const response = await api.postEnviarCodigoVerificacao(formData);
+      
+      if (response.status === 200) {
+        setInternalModalMessage("Código de verificação enviado para o seu e-mail!");
+        setInternalModalType("success");
+        setInternalModalVisible(true);
+        onClose();
+        setIsVerificationModalVisible(true);
+      }
+    } catch (error) {
+      setInternalModalMessage(error.response?.data?.error || "Erro ao enviar o código.");
+      console.error(error);
+      setInternalModalType("error");
+      setInternalModalVisible(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
-      armazenarDados(idUsuario, token);
+  const handleVerificationSuccess = () => {
+    setIsVerificationModalVisible(false);
+    navigation.navigate("Principal");
+  };
 
-      setTimeout(() => {
-        onClose();
-        navigation.navigate("Principal");
-      }, 700);
-    } catch (error) {
-      setInternalModalMessage(error.response?.data?.error || "Erro ao cadastrar.");
-      setInternalModalType("error");
-      setInternalModalVisible(true);
-    }
-  }
+  return (
+    <>
+      <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
+        <View style={styles.overlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardView}
+          >
+            <View style={styles.modal}>
+              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
+              </TouchableOpacity>
 
-  const dynamicStyles = StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.7)",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    modal: {
-      backgroundColor: "white",
-      padding: width * 0.06,
-      borderRadius: 15,
-      width: width * 0.85,
-      maxWidth: 400,
-      alignItems: 'center',
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 5 },
-      shadowOpacity: 0.35,
-      shadowRadius: 10,
-      elevation: 10,
-    },
-    closeButton: {
-      position: 'absolute',
-      top: 10,
-      right: 10,
-      padding: 5,
-      zIndex: 1,
-    },
-    headerImage: {
-      width: width * 0.6, 
-      height: width * 0.25,
-      resizeMode: 'contain', 
-      marginBottom: height * 0.02,
-    },
-    confirmButton: {
-      backgroundColor: "rgb(177, 16, 16)",
-      paddingVertical: height * 0.02,
-      paddingHorizontal: width * 0.08,
-      borderRadius: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '100%',
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.25,
-      shadowRadius: 5,
-      elevation: 6,
-    },
-    confirmButtonText: {
-      color: "white",
-      fontWeight: "bold",
-      fontSize: width * 0.045,
-      marginLeft: width * 0.02,
-    },
-    separator: {
-      height: 1,
-      width: '80%',
-      backgroundColor: '#eee',
-      marginVertical: height * 0.018,
-    },
-    buttonToCadastro: {
-      backgroundColor: "transparent",
-      paddingVertical: height * 0.0001,
-      paddingHorizontal: width * 0.05,
-      borderRadius: 8,
-      alignItems: "center",
-      marginTop: height * 0.015,
-      width: '100%',
-    },
-    textButtonToCadastro: {
-      fontSize: width * 0.045,
-      color: "rgb(152, 0, 0)",
-      fontWeight: "bold",
-      textDecorationLine: 'underline',
-    },
-    createAccountText: {
-      fontSize: width * 0.039,
-      color: 'gray',
-      marginBottom: height * 0.001,
-    },
-    loginInputContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        width: '100%',
-        borderWidth: 1,
-        borderColor: "#ddd",
-        backgroundColor: "#f5f5f5",
-        paddingVertical: height * 0.015,
-        paddingHorizontal: width * 0.03,
-        borderRadius: 8,
-        marginBottom: height * 0.025,
-    },
-    loginInputField: {
-        flex: 1,
-        fontSize: width * 0.04,
-        color: '#333',
-        paddingVertical: 0,
-    },
-  });
+              <Image source={require("../../img/logo.png")} style={styles.headerImage} />
 
-  return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={dynamicStyles.overlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
-        >
-          <View style={dynamicStyles.modal}>
-            <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
-              <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
-            </TouchableOpacity>
+              <InputField
+                iconName="person-outline"
+                placeholder="nome"
+                value={formData.name}
+                onChangeText={(value) => handleChange("name", value)}
+              />
+              <InputField
+                iconName="mail-outline"
+                placeholder="e-mail"
+                value={formData.email}
+                onChangeText={(value) => handleChange("email", value)}
+              />
+              <InputField
+                iconName="lock-closed-outline"
+                placeholder="senha"
+                value={formData.password}
+                secureTextEntry={showPassword}
+                onChangeText={(value) => handleChange("password", value)}
+                onToggleSecureEntry={() => setShowPassword(!showPassword)}
+              />
+              <InputField
+                iconName="lock-closed-outline"
+                placeholder="confirmar senha"
+                value={formData.confirmPassword}
+                secureTextEntry={showPassword}
+                onChangeText={(value) => handleChange("confirmPassword", value)}
+                onToggleSecureEntry={() => setShowPassword(!showPassword)}
+              />
 
-            <Image
-              source={require("../../img/logo.png")}
-              style={dynamicStyles.headerImage}
-            />
+              <TouchableOpacity onPress={handleCadastro} style={styles.confirmButton} disabled={isLoading}>
+                {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmButtonText}>Cadastrar-se</Text>}
+              </TouchableOpacity>
 
-            <View style={dynamicStyles.loginInputContainer}>
-                <Ionicons name="person-outline" size={width * 0.05} color="gray" />
-                <TextInput
-                    placeholder="nome"
-                    value={usuario.name}
-                    onChangeText={(value) => {
-                        setUsuario({ ...usuario, name: value });
-                    }}
-                    style={dynamicStyles.loginInputField}
-                    placeholderTextColor="gray"
-                />
-            </View>
+              <View style={styles.separator} />
 
-            <View style={dynamicStyles.loginInputContainer}>
-                <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
-                <TextInput
-                    placeholder="e-mail"
-                    value={usuario.email}
-                    onChangeText={(value) => {
-                        setUsuario({ ...usuario, email: value });
-                    }}
-                    style={dynamicStyles.loginInputField}
-                    placeholderTextColor="gray"
-                />
-            </View>
-            
-            <View style={dynamicStyles.loginInputContainer}>
-                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
-                <TextInput
-                    style={dynamicStyles.loginInputField}
-                    placeholder="senha"
-                    value={usuario.password}
-                    secureTextEntry={usuario.showPassword}
-                    onChangeText={(value) => {
-                        setUsuario({ ...usuario, password: value });
-                    }}
-                    placeholderTextColor="gray"
-                />
-                <TouchableOpacity
-                    onPress={() => setUsuario({ ...usuario, showPassword: !usuario.showPassword })}
-                >
-                    <Ionicons
-                        name={usuario.showPassword ? "eye-off-outline" : "eye-outline"}
-                        size={width * 0.05}
-                        color="gray"
-                    />
-                </TouchableOpacity>
-            </View>
+              <Text style={styles.createAccountText}>Já tem uma conta?</Text>
+              <TouchableOpacity
+                style={styles.buttonToLogin}
+                onPress={() => {
+                  onClose();
+                  if (onOpenLogin) {
+                    onOpenLogin();
+                  } else {
+                    navigation.navigate("Login");
+                  }
+                }}
+              >
+                <Text style={styles.textButtonToLogin}>Login</Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
 
-            <View style={dynamicStyles.loginInputContainer}>
-                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
-                <TextInput
-                    style={dynamicStyles.loginInputField}
-                    placeholder="confirmar senha"
-                    value={confirmPassword}
-                    secureTextEntry={usuario.showPassword}
-                    onChangeText={(value) => setConfirmPassword(value)}
-                    placeholderTextColor="gray"
-                />
-                <TouchableOpacity
-                    onPress={() => setUsuario({ ...usuario, showPassword: !usuario.showPassword })}
-                >
-                    <Ionicons
-                        name={usuario.showPassword ? "eye-off-outline" : "eye-outline"}
-                        size={width * 0.05}
-                        color="gray"
-                    />
-                </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleCadastro}
-              style={dynamicStyles.confirmButton}
-            >
-              <Text style={dynamicStyles.confirmButtonText}>Cadastrar-se</Text>
-            </TouchableOpacity>
-            
-            <View style={dynamicStyles.separator} />
-
-            <Text style={dynamicStyles.createAccountText}>Já tem uma conta?</Text>
-            <TouchableOpacity
-              style={dynamicStyles.buttonToCadastro}
-              onPress={() => {
-                onClose();
-                if (onOpenLogin) {
-                  onOpenLogin();
-                } else {
-                  navigation.navigate("Login");
-                }
-              }}
-            >
-              <Text style={dynamicStyles.textButtonToCadastro}>Login</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
-
-      <CustomModal
-        open={internalModalVisible}
-        onClose={() => setInternalModalVisible(false)}
-        title={internalModalType === "success" ? "Cadastro Concluído" : "Erro"}
-        message={internalModalMessage}
-        type={internalModalType}
-      />
-    </Modal>
-  );
+      <VerificationModal
+          visible={isVerificationModalVisible}
+          onClose={() => setIsVerificationModalVisible(false)}
+          formData={formData}
+          onVerificationSuccess={handleVerificationSuccess}
+      />
+      
+      <CustomModal
+        open={internalModalVisible}
+        onClose={() => setInternalModalVisible(false)}
+        title={internalModalType === "success" ? "Sucesso" : "Erro"}
+        message={internalModalMessage}
+        type={internalModalType}
+      />
+    </>
+  );
 }
 
-export default Cadastro;
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  keyboardView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+  },
+  modal: {
+    backgroundColor: "white",
+    padding: width * 0.06,
+    borderRadius: 15,
+    width: width * 0.85,
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    padding: 5,
+    zIndex: 1,
+  },
+  headerImage: {
+    width: width * 0.6,
+    height: width * 0.25,
+    resizeMode: "contain",
+    marginBottom: height * 0.02,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#f5f5f5",
+    paddingVertical: height * 0.015,
+    paddingHorizontal: width * 0.03,
+    borderRadius: 8,
+    marginBottom: height * 0.025,
+  },
+  inputField: {
+    flex: 1,
+    fontSize: width * 0.04,
+    color: "#333",
+    paddingVertical: 0,
+  },
+  confirmButton: {
+    backgroundColor: "rgb(177, 16, 16)",
+    paddingVertical: height * 0.02,
+    paddingHorizontal: width * 0.08,
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  confirmButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: width * 0.045,
+  },
+  separator: {
+    height: 1,
+    width: "80%",
+    backgroundColor: "#eee",
+    marginVertical: height * 0.018,
+  },
+  buttonToLogin: {
+    backgroundColor: "transparent",
+    paddingVertical: height * 0.0001,
+    paddingHorizontal: width * 0.05,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: height * 0.015,
+    width: "100%",
+  },
+  textButtonToLogin: {
+    fontSize: width * 0.045,
+    color: "rgb(152, 0, 0)",
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
+  createAccountText: {
+    fontSize: width * 0.039,
+    color: "gray",
+    marginBottom: height * 0.001,
+  },
+});
