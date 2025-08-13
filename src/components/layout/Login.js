@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
+import ForgotPasswordModal from "./forgotpassword"; 
 
 import api from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
@@ -36,6 +37,9 @@ function Login({ visible, onClose, onOpenCadastro }) {
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
+  
+  // Novo estado para controlar a visibilidade do modal de recuperação de senha
+  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false); 
 
   async function armazenarDados(idUser, token) {
     try {
@@ -210,11 +214,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
       fontWeight: "bold",
       textDecorationLine: 'underline',
     },
-    createAccountText: {
-      fontSize: width * 0.039,
-      color: 'gray',
-      marginBottom: height * 0.001,
-    },
+    
     loginInputContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -301,7 +301,16 @@ function Login({ visible, onClose, onOpenCadastro }) {
 
             <View style={dynamicStyles.separator} />
 
-            <Text style={dynamicStyles.createAccountText}>Não tem uma conta?</Text>
+            <TouchableOpacity
+              style={dynamicStyles.buttonToCadastro}
+              // Ação do botão foi alterada para abrir o novo modal
+              onPress={() => {
+                setForgotPasswordModalVisible(true);
+              }}
+            >
+              <Text style={dynamicStyles.textButtonToCadastro}>Esqueceu a senha?</Text>
+            </TouchableOpacity>
+              
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
               onPress={() => {
@@ -325,6 +334,10 @@ function Login({ visible, onClose, onOpenCadastro }) {
         title={internalModalType === "success" ? "Login Concluído" : "Erro"}
         message={internalModalMessage}
         type={internalModalType}
+      />
+      <ForgotPasswordModal
+        visible={forgotPasswordModalVisible}
+        onClose={() => setForgotPasswordModalVisible(false)}
       />
     </Modal>
   );

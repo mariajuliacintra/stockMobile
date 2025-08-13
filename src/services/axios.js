@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
+// Criando uma instância do Axios com a URL base da sua API
 const api = axios.create({
   baseURL: "http://10.89.240.91:5000/stock/",
   headers: {
@@ -8,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// Interceptor para adicionar o token em cada requisição
+// Interceptor para adicionar o token de autenticação em cada requisição
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
@@ -24,6 +25,7 @@ const sheets = {
   postLogin: (user) => api.post("user/login/", user),
   postEnviarCodigoVerificacao: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
+  postVerifyRecoveryPassword: (email) => api.post("/user/recovery-password", { email }),
 
   getSalas: () => api.get("salas"),
   getSalasDisponivelHorario: (sala) => api.post(`salasdisponivelhorario/`, sala),
@@ -45,6 +47,5 @@ const sheets = {
   getReservasDeletadasById: (id_usuario) => api.get(`/usuario/deletadas/${id_usuario}`),
   deleteUsuario: (id_usuario) => api.delete(`/usuario/${id_usuario}`),
 };
-
 
 export default sheets;
