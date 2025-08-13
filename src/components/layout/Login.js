@@ -303,7 +303,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
 
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
-              // Ação do botão foi alterada para abrir o novo modal
+
               onPress={() => {
                 setForgotPasswordModalVisible(true);
               }}

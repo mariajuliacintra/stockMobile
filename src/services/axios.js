@@ -25,7 +25,10 @@ const sheets = {
   postLogin: (user) => api.post("user/login/", user),
   postEnviarCodigoVerificacao: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
-  postVerifyRecoveryPassword: (email) => api.post("/user/recovery-password", { email }),
+
+  // Funções para o fluxo de recuperação de senha
+  postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
+
 
   getSalas: () => api.get("salas"),
   getSalasDisponivelHorario: (sala) => api.post(`salasdisponivelhorario/`, sala),

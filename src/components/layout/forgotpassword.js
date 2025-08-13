@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import sheets from "../../services/axios";
@@ -30,14 +29,13 @@ function ForgotPasswordModal({ visible, onClose }) {
       setInternalModalType("success");
       setInternalModalVisible(true);
       
-      // Limpa o e-mail e fecha o modal de recuperação após o sucesso
-      setEmail("");
       setTimeout(() => {
         setInternalModalVisible(false);
-        onClose();
-      }, 2000);
+        onClose(true, email);
+        setEmail("");
+      }, 1000);
+      
     } catch (error) {
-
       setInternalModalMessage(error.response?.data?.error || "Erro ao enviar o e-mail de recuperação.");
       setInternalModalType("error");
       setInternalModalVisible(true);
@@ -70,12 +68,6 @@ function ForgotPasswordModal({ visible, onClose }) {
       right: 10,
       padding: 5,
       zIndex: 1,
-    },
-    headerImage: {
-      width: width * 0.6,
-      height: width * 0.25,
-      resizeMode: 'contain',
-      marginBottom: height * 0.02,
     },
     title: {
       fontSize: width * 0.06,
@@ -136,7 +128,7 @@ function ForgotPasswordModal({ visible, onClose }) {
       animationType="fade"
       transparent={true}
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={() => onClose(false)}
     >
       <View style={dynamicStyles.overlay}>
         <KeyboardAvoidingView
@@ -144,15 +136,14 @@ function ForgotPasswordModal({ visible, onClose }) {
           style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
         >
           <View style={dynamicStyles.modal}>
-            <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
+            <TouchableOpacity style={dynamicStyles.closeButton} onPress={() => onClose(false)}>
               <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
             </TouchableOpacity>
-
+            
             <Text style={dynamicStyles.title}>Recuperar Senha</Text>
             <Text style={dynamicStyles.subtitle}>
               Informe o e-mail da sua conta para que possamos enviar um código de recuperação.
             </Text>
-
             <View style={dynamicStyles.loginInputContainer}>
               <Ionicons name="mail-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
               <TextInput
@@ -165,9 +156,8 @@ function ForgotPasswordModal({ visible, onClose }) {
                 autoCapitalize="none"
               />
             </View>
-
             <TouchableOpacity onPress={handleSendRecoveryEmail} style={dynamicStyles.confirmButton}>
-              <Text style={dynamicStyles.confirmButtonText}>Enviar Código</Text>
+              <Text style={dynamicStyles.confirmButtonText}>Confirmar</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
