@@ -11,13 +11,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
-import sheets from "../../services/axios";
+import sheets from "../../services/axios"; 
 import CustomModal from "../mod/CustomModal";
 
 const { width, height } = Dimensions.get("window");
 
 export default function VerificationModal({ visible, onClose, formData, onVerificationSuccess }) {
-  const [email, setEmail] = useState(formData.email); // Novo estado para o email
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,8 +35,7 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
 
   async function handleCodeVerification() {
     setIsLoading(true);
-    // Verificando se ambos os campos estão preenchidos
-    if (!email || !verificationCode) {
+    if (!formData.email || !verificationCode) {
       setInternalModalMessage("Por favor, insira o e-mail e o código de verificação.");
       setInternalModalType("error");
       setInternalModalVisible(true);
@@ -46,9 +44,8 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
     }
 
     try {
-      // Objeto agora usa o 'email' e o 'verificationCode' dos estados locais
       const dataParaVerificacao = {
-        email: email,
+        email: formData.email,
         code: verificationCode,
       };
 
@@ -93,20 +90,12 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
             </TouchableOpacity>
             <Text style={styles.titleText}>Verificação de E-mail</Text>
             <Text style={styles.instructionText}>
-              Um código foi enviado para o seu e-mail. Por favor, digite seu e-mail e o código abaixo.
+              Um código foi enviado para o e-mail: <Text style={{ fontWeight: "bold" }}>{formData.email}</Text>. Por favor, digite o código abaixo.
             </Text>
             
-            {/* Novo campo de entrada para o e-mail */}
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, styles.disabledInputContainer]}>
               <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
-              <TextInput
-                style={styles.inputField}
-                placeholder="e-mail"
-                value={email}
-                onChangeText={setEmail}
-                placeholderTextColor="gray"
-                keyboardType="email-address"
-              />
+              <Text style={[styles.inputField, styles.disabledInputText]}>{formData.email}</Text>
             </View>
 
             <View style={styles.inputContainer}>
@@ -216,4 +205,11 @@ const styles = StyleSheet.create({
       fontWeight: "bold",
       fontSize: width * 0.045,
     },
-  });
+    // Novos estilos para o campo de e-mail não editável
+    disabledInputContainer: {
+      backgroundColor: "#e8e8e8", // Cor de fundo para indicar que está desabilitado
+    },
+    disabledInputText: {
+      color: "#666", // Cor do texto mais clara
+    },
+});
