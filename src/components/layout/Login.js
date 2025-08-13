@@ -10,7 +10,7 @@ import {
   Platform,
   Dimensions,
   useWindowDimensions,
-  Image, 
+  Image,
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -29,7 +29,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
 
   const [usuario, setUsuario] = useState({
     email: "",
-    senha: "",
+    password: "",
     showSenha: true,
   });
 
@@ -37,9 +37,9 @@ function Login({ visible, onClose, onOpenCadastro }) {
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
 
-  async function armazenarDados(idUsuario, token) {
+  async function armazenarDados(idUser, token) {
     try {
-      await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
+      await SecureStore.setItemAsync("idUsuario", idUser.toString());
       await SecureStore.setItemAsync("tokenUsuario", token.toString());
     } catch (erro) {
       console.error("Erro ao armazenar dados:", erro);
@@ -49,14 +49,15 @@ function Login({ visible, onClose, onOpenCadastro }) {
   async function handleLogin() {
     try {
       const response = await api.postLogin(usuario);
+
       setInternalModalMessage(response.data.message);
       setInternalModalType("success");
       setInternalModalVisible(true);
 
-      const idUsuario = response.data.usuario.id_usuario;
+      const idUser = response.data.user.idUser;
       const token = response.data.token;
 
-      armazenarDados(idUsuario, token);
+      armazenarDados(idUser, token);
 
       setTimeout(() => {
         onClose();
@@ -97,9 +98,9 @@ function Login({ visible, onClose, onOpenCadastro }) {
       zIndex: 1,
     },
     headerImage: {
-      width: width * 0.6, 
+      width: width * 0.6,
       height: width * 0.25,
-      resizeMode: 'contain', // "contain" para caber na área, "cover" para preencher
+      resizeMode: 'contain',
       marginBottom: height * 0.02,
     },
     title: {
@@ -215,22 +216,22 @@ function Login({ visible, onClose, onOpenCadastro }) {
       marginBottom: height * 0.001,
     },
     loginInputContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        width: '100%',
-        borderWidth: 1,
-        borderColor: "#ddd",
-        backgroundColor: "#f5f5f5",
-        paddingVertical: height * 0.015,
-        paddingHorizontal: width * 0.03,
-        borderRadius: 8,
-        marginBottom: height * 0.025,
+      flexDirection: "row",
+      alignItems: "center",
+      width: '100%',
+      borderWidth: 1,
+      borderColor: "#ddd",
+      backgroundColor: "#f5f5f5",
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.03,
+      borderRadius: 8,
+      marginBottom: height * 0.025,
     },
     loginInputField: {
-        flex: 1,
-        fontSize: width * 0.04,
-        color: '#333',
-        paddingVertical: 0,
+      flex: 1,
+      fontSize: width * 0.04,
+      color: '#333',
+      paddingVertical: 0,
     },
   });
 
@@ -257,41 +258,41 @@ function Login({ visible, onClose, onOpenCadastro }) {
             />
 
             <View style={dynamicStyles.loginInputContainer}>
-                <Ionicons name="person-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-                <TextInput
-                    placeholder="e-mail"
-                    value={usuario.email}
-                    onChangeText={(value) => {
-                        setUsuario({ ...usuario, email: value });
-                    }}
-                    style={dynamicStyles.loginInputField}
-                    placeholderTextColor="gray"
-                />
+              <Ionicons name="person-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
+              <TextInput
+                placeholder="e-mail"
+                value={usuario.email}
+                onChangeText={(value) => {
+                  setUsuario({ ...usuario, email: value });
+                }}
+                style={dynamicStyles.loginInputField}
+                placeholderTextColor="gray"
+              />
             </View>
 
             <View style={dynamicStyles.loginInputContainer}>
-                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-                <TextInput
-                    style={dynamicStyles.loginInputField}
-                    placeholder="senha"
-                    value={usuario.senha}
-                    secureTextEntry={usuario.showSenha}
-                    onChangeText={(value) => {
-                        setUsuario({ ...usuario, senha: value });
-                    }}
-                    placeholderTextColor="gray"
+              <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
+              <TextInput
+                style={dynamicStyles.loginInputField}
+                placeholder="senha"
+                value={usuario.password}
+                secureTextEntry={usuario.showSenha}
+                onChangeText={(value) => {
+                  setUsuario({ ...usuario, password: value });
+                }}
+                placeholderTextColor="gray"
+              />
+              <TouchableOpacity
+                onPress={() =>
+                  setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+                }
+              >
+                <Ionicons
+                  name={usuario.showSenha ? "eye-off-outline" : "eye-outline"}
+                  size={width * 0.05}
+                  color="gray"
                 />
-                <TouchableOpacity
-                    onPress={() =>
-                        setUsuario({ ...usuario, showSenha: !usuario.showSenha })
-                    }
-                >
-                    <Ionicons
-                        name={usuario.showSenha ? "eye-off-outline" : "eye-outline"}
-                        size={width * 0.05}
-                        color="gray"
-                    />
-                </TouchableOpacity>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity onPress={handleLogin} style={dynamicStyles.confirmButton}>
@@ -302,17 +303,17 @@ function Login({ visible, onClose, onOpenCadastro }) {
 
             <Text style={dynamicStyles.createAccountText}>Não tem uma conta?</Text>
             <TouchableOpacity
-                style={dynamicStyles.buttonToCadastro}
-                onPress={() => {
-                    onClose();
-                    if (onOpenCadastro) {
-                        onOpenCadastro();
-                    } else {
-                        navigation.navigate("Cadastro");
-                    }
-                }}
+              style={dynamicStyles.buttonToCadastro}
+              onPress={() => {
+                onClose();
+                if (onOpenCadastro) {
+                  onOpenCadastro();
+                } else {
+                  navigation.navigate("Cadastro");
+                }
+              }}
             >
-                <Text style={dynamicStyles.textButtonToCadastro}>Cadastre-se</Text>
+              <Text style={dynamicStyles.textButtonToCadastro}>Cadastre-se</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

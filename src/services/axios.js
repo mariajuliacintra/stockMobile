@@ -21,7 +21,7 @@ api.interceptors.request.use(
 );
 
 const sheets = {
-  postLogin: (usuario) => api.post("login/", usuario),
+  postLogin: (user) => api.post("user/login/", user),
   postEnviarCodigoVerificacao: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
 
