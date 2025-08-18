@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 
 // Criando uma instância do Axios com a URL base da sua API
 const api = axios.create({
-  baseURL: "http://10.89.240.91:5000/stock/",
+  baseURL: "http://10.89.240.86:5000/stock/",
   headers: {
     accept: "application/json",
   },
@@ -26,7 +26,7 @@ const sheets = {
   postEnviarCodigoVerificacao: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
 
-  // Funções para o fluxo de recuperação de senha
+  postValidateRecoveryCode: (data) => api.post('/user/validate-recovery-code', data),
   postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
 
 
