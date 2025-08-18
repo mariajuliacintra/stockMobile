@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Login from "../components/layout/Login";
-import Cadastro from "../components/layout/Cadastro";
+import Cadastro from "../components/layout/Register";
 
 function Home() {
   const navigation = useNavigation();
