@@ -13,6 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import sheets from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
+import CodeVerificationModal from "./CodeVerificationModal"; // Importe o novo modal
 
 const { width, height } = Dimensions.get("window");
 
@@ -21,6 +22,7 @@ function ForgotPasswordModal({ visible, onClose }) {
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
+  const [codeModalVisible, setCodeModalVisible] = useState(false); // Novo estado para o modal de código
 
   const handleSendRecoveryEmail = async () => {
     try {
@@ -31,8 +33,8 @@ function ForgotPasswordModal({ visible, onClose }) {
       
       setTimeout(() => {
         setInternalModalVisible(false);
-        onClose(true, email);
-        setEmail("");
+        onClose(false); // Feche o modal de "esqueci a senha"
+        setCodeModalVisible(true); // Abra o modal de verificação
       }, 1000);
       
     } catch (error) {
@@ -40,6 +42,12 @@ function ForgotPasswordModal({ visible, onClose }) {
       setInternalModalType("error");
       setInternalModalVisible(true);
     }
+  };
+
+  const handleCloseCodeModal = (success) => {
+    setCodeModalVisible(false);
+    onClose(success);
+    setEmail("");
   };
 
   const dynamicStyles = StyleSheet.create({
@@ -124,53 +132,61 @@ function ForgotPasswordModal({ visible, onClose }) {
   });
 
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={() => onClose(false)}
-    >
-      <View style={dynamicStyles.overlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
-        >
-          <View style={dynamicStyles.modal}>
-            <TouchableOpacity style={dynamicStyles.closeButton} onPress={() => onClose(false)}>
-              <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
-            </TouchableOpacity>
-            
-            <Text style={dynamicStyles.title}>Recuperar Senha</Text>
-            <Text style={dynamicStyles.subtitle}>
-              Informe o e-mail da sua conta para que possamos enviar um código de recuperação.
-            </Text>
-            <View style={dynamicStyles.loginInputContainer}>
-              <Ionicons name="mail-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
-              <TextInput
-                placeholder="e-mail"
-                value={email}
-                onChangeText={(value) => setEmail(value)}
-                style={dynamicStyles.loginInputField}
-                placeholderTextColor="gray"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+    <>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={visible && !codeModalVisible}
+        onRequestClose={() => onClose(false)}
+      >
+        <View style={dynamicStyles.overlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
+          >
+            <View style={dynamicStyles.modal}>
+              <TouchableOpacity style={dynamicStyles.closeButton} onPress={() => onClose(false)}>
+                <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
+              </TouchableOpacity>
+              
+              <Text style={dynamicStyles.title}>Recuperar Senha</Text>
+              <Text style={dynamicStyles.subtitle}>
+                Informe o e-mail da sua conta para que possamos enviar um código de recuperação.
+              </Text>
+              <View style={dynamicStyles.loginInputContainer}>
+                <Ionicons name="mail-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
+                <TextInput
+                  placeholder="e-mail"
+                  value={email}
+                  onChangeText={(value) => setEmail(value)}
+                  style={dynamicStyles.loginInputField}
+                  placeholderTextColor="gray"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+              <TouchableOpacity onPress={handleSendRecoveryEmail} style={dynamicStyles.confirmButton}>
+                <Text style={dynamicStyles.confirmButtonText}>Confirmar</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={handleSendRecoveryEmail} style={dynamicStyles.confirmButton}>
-              <Text style={dynamicStyles.confirmButtonText}>Confirmar</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
+          </KeyboardAvoidingView>
+        </View>
 
-      <CustomModal
-        open={internalModalVisible}
-        onClose={() => setInternalModalVisible(false)}
-        title={internalModalType === "success" ? "Sucesso" : "Erro"}
-        message={internalModalMessage}
-        type={internalModalType}
+        <CustomModal
+          open={internalModalVisible}
+          onClose={() => setInternalModalVisible(false)}
+          title={internalModalType === "success" ? "Sucesso" : "Erro"}
+          message={internalModalMessage}
+          type={internalModalType}
+        />
+      </Modal>
+      
+      <CodeVerificationModal
+        visible={codeModalVisible}
+        onClose={handleCloseCodeModal}
+        email={email} // Passa o e-mail para o novo modal
       />
-    </Modal>
+    </>
   );
 }
 

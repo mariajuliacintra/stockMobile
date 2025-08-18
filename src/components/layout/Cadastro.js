@@ -76,8 +76,6 @@ export default function Cadastro({ visible, onClose, onOpenLogin }) {
     }
 
     try {
-      // CORREÇÃO: Enviando o objeto formData completo.
-      // Isso garante que todos os campos, incluindo confirmPassword, sejam enviados.
       const response = await api.postEnviarCodigoVerificacao(formData);
       
       if (response.status === 200) {
