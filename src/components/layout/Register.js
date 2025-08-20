@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   StyleSheet,
@@ -47,12 +47,15 @@ const InputField = ({ iconName, placeholder, value, onChangeText, secureTextEntr
 export default function Register({ visible, onClose, onOpenLogin }) {
   const navigation = useNavigation();
 
-  const [formData, setFormData] = useState({
+  // Estado inicial dos dados do formulário
+  const initialFormData = {
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
   const [showPassword, setShowPassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isVerificationModalVisible, setIsVerificationModalVisible] = useState(false);
@@ -60,6 +63,27 @@ export default function Register({ visible, onClose, onOpenLogin }) {
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
+
+  // O ponto de ajuste: Agora, o useEffect reseta o estado do modal
+  // de mensagem toda vez que a prop 'visible' muda.
+  useEffect(() => {
+    if (visible) {
+      setInternalModalVisible(false);
+      setInternalModalMessage("");
+      setInternalModalType("info");
+    }
+  }, [visible]);
+
+  // Função para fechar o modal e resetar os estados
+  const handleCloseAndReset = () => {
+    // Resetar os estados do modal de mensagem (CustomModal)
+    setInternalModalVisible(false);
+    setInternalModalMessage("");
+    setInternalModalType("info");
+
+    // Chamar a função de fechamento principal
+    onClose();
+  };
 
   function handleChange(field, value) {
     setFormData(prevData => ({ ...prevData, [field]: value }));
@@ -82,7 +106,7 @@ export default function Register({ visible, onClose, onOpenLogin }) {
         setInternalModalMessage("Código de verificação enviado para o seu e-mail!");
         setInternalModalType("success");
         setInternalModalVisible(true);
-        onClose();
+        handleCloseAndReset();
         setIsVerificationModalVisible(true);
       }
     } catch (error) {
@@ -95,20 +119,22 @@ export default function Register({ visible, onClose, onOpenLogin }) {
   }
 
   const handleVerificationSuccess = () => {
+    // Resetar o formulário apenas após a verificação ser bem-sucedida
+    setFormData(initialFormData);
     setIsVerificationModalVisible(false);
     navigation.navigate("Principal");
   };
 
   return (
     <>
-      <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
+      <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={handleCloseAndReset}>
         <View style={styles.overlay}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.keyboardView}
           >
             <View style={styles.modal}>
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <TouchableOpacity style={styles.closeButton} onPress={handleCloseAndReset}>
                 <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
               </TouchableOpacity>
 
@@ -153,7 +179,7 @@ export default function Register({ visible, onClose, onOpenLogin }) {
               <TouchableOpacity
                 style={styles.buttonToLogin}
                 onPress={() => {
-                  onClose();
+                  handleCloseAndReset();
                   if (onOpenLogin) {
                     onOpenLogin();
                   } else {

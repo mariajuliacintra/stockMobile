@@ -46,7 +46,7 @@ function UpdatePasswordModal({ visible, onClose, email }) {
       setTimeout(() => {
         setInternalModalVisible(false);
         onClose(true);
-      }, 2000);
+      }, 800);
 
     } catch (error) {
       setInternalModalMessage(error.response?.data?.error || "Erro ao atualizar a senha.");

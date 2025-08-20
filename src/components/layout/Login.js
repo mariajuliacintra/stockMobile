@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   StyleSheet,
@@ -9,37 +9,30 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  useWindowDimensions,
   Image,
 } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
-
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
-import ForgotPasswordModal from "./ForgotPassword"; 
-
-import api from "../../services/axios";
+import ForgotPasswordModal from "./forgotpassword";
 import CustomModal from "../mod/CustomModal";
+import api from "../../services/axios"; // Certifique-se de que este caminho está correto
 
 const { width, height } = Dimensions.get("window");
 
 function Login({ visible, onClose, onOpenCadastro }) {
   const navigation = useNavigation();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
+  // Estados do componente
   const [usuario, setUsuario] = useState({
     email: "",
     password: "",
     showSenha: true,
   });
-
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
-  
-  // Novo estado para controlar a visibilidade do modal de recuperação de senha
-  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false); 
+  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
 
   async function armazenarDados(idUser, token) {
     try {
@@ -60,12 +53,17 @@ function Login({ visible, onClose, onOpenCadastro }) {
       const idUser = response.data.user.idUser;
       const token = response.data.token;
 
-      armazenarDados(idUser, token);
+      await armazenarDados(idUser, token);
 
+      setUsuario({
+        email: "",
+        password: "",
+        showSenha: true,
+      })
       setTimeout(() => {
         onClose();
         navigation.navigate("Principal");
-      }, 700);
+      }, 1000);
     } catch (error) {
       setInternalModalMessage(error.response?.data?.error || "Erro desconhecido");
       setInternalModalType("error");
@@ -106,19 +104,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
       resizeMode: 'contain',
       marginBottom: height * 0.02,
     },
-    title: {
-      fontSize: width * 0.06,
-      fontWeight: "bold",
-      color: '#333',
-      marginBottom: height * 0.02,
-      textAlign: 'center',
-    },
-    subtitle: {
-      fontSize: width * 0.04,
-      color: '#666',
-      marginBottom: height * 0.03,
-      textAlign: 'center',
-    },
     inputRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -135,22 +120,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
       marginBottom: height * 0.005,
       fontWeight: "500",
       color: '#555',
-    },
-    inputFake: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: "#ddd",
-      backgroundColor: "#f5f5f5",
-      paddingVertical: height * 0.015,
-      paddingHorizontal: width * 0.03,
-      borderRadius: 8,
-      width: '100%',
-      justifyContent: 'space-between',
-    },
-    inputFakeText: {
-      fontSize: width * 0.04,
-      color: '#333',
     },
     summaryContainer: {
       flexDirection: 'row',
@@ -213,7 +182,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
       fontWeight: "bold",
       textDecorationLine: 'underline',
     },
-    
     loginInputContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -302,7 +270,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
 
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
-
               onPress={() => {
                 setForgotPasswordModalVisible(true);
               }}
