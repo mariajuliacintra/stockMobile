@@ -44,7 +44,7 @@ const InputField = ({ iconName, placeholder, value, onChangeText, secureTextEntr
   </View>
 );
 
-export default function Cadastro({ visible, onClose, onOpenLogin }) {
+export default function Register({ visible, onClose, onOpenLogin }) {
   const navigation = useNavigation();
 
   const [formData, setFormData] = useState({
@@ -76,7 +76,7 @@ export default function Cadastro({ visible, onClose, onOpenLogin }) {
     }
 
     try {
-      const response = await api.postEnviarCodigoVerificacao(formData);
+      const response = await api.postSendVerificationCode(formData);
       
       if (response.status === 200) {
         setInternalModalMessage("Código de verificação enviado para o seu e-mail!");
@@ -87,7 +87,6 @@ export default function Cadastro({ visible, onClose, onOpenLogin }) {
       }
     } catch (error) {
       setInternalModalMessage(error.response?.data?.error || "Erro ao enviar o código.");
-      console.error(error);
       setInternalModalType("error");
       setInternalModalVisible(true);
     } finally {

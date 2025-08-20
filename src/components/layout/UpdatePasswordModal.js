@@ -11,42 +11,47 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import sheets from "../../services/axios"; // Assumindo que este serviço já existe
+import sheets from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
-import UpdatePasswordModal from "./UpdatePasswordModal";
 
 const { width, height } = Dimensions.get("window");
 
-function CodeVerificationModal({ visible, onClose, email }) {
-  const [code, setCode] = useState("");
+function UpdatePasswordModal({ visible, onClose, email }) {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("");
-  const [updatePasswordModalVisible, setUpdatePasswordModalVisible] = useState(false);
 
-  const handleVerifyCode = async () => {
+  const handleUpdatePassword = async () => {
     try {
-      // Faz a requisição para a API para validar o código
-      const response = await sheets.postValidateRecoveryCode({ email, code });
+      if (password !== confirmPassword) {
+        setInternalModalMessage("As senhas não coincidem.");
+        setInternalModalType("error");
+        setInternalModalVisible(true);
+        return;
+      }
 
-      // Se a validação for um sucesso, mostra a mensagem de sucesso
+      
+      const response = await sheets.postRecoveryPassword({
+        email,
+        password,
+        confirmPassword,
+      });
+
       setInternalModalMessage(response.data.message);
       setInternalModalType("success");
       setInternalModalVisible(true);
 
-      // Aguarda 2 segundos e abre o próximo modal
       setTimeout(() => {
         setInternalModalVisible(false);
-        // Não fecha o modal de verificação, apenas o esconde
-        setUpdatePasswordModalVisible(true);
+        onClose(true);
       }, 2000);
 
     } catch (error) {
-      // Em caso de erro, mostra a mensagem de erro
-      setInternalModalMessage(error.response?.data?.error || "Código inválido ou expirado. Tente novamente.");
+      setInternalModalMessage(error.response?.data?.error || "Erro ao atualizar a senha.");
       setInternalModalType("error");
       setInternalModalVisible(true);
-      // O fluxo para aqui se houver erro
     }
   };
 
@@ -136,7 +141,7 @@ function CodeVerificationModal({ visible, onClose, email }) {
       <Modal
         animationType="fade"
         transparent={true}
-        visible={visible && !updatePasswordModalVisible}
+        visible={visible}
         onRequestClose={() => onClose(false)}
       >
         <View style={dynamicStyles.overlay}>
@@ -149,50 +154,49 @@ function CodeVerificationModal({ visible, onClose, email }) {
                 <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
               </TouchableOpacity>
               
-              <Text style={dynamicStyles.title}>Verificação de Código</Text>
+              <Text style={dynamicStyles.title}>Atualizar Senha</Text>
               <Text style={dynamicStyles.subtitle}>
-                Por favor, insira o código de 6 dígitos que foi enviado para o seu e-mail.
+                Insira sua nova senha para continuar.
               </Text>
               <View style={dynamicStyles.inputContainer}>
-                <Ionicons name="key-outline" size={width * 0.05} color="gray" />
+                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
                 <TextInput
-                  placeholder="Código"
-                  value={code}
-                  onChangeText={(value) => setCode(value)}
+                  placeholder="Nova Senha"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
                   style={dynamicStyles.inputField}
                   placeholderTextColor="gray"
-                  keyboardType="numeric"
-                  maxLength={6}
                 />
               </View>
-              <TouchableOpacity onPress={handleVerifyCode} style={dynamicStyles.confirmButton}>
-                <Text style={dynamicStyles.confirmButtonText}>Verificar Código</Text>
+              <View style={dynamicStyles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
+                <TextInput
+                  placeholder="Confirmar Nova Senha"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  style={dynamicStyles.inputField}
+                  placeholderTextColor="gray"
+                />
+              </View>
+              <TouchableOpacity onPress={handleUpdatePassword} style={dynamicStyles.confirmButton}>
+                <Text style={dynamicStyles.confirmButtonText}>Atualizar Senha</Text>
               </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
         </View>
-
-        <CustomModal
-          open={internalModalVisible}
-          onClose={() => setInternalModalVisible(false)}
-          title={internalModalType === "success" ? "Sucesso" : "Erro"}
-          message={internalModalMessage}
-          type={internalModalType}
-        />
       </Modal>
 
-      <UpdatePasswordModal
-        visible={updatePasswordModalVisible}
-        onClose={(success) => {
-          setUpdatePasswordModalVisible(false);
-          if (success) {
-            onClose(true); // Encerra o fluxo todo, fechando o modal de login
-          }
-        }}
-        email={email}
+      <CustomModal
+        open={internalModalVisible}
+        onClose={() => setInternalModalVisible(false)}
+        title={internalModalType === "success" ? "Sucesso" : "Erro"}
+        message={internalModalMessage}
+        type={internalModalType}
       />
     </>
   );
 }
 
-export default CodeVerificationModal;
+export default UpdatePasswordModal;

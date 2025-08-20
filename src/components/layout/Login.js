@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
-import ForgotPasswordModal from "./forgotpassword"; 
+import ForgotPasswordModal from "./ForgotPassword"; 
 
 import api from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
@@ -46,7 +46,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
       await SecureStore.setItemAsync("idUsuario", idUser.toString());
       await SecureStore.setItemAsync("tokenUsuario", token.toString());
     } catch (erro) {
-      console.error("Erro ao armazenar dados:", erro);
     }
   }
 

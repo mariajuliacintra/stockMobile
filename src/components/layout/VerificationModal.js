@@ -22,14 +22,13 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
 
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
-  const [internalModalType, setInternalModalType] = useState("info");
+  const [internalModalType, setInternalModalType] = useState("");
 
   async function armazenarDados(idUsuario, token) {
     try {
       await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
       await SecureStore.setItemAsync("tokenUsuario", token.toString());
     } catch (erro) {
-      console.error("Erro ao armazenar dados:", erro);
     }
   }
 
@@ -72,12 +71,10 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
       }
     } catch (error) {
       setInternalModalMessage(error.response?.data?.error || "Erro ao verificar o código.");
-      console.error(error);
       setInternalModalType("error");
       setInternalModalVisible(true);
-    } finally {
-      setIsLoading(false);
-    }
+    } 
+    
   }
 
   return (
@@ -205,11 +202,11 @@ const styles = StyleSheet.create({
       fontWeight: "bold",
       fontSize: width * 0.045,
     },
-    // Novos estilos para o campo de e-mail não editável
+   
     disabledInputContainer: {
-      backgroundColor: "#e8e8e8", // Cor de fundo para indicar que está desabilitado
+      backgroundColor: "#e8e8e8", 
     },
     disabledInputText: {
-      color: "#666", // Cor do texto mais clara
+      color: "#666", 
     },
 });
