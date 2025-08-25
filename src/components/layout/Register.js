@@ -119,7 +119,6 @@ export default function Register({ visible, onClose, onOpenLogin }) {
   }
 
   const handleVerificationSuccess = () => {
-    // Resetar o formulário apenas após a verificação ser bem-sucedida
     setFormData(initialFormData);
     setIsVerificationModalVisible(false);
     navigation.navigate("Principal");

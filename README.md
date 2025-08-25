@@ -107,4 +107,6 @@ Os requisitos necessários para funcionamento pleno do projeto estão em outro r
 ## Autores
 
 - [@mariafernandacintra](https://github.com/MariaFernandaCintra)
+
 - [@joaovitorqueiroz](https://github.com/Joqueiroz)
+
