@@ -1,10 +1,10 @@
 # SprintMobile
 
-Este é o aplicativo mobile de um sistema de reservas desenvolvido durante um sprint.
+Este é o aplicativo mobile de um sistema de controle de estoque desenvolvido durante um sprint.
 
 ## Descrição
 
-O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outras funcionalidades relacionadas a reservas. Desenvolvido com React Native e utilizando Expo, a interface foi criada para oferecer uma experiência de usuário moderna, intuitiva e responsiva. O aplicativo integra com a Sprint API para obter dados em tempo real e possibilitar a navegação entre as telas.
+O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outras funcionalidades relacionadas ao controle de estoque. Desenvolvido com React Native e utilizando Expo, a interface foi criada para oferecer uma experiência de usuário moderna, intuitiva e responsiva. O aplicativo integra com a Sprint API para obter dados em tempo real e possibilitar a navegação entre as telas.
 
 ## Tecnologias Utilizadas
 
@@ -35,14 +35,14 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 1. **Clonar o Repositório**
 
    ```bash
-   git clone https://github.com/MariaFernandaCintra/sprintMobile.git
+   git clone https://github.com/mariajuliacintra/stockMobile.git
 
    ```
 
 2. **Entre na Pasta**
 
    ```bash
-   cd sprintMobile
+   cd stockMobile
    ```
 
 3. **Instalar as Dependências**
@@ -102,10 +102,9 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 
 ## Documentação Completa dos Requisitos Necessários
 
-Os requisitos necessários para funcionamento pleno do projeto estão em outro repositório. Acesse-os [aqui](https://github.com/MariaFernandaCintra/sprintApi/).
+Os requisitos necessários para funcionamento pleno do projeto estão em outro repositório. Acesse-os [aqui](https://github.com/mariajuliacintra/stockApi).
 
 ## Autores
 
-- [@fogazzaa](https://github.com/Fogazzaa)
 - [@mariafernandacintra](https://github.com/MariaFernandaCintra)
-- [@mariajuliacintra](https://github.com/mariajuliacintra)
+- [@joaovitorqueiroz](https://github.com/Joqueiroz)

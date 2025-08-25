@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   StyleSheet,
@@ -19,9 +19,17 @@ const { width, height } = Dimensions.get("window");
 function UpdatePasswordModal({ visible, onClose, email }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(true);
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("");
+  
+  useEffect(() => {
+    if (!visible) {
+      setPassword("");
+      setConfirmPassword("");
+    }
+  }, [visible]);
 
   const handleUpdatePassword = async () => {
     try {
@@ -158,27 +166,53 @@ function UpdatePasswordModal({ visible, onClose, email }) {
               <Text style={dynamicStyles.subtitle}>
                 Insira sua nova senha para continuar.
               </Text>
+              {/* Input para Nova Senha */}
               <View style={dynamicStyles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
                 <TextInput
                   placeholder="Nova Senha"
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
+                  // secureTextEntry agora depende do estado 'showPassword'
+                  secureTextEntry={showPassword}
                   style={dynamicStyles.inputField}
                   placeholderTextColor="gray"
                 />
+                {/* Botão de "olho" para alternar a visibilidade */}
+                <TouchableOpacity
+                  style={dynamicStyles.togglePasswordButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    // O ícone muda dependendo do estado
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={width * 0.05}
+                    color="gray"
+                  />
+                </TouchableOpacity>
               </View>
+
               <View style={dynamicStyles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
                 <TextInput
                   placeholder="Confirmar Nova Senha"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  secureTextEntry
+                  secureTextEntry={showPassword}
                   style={dynamicStyles.inputField}
                   placeholderTextColor="gray"
                 />
+                <TouchableOpacity
+                  style={dynamicStyles.togglePasswordButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    // O ícone muda dependendo do estado
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={width * 0.05}
+                    color="gray"
+                  />
+                </TouchableOpacity>
               </View>
               <TouchableOpacity onPress={handleUpdatePassword} style={dynamicStyles.confirmButton}>
                 <Text style={dynamicStyles.confirmButtonText}>Atualizar Senha</Text>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   StyleSheet,
@@ -23,6 +23,16 @@ function CodeVerificationModal({ visible, onClose, email }) {
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("");
   const [updatePasswordModalVisible, setUpdatePasswordModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setCode("");
+      setInternalModalVisible(false);
+      setInternalModalMessage("");
+      setInternalModalType("");
+      setUpdatePasswordModalVisible(false);
+    }
+  }, [visible]);
 
   const handleVerifyCode = async () => {
     try {
