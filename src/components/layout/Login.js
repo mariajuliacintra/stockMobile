@@ -16,30 +16,42 @@ import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import ForgotPasswordModal from "./forgotpassword";
 import CustomModal from "../mod/CustomModal";
-import api from "../../services/axios"; // Certifique-se de que este caminho está correto
+import api from "../../services/axios";
 
 const { width, height } = Dimensions.get("window");
 
 function Login({ visible, onClose, onOpenCadastro }) {
   const navigation = useNavigation();
 
-  // Estados do componente
   const [usuario, setUsuario] = useState({
     email: "",
     password: "",
     showSenha: true,
   });
+
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
   const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
+  const [loginModalVisible, setLoginModalVisible] = useState(visible);
+
+  useEffect(() => {
+    setLoginModalVisible(visible);
+  }, [visible]);
+
+  function handleCloseLogin() {
+    setInternalModalMessage("");
+    setInternalModalType("");
+    setInternalModalVisible(false);
+    setLoginModalVisible(false);
+    if (onClose) onClose();
+  }
 
   async function armazenarDados(idUser, token) {
     try {
       await SecureStore.setItemAsync("idUsuario", idUser.toString());
       await SecureStore.setItemAsync("tokenUsuario", token.toString());
-    } catch (erro) {
-    }
+    } catch (erro) {}
   }
 
   async function handleLogin() {
@@ -59,9 +71,10 @@ function Login({ visible, onClose, onOpenCadastro }) {
         email: "",
         password: "",
         showSenha: true,
-      })
+      });
+
       setTimeout(() => {
-        onClose();
+        handleCloseLogin();
         navigation.navigate("Principal");
       }, 1000);
     } catch (error) {
@@ -84,7 +97,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
       borderRadius: 15,
       width: width * 0.85,
       maxWidth: 400,
-      alignItems: 'center',
+      alignItems: "center",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 5 },
       shadowOpacity: 0.35,
@@ -92,7 +105,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
       elevation: 10,
     },
     closeButton: {
-      position: 'absolute',
+      position: "absolute",
       top: 10,
       right: 10,
       padding: 5,
@@ -101,91 +114,13 @@ function Login({ visible, onClose, onOpenCadastro }) {
     headerImage: {
       width: width * 0.6,
       height: width * 0.25,
-      resizeMode: 'contain',
+      resizeMode: "contain",
       marginBottom: height * 0.02,
-    },
-    inputRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%',
-      marginBottom: height * 0.025,
-      gap: width * 0.02,
-    },
-    inputGroup: {
-      flex: 1,
-      alignItems: 'flex-start',
-    },
-    inputTitle: {
-      fontSize: width * 0.035,
-      marginBottom: height * 0.005,
-      fontWeight: "500",
-      color: '#555',
-    },
-    summaryContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#f0f0f0',
-      borderRadius: 10,
-      paddingVertical: height * 0.015,
-      paddingHorizontal: width * 0.04,
-      marginBottom: height * 0.03,
-      width: '100%',
-    },
-    summaryIcon: {
-      marginRight: width * 0.025,
-      color: 'rgb(177, 16, 16)',
-    },
-    summaryText: {
-      fontSize: width * 0.038,
-      color: '#333',
-      fontWeight: '500',
-    },
-    confirmButton: {
-      backgroundColor: "rgb(177, 16, 16)",
-      paddingVertical: height * 0.02,
-      paddingHorizontal: width * 0.08,
-      borderRadius: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: '100%',
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.25,
-      shadowRadius: 5,
-      elevation: 6,
-    },
-    confirmButtonText: {
-      color: "white",
-      fontWeight: "bold",
-      fontSize: width * 0.045,
-      marginLeft: width * 0.02,
-    },
-    separator: {
-      height: 1,
-      width: '80%',
-      backgroundColor: '#eee',
-      marginVertical: height * 0.018,
-    },
-    buttonToCadastro: {
-      backgroundColor: "transparent",
-      paddingVertical: height * 0.0001,
-      paddingHorizontal: width * 0.05,
-      borderRadius: 8,
-      alignItems: "center",
-      marginTop: height * 0.015,
-      width: '100%',
-    },
-    textButtonToCadastro: {
-      fontSize: width * 0.045,
-      color: "rgb(152, 0, 0)",
-      fontWeight: "bold",
-      textDecorationLine: 'underline',
     },
     loginInputContainer: {
       flexDirection: "row",
       alignItems: "center",
-      width: '100%',
+      width: "100%",
       borderWidth: 1,
       borderColor: "#ddd",
       backgroundColor: "#f5f5f5",
@@ -197,8 +132,51 @@ function Login({ visible, onClose, onOpenCadastro }) {
     loginInputField: {
       flex: 1,
       fontSize: width * 0.04,
-      color: '#333',
+      color: "#333",
       paddingVertical: 0,
+    },
+    confirmButton: {
+      backgroundColor: "rgb(177, 16, 16)",
+      paddingVertical: height * 0.02,
+      paddingHorizontal: width * 0.08,
+      borderRadius: 10,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "100%",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 5,
+      elevation: 6,
+      marginBottom: height * 0.015,
+    },
+    confirmButtonText: {
+      color: "white",
+      fontWeight: "bold",
+      fontSize: width * 0.045,
+      marginLeft: width * 0.02,
+    },
+    buttonToCadastro: {
+      backgroundColor: "transparent",
+      paddingVertical: height * 0.0001,
+      paddingHorizontal: width * 0.05,
+      borderRadius: 8,
+      alignItems: "center",
+      marginTop: height * 0.015,
+      width: "100%",
+    },
+    textButtonToCadastro: {
+      fontSize: width * 0.045,
+      color: "rgb(152, 0, 0)",
+      fontWeight: "bold",
+      textDecorationLine: "underline",
+    },
+    separator: {
+      height: 1,
+      width: "80%",
+      backgroundColor: "#eee",
+      marginVertical: height * 0.018,
     },
   });
 
@@ -206,8 +184,8 @@ function Login({ visible, onClose, onOpenCadastro }) {
     <Modal
       animationType="fade"
       transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
+      visible={loginModalVisible}
+      onRequestClose={handleCloseLogin}
     >
       <View style={dynamicStyles.overlay}>
         <KeyboardAvoidingView
@@ -215,50 +193,35 @@ function Login({ visible, onClose, onOpenCadastro }) {
           style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
         >
           <View style={dynamicStyles.modal}>
-            <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
+            <TouchableOpacity style={dynamicStyles.closeButton} onPress={handleCloseLogin}>
               <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
             </TouchableOpacity>
 
-            <Image
-              source={require("../../img/logo.png")}
-              style={dynamicStyles.headerImage}
-            />
+            <Image source={require("../../img/logo.png")} style={dynamicStyles.headerImage} />
 
             <View style={dynamicStyles.loginInputContainer}>
-              <Ionicons name="person-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
+              <Ionicons name="person-outline" size={width * 0.05} color="gray" />
               <TextInput
                 placeholder="e-mail"
                 value={usuario.email}
-                onChangeText={(value) => {
-                  setUsuario({ ...usuario, email: value });
-                }}
+                onChangeText={(value) => setUsuario({ ...usuario, email: value })}
                 style={dynamicStyles.loginInputField}
                 placeholderTextColor="gray"
               />
             </View>
 
             <View style={dynamicStyles.loginInputContainer}>
-              <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" style={dynamicStyles.iconStyle} />
+              <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
               <TextInput
-                style={dynamicStyles.loginInputField}
                 placeholder="senha"
                 value={usuario.password}
                 secureTextEntry={usuario.showSenha}
-                onChangeText={(value) => {
-                  setUsuario({ ...usuario, password: value });
-                }}
+                onChangeText={(value) => setUsuario({ ...usuario, password: value })}
+                style={dynamicStyles.loginInputField}
                 placeholderTextColor="gray"
               />
-              <TouchableOpacity
-                onPress={() =>
-                  setUsuario({ ...usuario, showSenha: !usuario.showSenha })
-                }
-              >
-                <Ionicons
-                  name={usuario.showSenha ? "eye-off-outline" : "eye-outline"}
-                  size={width * 0.05}
-                  color="gray"
-                />
+              <TouchableOpacity onPress={() => setUsuario({ ...usuario, showSenha: !usuario.showSenha })}>
+                <Ionicons name={usuario.showSenha ? "eye-off-outline" : "eye-outline"} size={width * 0.05} color="gray" />
               </TouchableOpacity>
             </View>
 
@@ -270,22 +233,17 @@ function Login({ visible, onClose, onOpenCadastro }) {
 
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
-              onPress={() => {
-                setForgotPasswordModalVisible(true);
-              }}
+              onPress={() => setForgotPasswordModalVisible(true)}
             >
               <Text style={dynamicStyles.textButtonToCadastro}>Esqueceu a senha?</Text>
             </TouchableOpacity>
-              
+
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
               onPress={() => {
-                onClose();
-                if (onOpenCadastro) {
-                  onOpenCadastro();
-                } else {
-                  navigation.navigate("Cadastro");
-                }
+                handleCloseLogin();
+                if (onOpenCadastro) onOpenCadastro();
+                else navigation.navigate("Cadastro");
               }}
             >
               <Text style={dynamicStyles.textButtonToCadastro}>Cadastre-se</Text>
@@ -301,6 +259,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
         message={internalModalMessage}
         type={internalModalType}
       />
+
       <ForgotPasswordModal
         visible={forgotPasswordModalVisible}
         onClose={() => setForgotPasswordModalVisible(false)}
