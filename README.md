@@ -35,7 +35,7 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
 1. **Clonar o Repositório**
 
    ```bash
-   https://github.com/mariajuliacintra/stockMobile.git
+   git clone https://github.com/mariajuliacintra/stockMobile.git
 
    ```
 
@@ -107,4 +107,6 @@ Os requisitos necessários para funcionamento pleno do projeto estão em outro r
 ## Autores
 
 - [@mariafernandacintra](https://github.com/MariaFernandaCintra)
+
 - [@joaovitorqueiroz](https://github.com/Joqueiroz)
+
