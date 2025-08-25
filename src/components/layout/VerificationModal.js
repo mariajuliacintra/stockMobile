@@ -63,7 +63,7 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
         setTimeout(() => {
           onClose();
           onVerificationSuccess();
-        }, 700);
+        }, 800);
       } else {
         setInternalModalMessage("Resposta da API incompleta. O cadastro pode não ter sido concluído.");
         setInternalModalType("error");

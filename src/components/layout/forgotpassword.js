@@ -35,7 +35,7 @@ function ForgotPasswordModal({ visible, onClose }) {
         setInternalModalVisible(false);
         onClose(false); // Feche o modal de "esqueci a senha"
         setCodeModalVisible(true); // Abra o modal de verificação
-      }, 1000);
+      }, 800);
       
     } catch (error) {
       setInternalModalMessage(error.response?.data?.error || "Erro ao enviar o e-mail de recuperação.");

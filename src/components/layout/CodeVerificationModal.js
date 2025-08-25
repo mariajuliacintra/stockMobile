@@ -39,7 +39,7 @@ function CodeVerificationModal({ visible, onClose, email }) {
         setInternalModalVisible(false);
         // Não fecha o modal de verificação, apenas o esconde
         setUpdatePasswordModalVisible(true);
-      }, 2000);
+      }, 800);
 
     } catch (error) {
       // Em caso de erro, mostra a mensagem de erro
