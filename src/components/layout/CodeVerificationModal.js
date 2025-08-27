@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import sheets from "../../services/axios"; // Assumindo que este serviço já existe
+import sheets from "../../services/axios"; 
 import CustomModal from "../mod/CustomModal";
 import UpdatePasswordModal from "./UpdatePasswordModal";
 
@@ -36,27 +36,20 @@ function CodeVerificationModal({ visible, onClose, email }) {
 
   const handleVerifyCode = async () => {
     try {
-      // Faz a requisição para a API para validar o código
       const response = await sheets.postValidateRecoveryCode({ email, code });
 
-      // Se a validação for um sucesso, mostra a mensagem de sucesso
       setInternalModalMessage(response.data.message);
       setInternalModalType("success");
       setInternalModalVisible(true);
-
-      // Aguarda 2 segundos e abre o próximo modal
       setTimeout(() => {
         setInternalModalVisible(false);
-        // Não fecha o modal de verificação, apenas o esconde
         setUpdatePasswordModalVisible(true);
       }, 800);
 
     } catch (error) {
-      // Em caso de erro, mostra a mensagem de erro
       setInternalModalMessage(error.response?.data?.error || "Código inválido ou expirado. Tente novamente.");
       setInternalModalType("error");
       setInternalModalVisible(true);
-      // O fluxo para aqui se houver erro
     }
   };
 
@@ -196,7 +189,7 @@ function CodeVerificationModal({ visible, onClose, email }) {
         onClose={(success) => {
           setUpdatePasswordModalVisible(false);
           if (success) {
-            onClose(true); // Encerra o fluxo todo, fechando o modal de login
+            onClose(true); 
           }
         }}
         email={email}

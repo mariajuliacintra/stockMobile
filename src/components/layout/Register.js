@@ -20,7 +20,6 @@ import VerificationModal from "./VerificationModal";
 
 const { width, height } = Dimensions.get("window");
 
-// Componente reutilizável para os campos de entrada
 const InputField = ({ iconName, placeholder, value, onChangeText, secureTextEntry, onToggleSecureEntry }) => (
   <View style={styles.inputContainer}>
     <Ionicons name={iconName} size={width * 0.05} color="gray" />
@@ -47,7 +46,6 @@ const InputField = ({ iconName, placeholder, value, onChangeText, secureTextEntr
 export default function Register({ visible, onClose, onOpenLogin }) {
   const navigation = useNavigation();
 
-  // Estado inicial dos dados do formulário
   const initialFormData = {
     name: "",
     email: "",
@@ -64,8 +62,6 @@ export default function Register({ visible, onClose, onOpenLogin }) {
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
 
-  // O ponto de ajuste: Agora, o useEffect reseta o estado do modal
-  // de mensagem toda vez que a prop 'visible' muda.
   useEffect(() => {
     if (visible) {
       setInternalModalVisible(false);
@@ -74,14 +70,10 @@ export default function Register({ visible, onClose, onOpenLogin }) {
     }
   }, [visible]);
 
-  // Função para fechar o modal e resetar os estados
   const handleCloseAndReset = () => {
-    // Resetar os estados do modal de mensagem (CustomModal)
     setInternalModalVisible(false);
     setInternalModalMessage("");
     setInternalModalType("info");
-
-    // Chamar a função de fechamento principal
     onClose();
   };
 
@@ -127,8 +119,8 @@ export default function Register({ visible, onClose, onOpenLogin }) {
   return (
     <>
       <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={handleCloseAndReset}>
-        <View style={styles.overlay}>
-          <KeyboardAvoidingView
+        <View style={styles.overlay}> 
+          <KeyboardAvoidingView 
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.keyboardView}
           >

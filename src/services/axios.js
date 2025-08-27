@@ -1,15 +1,12 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-// Criando uma instância do Axios com a URL base da sua API
 const api = axios.create({
-  baseURL: "http://10.89.240.82:5000/stock/",
+  baseURL: "http://10.89.240.86:5000/stock/",
   headers: {
     accept: "application/json",
   },
 });
-
-// Interceptor para adicionar o token de autenticação em cada requisição
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
