@@ -33,14 +33,6 @@ function UpdatePasswordModal({ visible, onClose, email }) {
 
   const handleUpdatePassword = async () => {
     try {
-      if (password !== confirmPassword) {
-        setInternalModalMessage("As senhas não coincidem.");
-        setInternalModalType("error");
-        setInternalModalVisible(true);
-        return;
-      }
-
-      
       const response = await sheets.postRecoveryPassword({
         email,
         password,

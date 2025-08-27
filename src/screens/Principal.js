@@ -1,49 +1,100 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
-  ImageBackground,
   StyleSheet,
   Text,
   View,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
+import AntDesign from "react-native-vector-icons/AntDesign";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
+import CardType from "../components/layout/cardType";
 
 const { width, height } = Dimensions.get("window");
 
 function Principal() {
+  const navigation = useNavigation();
+
+  const handleLogout = () => {
+    navigation.navigate("Home");
+  };
+  const handleProfile = () => {
+    navigation.navigate("Home");
+  };
+
+  const handleEquipamentos = () => {
+    // Lógica para navegar para a tela de Equipamentos
+    navigation.navigate("Home");
+  };
+
   return (
-    <ImageBackground
-      source={require("../img/fundo.png")}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.welcomeText}>Bem-vindo!</Text>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleProfile} style={styles.profile}>
+          <Ionicons name="person-circle-outline" color="#FFFFFF" size={40} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <AntDesign name="logout" color="#FFF" size={25} />
+        </TouchableOpacity>
       </View>
-    </ImageBackground>
+
+      <CardType 
+        title="Equipamentos"
+        description="Máquinas ou aparelhos usados no trabalho."
+        onPress={handleEquipamentos}
+      />
+
+      <CardType 
+        title="Matéria-Prima"
+        description="Insumos brutos usados na produção."
+        onPress={() => console.log('Navegar para Matéria-Prima')}
+      />
+
+    </View>
+
+    
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
+  header: {
+    backgroundColor: "rgba(177, 16, 16, 1)",
+    height: 80,
+    borderBottomColor: "white",
+    borderBottomWidth: 3,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    width: width,
+    paddingRight: 20,
   },
   container: {
     flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    backgroundColor: "#BFAEAE",
+  },
+  profile: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 30,
   },
-  content: {
-    padding: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius: 10,
-  },
-  welcomeText: {
-    fontSize: width * 0.08,
-    fontWeight: "bold",
-    color: "#333",
+  logoutButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginLeft: -22,
+    marginRight: -10,
   },
 });
 
