@@ -13,7 +13,7 @@ import {
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 export default function PerfilScreen() {
-  
+
   const navigation = useNavigation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -112,7 +112,7 @@ export default function PerfilScreen() {
         source={require("../img/fundo.png")}
       >
         <View style={dynamicStyles.header}>
-          <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Principal")}>
             <MaterialCommunityIcons
               name="home-circle-outline"
               size={60}
