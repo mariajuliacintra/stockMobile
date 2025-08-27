@@ -1,18 +1,20 @@
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ImageBackground, 
-  SafeAreaView, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+  SafeAreaView,
   Image,
-  useWindowDimensions
+  useWindowDimensions,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
-export default function PerfilScreen({ navigation }) {
+import { useNavigation } from "@react-navigation/native";
+export default function PerfilScreen() {
+  
+  const navigation = useNavigation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
 
@@ -111,13 +113,17 @@ export default function PerfilScreen({ navigation }) {
       >
         <View style={dynamicStyles.header}>
           <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-            <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
+            <MaterialCommunityIcons
+              name="home-circle-outline"
+              size={60}
+              color="#fff"
+            />
           </TouchableOpacity>
         </View>
 
         <View style={dynamicStyles.card}>
-          <Image 
-            source={require("../img/logo.png")} 
+          <Image
+            source={require("../img/logo.png")}
             style={dynamicStyles.logo}
             resizeMode="contain"
           />
