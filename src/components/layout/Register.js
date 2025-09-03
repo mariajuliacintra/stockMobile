@@ -91,14 +91,6 @@ export default function Register({ visible, onClose, onOpenLogin }) {
 
   async function handleCadastro() {
     setIsLoading(true);
-    if (formData.password !== formData.confirmPassword) {
-      setInternalModalMessage("As senhas não coincidem.");
-      setInternalModalType("error");
-      setInternalModalVisible(true);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const response = await api.postSendVerificationCode(formData);
       
