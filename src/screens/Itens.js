@@ -7,25 +7,103 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import sheets from "../services/axios";
-import CardType from "../components/layout/cardType";
 
 const { width } = Dimensions.get("window");
+
+const categoryMapping = {
+  tool: { title: "Ferramentas", description: "Instrumentos para trabalhos manuais." },
+  material: { title: "Material", description: "Itens de consumo, como fitas e tintas." },
+  rawMaterial: { title: "Matéria-Prima", description: "Insumos brutos para produção." },
+  equipment: { title: "Equipamentos", description: "Máquinas e aparelhos em geral." },
+  product: { title: "Produto", description: "Itens finais para comercialização." },
+  diverses: { title: "Diversos", description: "Itens variados e de uso geral." },
+};
+
+function ItemCard({ item }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [quantity, setQuantity] = useState('');
+  const [actionType, setActionType] = useState('Entrada');
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  return (
+    <View style={styles.cardContainer}>
+      <TouchableOpacity onPress={toggleDropdown} style={styles.cardHeader}>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardDescription}>{item.description}</Text>
+        </View>
+        <AntDesign
+          name={isOpen ? "up" : "down"}
+          size={20}
+          color="#FFF"
+          style={styles.dropdownIcon}
+        />
+      </TouchableOpacity>
+
+      {isOpen && (
+        <View style={styles.dropdownContent}>
+          <Text style={styles.dropdownText}>
+            <Text style={styles.dropdownLabel}>Marca:</Text> {item.brand || 'N/A'}
+          </Text>
+          <Text style={styles.dropdownText}>
+            <Text style={styles.dropdownLabel}>Especificações:</Text> {item.technicalSpecifications || 'N/A'}
+          </Text>
+          <Text style={styles.dropdownText}>
+            <Text style={styles.dropdownLabel}>Quantidade:</Text> {item.quantity || '0'}
+          </Text>
+          <Text style={styles.dropdownText}>
+            <Text style={styles.dropdownLabel}>Última Manutenção:</Text> {item.lastMaintenance || 'N/A'}
+          </Text>
+          
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Quantidade:</Text>
+            <TextInput
+              style={styles.quantityInput}
+              keyboardType="numeric"
+              value={quantity}
+              onChangeText={setQuantity}
+              placeholder="0"
+            />
+          </View>
+
+          <View style={styles.actionTypeContainer}>
+            <TouchableOpacity
+              style={[styles.actionButton, actionType === 'Entrada' && styles.actionButtonSelected]}
+              onPress={() => setActionType('Entrada')}
+            >
+              <Text style={styles.actionButtonText}>Entrada</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, actionType === 'Saída' && styles.actionButtonSelected]}
+              onPress={() => setActionType('Saída')}
+            >
+              <Text style={styles.actionButtonText}>Saída</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
 
 function Itens() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { category } = route.params; // Pega a categoria passada como parâmetro
+  const { category } = route.params; 
   
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Função para buscar os itens da API com base na categoria
     const fetchItems = async () => {
       setLoading(true);
       try {
@@ -39,7 +117,7 @@ function Itens() {
     };
 
     fetchItems();
-  }, [category]); // A dependência [category] garante que a função será executada novamente se a categoria mudar
+  }, [category]);
 
   const handleLogout = () => {
     navigation.navigate("Principal");
@@ -49,10 +127,7 @@ function Itens() {
     navigation.navigate("Home");
   };
 
-  const handleCardPress = (item) => {
-    // Adicione a lógica para lidar com o clique em um item, se necessário
-    console.log("Card clicado:", item.name);
-  };
+  const translatedTitle = categoryMapping[category]?.title || category;
 
   return (
     <View style={styles.container}>
@@ -72,14 +147,9 @@ function Itens() {
         </View>
       ) : (
         <ScrollView style={styles.itemsContainer}>
-          <Text style={styles.categoryTitle}>{category.toUpperCase()}</Text>
+          <Text style={styles.categoryTitle}>{translatedTitle.toUpperCase()}</Text>
           {items.map((item) => (
-            <CardType
-              key={item.idItem}
-              title={item.name}
-              description={item.description}
-              onPress={() => handleCardPress(item)}
-            />
+            <ItemCard key={item.idItem} item={item} />
           ))}
         </ScrollView>
       )}
@@ -146,6 +216,93 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginLeft: -22,
     marginRight: -10,
+  },
+  cardContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(177, 16, 16, 1)',
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: '#fff',
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#fff',
+    marginTop: 4,
+  },
+  dropdownIcon: {
+    marginLeft: 10,
+  },
+  dropdownContent: {
+    padding: 16,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  dropdownText: {
+    fontSize: 14,
+    marginBottom: 4,
+    color: '#333',
+  },
+  dropdownLabel: {
+    fontWeight: "bold",
+    color: '#600000',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  inputLabel: {
+    fontWeight: "bold",
+    marginRight: 8,
+    color: '#600000',
+  },
+  quantityInput: {
+    flex: 1,
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 8,
+  },
+  actionTypeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
+  actionButton: {
+    backgroundColor: '#600000',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  actionButtonSelected: {
+    backgroundColor: 'rgba(177, 16, 16, 1)',
+    borderColor: '#FFF',
+    borderWidth: 1,
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

@@ -10,66 +10,61 @@ import {
 } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
+
 
 const { width } = Dimensions.get("window");
 
 const categoryMapping = {
-  tool: { title: "Ferramentas", description: "Instrumentos para trabalhos manuais." },
-  material: { title: "Material", description: "Itens de consumo, como fitas e tintas." },
-  rawMaterial: { title: "Matéria-Prima", description: "Insumos brutos para produção." },
-  equipment: { title: "Equipamentos", description: "Máquinas e aparelhos em geral." },
-  product: { title: "Produto", description: "Itens finais para comercialização." },
-  diverses: { title: "Diversos", description: "Itens variados e de uso geral." },
-};
+    tool: { title: "Ferramentas", description: "Instrumentos para trabalhos manuais." },
+    material: { title: "Material", description: "Itens de consumo, como fitas e tintas." },
+    rawMaterial: { title: "Matéria-Prima", description: "Insumos brutos para produção." },
+    equipment: { title: "Equipamentos", description: "Máquinas e aparelhos em geral." },
+    product: { title: "Produto", description: "Itens finais para comercialização." },
+    diverses: { title: "Diversos", description: "Itens variados e de uso geral." },
+  };
 
-function Principal() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+function Types() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { category } = route.params; // Pega a categoria passada como parâmetro
+  
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    // Função para buscar os itens da API com base na categoria
+    const fetchItems = async () => {
       setLoading(true);
       try {
-        const response = await sheets.getAllItems();
-        const allItems = response.data;
-        const uniqueCategories = new Set(allItems.map(item => item.category));
-        const categoriesArray = [...uniqueCategories];
-        
-        const formattedData = categoriesArray.map((category, index) => ({
-          id: index,
-          title: categoryMapping[category]?.title || category,
-          description: categoryMapping[category]?.description || "Sem descrição disponível.",
-          // Alteramos a rota para passar a categoria como parâmetro
-          category: category, 
-        }));
-        
-        setCategories(formattedData);
+        const response = await sheets.getItemsByCategory(category);
+        setItems(response.data);
       } catch (error) {
-        console.error("Erro ao buscar categorias:", error);
+        console.error("Erro ao buscar itens por categoria:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCategories();
-  }, []);
+    fetchItems();
+  }, [category]); // A dependência [category] garante que a função será executada novamente se a categoria mudar
 
   const handleLogout = () => {
-    navigation.navigate("Home");
-  };
-  
-  const handleProfile = () => {
-    navigation.navigate("Perfil");
+    navigation.navigate("Principal");
   };
 
-  const handleCardPress = (category) => {
-    // Agora, navegamos para a tela "Itens" e passamos a categoria como parâmetro
-    navigation.navigate("Itens", { category: category });
+  const handleProfile = () => {
+    navigation.navigate("Home");
   };
+
+  const handleCardPress = (item) => {
+    // Adicione a lógica para lidar com o clique em um item, se necessário
+    console.log("Card clicado:", item.name);
+  };
+
+  const translatedTitle = categoryMapping[category]?.title || category;
 
   return (
     <View style={styles.container}>
@@ -85,17 +80,17 @@ function Principal() {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#600000" />
-          <Text style={styles.loadingText}>Carregando categorias...</Text>
+          <Text style={styles.loadingText}>Carregando itens...</Text>
         </View>
       ) : (
-        <ScrollView style={styles.cardContainer}>
-          {categories.map((item) => (
+        <ScrollView style={styles.itemsContainer}>
+          <Text style={styles.categoryTitle}>{translatedTitle.toUpperCase()}</Text>
+          {items.map((item) => (
             <CardType
-              key={item.id}
-              title={item.title}
+              key={item.idItem}
+              title={item.name}
               description={item.description}
-              // Passamos a propriedade `category` para a função de navegação
-              onPress={() => handleCardPress(item.category)}
+              onPress={() => handleCardPress(item)}
             />
           ))}
         </ScrollView>
@@ -105,6 +100,10 @@ function Principal() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#E4E4E4",
+  },
   header: {
     backgroundColor: "rgba(177, 16, 16, 1)",
     height: 80,
@@ -116,20 +115,23 @@ const styles = StyleSheet.create({
     width: width,
     paddingRight: 20,
   },
-  container: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    backgroundColor: "#E4E4E4",
-  },
-  cardContainer: {
+  itemsContainer: {
     flex: 1,
     width: "100%",
+  },
+  categoryTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 10,
+    color: "#600000",
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#BFAEAE",
   },
   loadingText: {
     marginTop: 10,
@@ -159,4 +161,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Principal;
+export default Types;
