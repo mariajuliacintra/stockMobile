@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,16 +9,74 @@ import {
   SafeAreaView,
   Image,
   useWindowDimensions,
+  Alert,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
-export default function PerfilScreen() {
+import sheets from '../services/axios'; // Importe o objeto 'sheets' do seu arquivo axios.js
+import * as SecureStore from 'expo-secure-store';
 
+export default function PerfilScreen() {
   const navigation = useNavigation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState(null); // O ID do usuário será definido após carregar o token
 
   const { width, height } = useWindowDimensions();
+
+  // Função para buscar os dados do usuário
+  useEffect(() => {
+    const fetchUserData = async () => {
+      // Obter o token e o ID do usuário de forma segura
+      const token = await SecureStore.getItemAsync("tokenUsuario");
+      // Você precisará de uma forma de obter o ID do usuário (talvez do token, ou de um contexto de autenticação)
+      // Por exemplo, decodificando o token ou de um estado global
+      const loggedInUserId = "obtenha_seu_id_aqui"; 
+      setUserId(loggedInUserId);
+
+      if (!loggedInUserId || !token) {
+        Alert.alert("Erro", "Você precisa estar logado para acessar esta página.");
+        navigation.navigate("Login");
+        return;
+      }
+
+      try {
+        const response = await sheets.getUsuarioById(loggedInUserId);
+        
+        if (response.data && response.data.user) {
+          setNome(response.data.user.name);
+          setEmail(response.data.user.email);
+        } else {
+          Alert.alert("Erro", "Dados do usuário não encontrados.");
+        }
+        
+      } catch (error) {
+        console.error("Erro ao carregar dados do usuário:", error.response?.data || error.message);
+        Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
+      }
+    };
+
+    fetchUserData();
+  }, [navigation]);
+
+  // Função para atualizar o perfil
+  const handleUpdateUser = async () => {
+    if (!nome || !email) {
+      Alert.alert("Erro", "Nome e e-mail não podem ser vazios.");
+      return;
+    }
+
+    try {
+      const dadosAtualizados = { name: nome, email: email };
+      const response = await sheets.putAtualizarUsuario(userId, dadosAtualizados);
+      
+      Alert.alert("Sucesso", response.data.message);
+      
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error.response?.data || error.message);
+      Alert.alert("Erro", "Não foi possível atualizar o perfil. " + (error.response?.data?.error || ""));
+    }
+  };
 
   const dynamicStyles = StyleSheet.create({
     background: {
@@ -50,7 +108,7 @@ export default function PerfilScreen() {
       shadowOpacity: 0.35,
       shadowRadius: 10,
       elevation: 10,
-      marginTop: height * 0.12, // espaço para o header
+      marginTop: height * 0.12,
     },
     logo: {
       width: width * 0.6,
@@ -149,7 +207,7 @@ export default function PerfilScreen() {
             />
           </View>
 
-          <TouchableOpacity style={dynamicStyles.button}>
+          <TouchableOpacity style={dynamicStyles.button} onPress={handleUpdateUser}>
             <Text style={dynamicStyles.buttonText}>Editar perfil</Text>
           </TouchableOpacity>
 
