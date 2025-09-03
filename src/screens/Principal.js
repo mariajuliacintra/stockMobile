@@ -63,7 +63,7 @@ function Principal() {
   };
   
   const handleProfile = () => {
-    navigation.navigate("Home");
+    navigation.navigate("Perfil");
   };
 
   const handleCardPress = (category) => {
