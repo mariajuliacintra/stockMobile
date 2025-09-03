@@ -19,10 +19,11 @@ const CardType = ({ title, description, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#D9D9D9',
+    backgroundColor: "#ffffff",
     borderRadius: 8,
     padding: 15,
     marginVertical: 10,
+    marginTop: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

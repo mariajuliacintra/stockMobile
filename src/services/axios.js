@@ -30,6 +30,11 @@ const sheets = {
   postValidateRecoveryCode: (data) => api.post('/user/validate-recovery-code', data),
   postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
   
+  getAllItems: () => api.get("item"),
+
+  getItemsByCategory: (category) => api.get(`item/${category}`),
+
+
 
 
   getSalas: () => api.get("salas"),
