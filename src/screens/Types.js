@@ -14,42 +14,58 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
 
-
 const { width } = Dimensions.get("window");
 
 const categoryMapping = {
-    tool: { title: "Ferramentas", description: "Instrumentos para trabalhos manuais." },
-    material: { title: "Material", description: "Itens de consumo, como fitas e tintas." },
-    rawMaterial: { title: "Matéria-Prima", description: "Insumos brutos para produção." },
-    equipment: { title: "Equipamentos", description: "Máquinas e aparelhos em geral." },
-    product: { title: "Produto", description: "Itens finais para comercialização." },
-    diverses: { title: "Diversos", description: "Itens variados e de uso geral." },
-  };
+  tool: {
+    title: "Ferramentas",
+    description: "Instrumentos para trabalhos manuais.",
+  },
+  material: {
+    title: "Material",
+    description: "Itens de consumo, como fitas e tintas.",
+  },
+  rawMaterial: {
+    title: "Matéria-Prima",
+    description: "Insumos brutos para produção.",
+  },
+  equipment: {
+    title: "Equipamentos",
+    description: "Máquinas e aparelhos em geral.",
+  },
+  product: {
+    title: "Produto",
+    description: "Itens finais para comercialização.",
+  },
+  diverses: {
+    title: "Diversos",
+    description: "Itens variados e de uso geral.",
+  },
+};
 
 function Types() {
   const navigation = useNavigation();
   const route = useRoute();
   const { category } = route.params; // Pega a categoria passada como parâmetro
-  
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Função para buscar os itens da API com base na categoria
     const fetchItems = async () => {
       setLoading(true);
       try {
         const response = await sheets.getItemsByCategory(category);
         setItems(response.data);
       } catch (error) {
-        console.error("Erro ao buscar itens por categoria:", error);
+        console.error("Erro ao buscar itens por categoria");
       } finally {
         setLoading(false);
       }
     };
 
     fetchItems();
-  }, [category]); // A dependência [category] garante que a função será executada novamente se a categoria mudar
+  }, [category]);
 
   const handleLogout = () => {
     navigation.navigate("Principal");
@@ -84,7 +100,9 @@ function Types() {
         </View>
       ) : (
         <ScrollView style={styles.itemsContainer}>
-          <Text style={styles.categoryTitle}>{translatedTitle.toUpperCase()}</Text>
+          <Text style={styles.categoryTitle}>
+            {translatedTitle.toUpperCase()}
+          </Text>
           {items.map((item) => (
             <CardType
               key={item.idItem}
