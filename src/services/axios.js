@@ -24,6 +24,15 @@ const sheets = {
   postLogin: (user) => api.post("user/login/", user),
   postSendVerificationCode: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
+
+  putAtualizarUsuario: (user) => api.put("/user/:idUser", user),
+  postRecoveryPassword: (data) => api.post("/user/recovery-password", data),
+  postValidateRecoveryCode: (data) => api.post('/user/validate-recovery-code', data),
+  postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
+  
+  getAllItems: () => api.get("items"),
+
+  addTransaction: (payload) => api.post(
   postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
   putAtualizarUsuario: (idUser, user) => api.put(`/user/${idUser}`, user),
   postVerifyUpdate: (data) => api.post("/user/verify-update", data),
@@ -33,6 +42,6 @@ const sheets = {
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
   getAllItems: () => api.get("item"),
   getItemsByCategory: (category) => api.get(`item/${category}`),
-};
+
 
 export default sheets;
