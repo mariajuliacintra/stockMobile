@@ -11,7 +11,6 @@ import {
   SafeAreaView,
   Image,
   useWindowDimensions,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -19,20 +18,38 @@ import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import * as SecureStore from "expo-secure-store";
 import ConfirmPasswordModal from "../components/layout/ConfirmPasswordModal";
-import VerifyCodeModal from "../components/layout/VerificationModal";   
+import VerifyCodeModal from "../components/layout/VerificationModal"; 
+import CustomModal from "../components/mod/CustomModal"; // Importe seu CustomModal
 
 export default function PerfilScreen() {
   const navigation = useNavigation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [currentEmail, setCurrentEmail] = useState(""); // Novo estado para o e-mail atual
+  const [currentEmail, setCurrentEmail] = useState(""); 
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [senhaModalVisible, setSenhaModalVisible] = useState(false);
-  const [verifyModalVisible, setVerifyModalVisible] = useState(false); // Estado para o modal de verificação
+  const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { width, height } = useWindowDimensions();
+
+  // Estados para CustomModal (snackbar/alertas)
+  const [customModalVisible, setCustomModalVisible] = useState(false);
+  const [customModalTitle, setCustomModalTitle] = useState("");
+  const [customModalMessage, setCustomModalMessage] = useState("");
+  const [customModalType, setCustomModalType] = useState("info");
+
+  // Estado para confirmação de exclusão
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const showCustomModal = (title, message, type = "info") => {
+    setCustomModalTitle(title);
+    setCustomModalMessage(message);
+    setCustomModalType(type);
+    setCustomModalVisible(true);
+  };
+  const onDismissCustomModal = () => setCustomModalVisible(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -42,14 +59,13 @@ export default function PerfilScreen() {
           const userData = JSON.parse(storedUserData);
           setNome(userData.name || "");
           setEmail(userData.email || "");
-          setCurrentEmail(userData.email || ""); // Salve o e-mail original
+          setCurrentEmail(userData.email || "");
         } else {
-          Alert.alert("Erro", "Usuário não encontrado, faça login novamente.");
+          showCustomModal("Erro", "Usuário não encontrado, faça login novamente.", "error");
           navigation.navigate("Login");
         }
       } catch (error) {
-        console.error("Erro ao carregar usuário:", error);
-        Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
+        showCustomModal("Erro", "Não foi possível carregar os dados do usuário.", "error");
       }
     };
     fetchUserData();
@@ -80,7 +96,7 @@ export default function PerfilScreen() {
 
   const handleUpdateUser = async () => {
     if (newPassword && newPassword !== confirmNewPassword) {
-      Alert.alert("Erro", "A confirmação de senha não corresponde à nova senha.");
+      showCustomModal("Erro", "A confirmação de senha não corresponde à nova senha.", "error");
       return;
     }
     setLoading(true);
@@ -100,39 +116,67 @@ export default function PerfilScreen() {
 
       const response = await sheets.putAtualizarUsuario(idUser, dadosAtualizados);
       
-      // VERIFICAMOS SE A API SOLICITOU VERIFICAÇÃO DE E-MAIL
       if (response.data && response.data.requiresEmailVerification) {
-        // Se sim, abrimos o modal de verificação.
         setVerifyModalVisible(true);
       } else if (response.data && response.data.user) {
-        // Se a API retornou o objeto de usuário (indicando sucesso), salvamos.
         await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
-        Alert.alert("Sucesso", response.data.message || "Perfil atualizado!");
+        showCustomModal("Sucesso", response.data.message || "Perfil atualizado!", "success");
         setNewPassword("");
         setConfirmNewPassword("");
         setIsEditing(false);
       } else {
-        // Caso a resposta da API não seja a esperada, exibe um erro.
-        Alert.alert("Erro", response.data.message || "Resposta da API incompleta. Perfil pode não ter sido atualizado corretamente.");
+        showCustomModal("Erro", response.data.message || "Resposta da API incompleta. Perfil pode não ter sido atualizado corretamente.", "error");
       }
     } catch (error) {
-      console.error("Erro ao atualizar usuário:", error.response?.data || error.message);
-      Alert.alert("Erro", "Não foi possível atualizar o perfil.");
+      showCustomModal("Erro", "Não foi possível atualizar o perfil.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Esta é a função que o modal de verificação irá chamar para validar o código
+  // Deletar usuário (confirmado)
+  const handleDeleteUser = async () => {
+    try {
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser) throw new Error("Usuário não encontrado");
+      const user = JSON.parse(storedUser);
+      const idUser = user.idUser;
+
+      const response = await sheets.deleteUsuario(idUser);
+
+     if (response.data && response.data.auth) {
+  await SecureStore.deleteItemAsync("user");
+  await SecureStore.deleteItemAsync("tokenUsuario");
+
+  showCustomModal("Sucesso", response.data.message || "Conta deletada!", "success");
+
+  setTimeout(() => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Principal" }],
+    });
+  }, 1500);
+
+
+      } else {
+        showCustomModal("Erro", response.data.error || "Erro ao deletar usuário", "error");
+      }
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error.response?.data || error.message);
+      showCustomModal("Erro", "Não foi possível deletar o usuário.", "error");
+    } finally {
+      setDeleteModalVisible(false);
+    }
+  };
+
   const handleVerifyEmailCode = async (code) => {
     try {
       const storedUser = await SecureStore.getItemAsync("user");
       if (!storedUser) throw new Error("Usuário não encontrado");
       const user = JSON.parse(storedUser);
       
-      // Chama a API de verificação de atualização, passando o e-mail e o código.
       const response = await sheets.postVerifyUpdate({
-        email: email, // O novo e-mail
+        email: email,
         code: code,
       });
 
@@ -287,8 +331,12 @@ export default function PerfilScreen() {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity>
-            <Text style={dynamicStyles.link}>Meus pedidos</Text>
+          {/* Botão para abrir modal de confirmação */}
+          <TouchableOpacity
+            style={[dynamicStyles.button, { backgroundColor: "red" }]}
+            onPress={() => setDeleteModalVisible(true)}
+          >
+            <Text style={dynamicStyles.buttonText}>Deletar Perfil</Text>
           </TouchableOpacity>
         </View>
 
@@ -301,8 +349,29 @@ export default function PerfilScreen() {
         <VerifyCodeModal
           visible={verifyModalVisible}
           onClose={() => setVerifyModalVisible(false)}
-          onVerify={handleVerifyEmailCode} // Passa a função de verificação do perfil
-          email={email} // Passa o novo e-mail para exibição
+          onVerify={handleVerifyEmailCode}
+          email={email}
+        />
+        {deleteModalVisible && (
+          <CustomModal
+            open={deleteModalVisible}
+            onClose={() => setDeleteModalVisible(false)}
+            title="Confirmação"
+            message="Tem certeza que deseja excluir sua conta?"
+            type="warning"
+            actions={[
+              { text: "Cancelar", onPress: () => setDeleteModalVisible(false), style: "cancel" },
+              { text: "Confirmar", onPress: handleDeleteUser, style: "destructive" },
+            ]}
+          />
+        )}
+
+        <CustomModal
+          open={customModalVisible}
+          onClose={onDismissCustomModal}
+          title={customModalTitle}
+          message={customModalMessage}
+          type={customModalType}
         />
       </ImageBackground>
     </SafeAreaView>
