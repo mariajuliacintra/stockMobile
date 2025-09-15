@@ -9,7 +9,11 @@ import {
   StyleSheet,
 } from "react-native";
 
-export default function ConfirmPasswordModal({ visible, onConfirm, onCancel }) {
+export default function ConfirmPasswordModal({
+  visible,
+  onCancel,
+  onValidatePassword, // <<< Recebe a função de validação
+}) {
   const [senhaAtual, setSenhaAtual] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,13 +26,18 @@ export default function ConfirmPasswordModal({ visible, onConfirm, onCancel }) {
     setLoading(true);
 
     try {
-      await onConfirm(senhaAtual); // envia a senha atual para a função da tela
-      setSenhaAtual("");
+      const isValid = await onValidatePassword(senhaAtual);
+      if (isValid) {
+        onCancel(); // Se for válida, fecha o modal. A edição será habilitada no PerfilScreen.
+      } else {
+        alert("Senha incorreta!");
+      }
     } catch (error) {
       console.error(error);
-      alert("Erro ao atualizar perfil");
+      alert("Erro ao validar senha.");
     } finally {
       setLoading(false);
+      setSenhaAtual("");
     }
   };
 

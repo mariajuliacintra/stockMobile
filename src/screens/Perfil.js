@@ -1,3 +1,5 @@
+// PerfilScreen.js
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -10,21 +12,28 @@ import {
   Image,
   useWindowDimensions,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import * as SecureStore from "expo-secure-store";
 import ConfirmPasswordModal from "../components/layout/ConfirmPasswordModal";
+import VerifyCodeModal from "../components/layout/VerificationModal"; 
 
 export default function PerfilScreen() {
   const navigation = useNavigation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [currentEmail, setCurrentEmail] = useState(""); // Novo estado para o e-mail atual
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [senhaModalVisible, setSenhaModalVisible] = useState(false);
+  const [verifyModalVisible, setVerifyModalVisible] = useState(false); // Estado para o modal de verificação
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { width, height } = useWindowDimensions();
 
-  // Busca dados do usuário ao montar
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -33,6 +42,7 @@ export default function PerfilScreen() {
           const userData = JSON.parse(storedUserData);
           setNome(userData.name || "");
           setEmail(userData.email || "");
+          setCurrentEmail(userData.email || ""); // Salve o e-mail original
         } else {
           Alert.alert("Erro", "Usuário não encontrado, faça login novamente.");
           navigation.navigate("Login");
@@ -45,27 +55,95 @@ export default function PerfilScreen() {
     fetchUserData();
   }, [navigation]);
 
-  // Função para atualizar perfil, recebe a senha do modal
-  const handleUpdateUser = async (senhaAtual) => {
+  const handleValidatePasswordAndEnableEdit = async (senhaAtual) => {
     try {
       const storedUser = await SecureStore.getItemAsync("user");
       if (!storedUser) throw new Error("Usuário não encontrado");
       const user = JSON.parse(storedUser);
       const idUser = user.idUser;
 
+      const response = await sheets.postValidatePassword(idUser, {
+        password: senhaAtual,
+      });
+
+      if (response.data.isValid) {
+        setIsEditing(true);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Erro ao validar senha:", error.response?.data || error.message);
+      return false;
+    }
+  };
+
+  const handleUpdateUser = async () => {
+    if (newPassword && newPassword !== confirmNewPassword) {
+      Alert.alert("Erro", "A confirmação de senha não corresponde à nova senha.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser) throw new Error("Usuário não encontrado");
+      const user = JSON.parse(storedUser);
+      const idUser = user.idUser;
       const dadosAtualizados = {
         name: nome,
         email: email,
-        password: senhaAtual, // envia a senha atual para validação
       };
+      if (newPassword) {
+        dadosAtualizados.password = newPassword;
+        dadosAtualizados.confirmPassword = confirmNewPassword;
+      }
 
       const response = await sheets.putAtualizarUsuario(idUser, dadosAtualizados);
-
-      Alert.alert("Sucesso", response.data.message || "Perfil atualizado!");
-      await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
+      
+      // VERIFICAMOS SE A API SOLICITOU VERIFICAÇÃO DE E-MAIL
+      if (response.data && response.data.requiresEmailVerification) {
+        // Se sim, abrimos o modal de verificação.
+        setVerifyModalVisible(true);
+      } else if (response.data && response.data.user) {
+        // Se a API retornou o objeto de usuário (indicando sucesso), salvamos.
+        await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
+        Alert.alert("Sucesso", response.data.message || "Perfil atualizado!");
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setIsEditing(false);
+      } else {
+        // Caso a resposta da API não seja a esperada, exibe um erro.
+        Alert.alert("Erro", response.data.message || "Resposta da API incompleta. Perfil pode não ter sido atualizado corretamente.");
+      }
     } catch (error) {
       console.error("Erro ao atualizar usuário:", error.response?.data || error.message);
       Alert.alert("Erro", "Não foi possível atualizar o perfil.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Esta é a função que o modal de verificação irá chamar para validar o código
+  const handleVerifyEmailCode = async (code) => {
+    try {
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser) throw new Error("Usuário não encontrado");
+      const user = JSON.parse(storedUser);
+      
+      // Chama a API de verificação de atualização, passando o e-mail e o código.
+      const response = await sheets.postVerifyUpdate({
+        email: email, // O novo e-mail
+        code: code,
+      });
+
+      if (response.data.auth && response.data.user) {
+        await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
+        return { success: true, message: response.data.message || "E-mail atualizado com sucesso!" };
+      } else {
+        return { success: false, error: response.data.error || "Código de verificação inválido." };
+      }
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || "Erro ao verificar o código." };
     }
   };
 
@@ -142,46 +220,89 @@ export default function PerfilScreen() {
         <View style={dynamicStyles.card}>
           <Image source={require("../img/logo.png")} style={dynamicStyles.logo} resizeMode="contain" />
 
-          {/* Nome (só leitura) */}
           <View style={dynamicStyles.inputContainer}>
             <TextInput
               style={dynamicStyles.inputField}
               placeholder="Nome"
               placeholderTextColor="#999"
               value={nome}
-              editable={false}
-              selectTextOnFocus={false}
+              onChangeText={setNome}
+              editable={isEditing}
+              selectTextOnFocus={isEditing}
             />
           </View>
 
-          {/* Email */}
           <View style={dynamicStyles.inputContainer}>
             <TextInput
               style={dynamicStyles.inputField}
               placeholder="E-mail"
               placeholderTextColor="#999"
               value={email}
-              editable={false}
               onChangeText={setEmail}
+              editable={isEditing}
               keyboardType="email-address"
             />
           </View>
+          
+          {isEditing && (
+            <>
+              <View style={dynamicStyles.inputContainer}>
+                <TextInput
+                  style={dynamicStyles.inputField}
+                  placeholder="Nova Senha"
+                  placeholderTextColor="#999"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                />
+              </View>
+              <View style={dynamicStyles.inputContainer}>
+                <TextInput
+                  style={dynamicStyles.inputField}
+                  placeholder="Confirmar Nova Senha"
+                  placeholderTextColor="#999"
+                  value={confirmNewPassword}
+                  onChangeText={setConfirmNewPassword}
+                  secureTextEntry
+                />
+              </View>
+            </>
+          )}
 
-          {/* Botão abrir modal de senha */}
-          <TouchableOpacity style={dynamicStyles.button} onPress={() => setSenhaModalVisible(true)}>
-            <Text style={dynamicStyles.buttonText}>Editar perfil</Text>
-          </TouchableOpacity>
+          {isEditing ? (
+            <TouchableOpacity 
+              style={dynamicStyles.button} 
+              onPress={handleUpdateUser}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={dynamicStyles.buttonText}>Salvar</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={dynamicStyles.button} onPress={() => setSenhaModalVisible(true)}>
+              <Text style={dynamicStyles.buttonText}>Editar perfil</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity>
             <Text style={dynamicStyles.link}>Meus pedidos</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Modal de confirmação de senha */}
         <ConfirmPasswordModal
           visible={senhaModalVisible}
-          onConfirm={handleUpdateUser} // recebe a senha do modal
+          onValidatePassword={handleValidatePasswordAndEnableEdit}
           onCancel={() => setSenhaModalVisible(false)}
+        />
+        
+        <VerifyCodeModal
+          visible={verifyModalVisible}
+          onClose={() => setVerifyModalVisible(false)}
+          onVerify={handleVerifyEmailCode} // Passa a função de verificação do perfil
+          email={email} // Passa o novo e-mail para exibição
         />
       </ImageBackground>
     </SafeAreaView>

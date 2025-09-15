@@ -36,27 +36,21 @@ function CodeVerificationModal({ visible, onClose, email }) {
 
   const handleVerifyCode = async () => {
     try {
-      // Faz a requisição para a API para validar o código
       const response = await sheets.postValidateRecoveryCode({ email, code });
 
-      // Se a validação for um sucesso, mostra a mensagem de sucesso
       setInternalModalMessage(response.data.message);
       setInternalModalType("success");
       setInternalModalVisible(true);
 
-      // Aguarda 2 segundos e abre o próximo modal
       setTimeout(() => {
         setInternalModalVisible(false);
-        // Não fecha o modal de verificação, apenas o esconde
         setUpdatePasswordModalVisible(true);
       }, 800);
 
     } catch (error) {
-      // Em caso de erro, mostra a mensagem de erro
       setInternalModalMessage(error.response?.data?.error || "Código inválido ou expirado. Tente novamente.");
       setInternalModalType("error");
       setInternalModalVisible(true);
-      // O fluxo para aqui se houver erro
     }
   };
 
