@@ -19,7 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import * as SecureStore from "expo-secure-store";
 import ConfirmPasswordModal from "../components/layout/ConfirmPasswordModal";
-import VerifyCodeModal from "../components/layout/VerificationModal"; 
+import VerifyCodeModal from "../components/layout/VerificationModal";   
 
 export default function PerfilScreen() {
   const navigation = useNavigation();
