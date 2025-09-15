@@ -1,90 +1,198 @@
+// PerfilScreen.js
+
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
   TextInput,
+  Text,
   TouchableOpacity,
   StyleSheet,
   ImageBackground,
   SafeAreaView,
   Image,
   useWindowDimensions,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
-import sheets from '../services/axios'; // Importe o objeto 'sheets' do seu arquivo axios.js
-import * as SecureStore from 'expo-secure-store';
+import sheets from "../services/axios";
+import * as SecureStore from "expo-secure-store";
+import ConfirmPasswordModal from "../components/layout/ConfirmPasswordModal";
+import VerifyCodeModal from "../components/layout/VerificationModal"; 
+import CustomModal from "../components/mod/CustomModal"; // Importe seu CustomModal
 
 export default function PerfilScreen() {
   const navigation = useNavigation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [userId, setUserId] = useState(null); // O ID do usuário será definido após carregar o token
-
+  const [currentEmail, setCurrentEmail] = useState(""); 
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [senhaModalVisible, setSenhaModalVisible] = useState(false);
+  const [verifyModalVisible, setVerifyModalVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { width, height } = useWindowDimensions();
 
-  // Função para buscar os dados do usuário
+  // Estados para CustomModal (snackbar/alertas)
+  const [customModalVisible, setCustomModalVisible] = useState(false);
+  const [customModalTitle, setCustomModalTitle] = useState("");
+  const [customModalMessage, setCustomModalMessage] = useState("");
+  const [customModalType, setCustomModalType] = useState("info");
+
+  // Estado para confirmação de exclusão
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const showCustomModal = (title, message, type = "info") => {
+    setCustomModalTitle(title);
+    setCustomModalMessage(message);
+    setCustomModalType(type);
+    setCustomModalVisible(true);
+  };
+  const onDismissCustomModal = () => setCustomModalVisible(false);
+
   useEffect(() => {
     const fetchUserData = async () => {
-      // Obter o token e o ID do usuário de forma segura
-      const token = await SecureStore.getItemAsync("tokenUsuario");
-      // Você precisará de uma forma de obter o ID do usuário (talvez do token, ou de um contexto de autenticação)
-      // Por exemplo, decodificando o token ou de um estado global
-      const loggedInUserId = "obtenha_seu_id_aqui"; 
-      setUserId(loggedInUserId);
-
-      if (!loggedInUserId || !token) {
-        Alert.alert("Erro", "Você precisa estar logado para acessar esta página.");
-        navigation.navigate("Login");
-        return;
-      }
-
       try {
-        const response = await sheets.getUsuarioById(loggedInUserId);
-        
-        if (response.data && response.data.user) {
-          setNome(response.data.user.name);
-          setEmail(response.data.user.email);
+        const storedUserData = await SecureStore.getItemAsync("user");
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          setNome(userData.name || "");
+          setEmail(userData.email || "");
+          setCurrentEmail(userData.email || "");
         } else {
-          Alert.alert("Erro", "Dados do usuário não encontrados.");
+          showCustomModal("Erro", "Usuário não encontrado, faça login novamente.", "error");
+          navigation.navigate("Login");
         }
-        
       } catch (error) {
-        console.error("Erro ao carregar dados do usuário:", error.response?.data || error.message);
-        Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
+        showCustomModal("Erro", "Não foi possível carregar os dados do usuário.", "error");
       }
     };
-
     fetchUserData();
   }, [navigation]);
 
-  // Função para atualizar o perfil
+  const handleValidatePasswordAndEnableEdit = async (senhaAtual) => {
+    try {
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser) throw new Error("Usuário não encontrado");
+      const user = JSON.parse(storedUser);
+      const idUser = user.idUser;
+
+      const response = await sheets.postValidatePassword(idUser, {
+        password: senhaAtual,
+      });
+
+      if (response.data.isValid) {
+        setIsEditing(true);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Erro ao validar senha:", error.response?.data || error.message);
+      return false;
+    }
+  };
+
   const handleUpdateUser = async () => {
-    if (!nome || !email) {
-      Alert.alert("Erro", "Nome e e-mail não podem ser vazios.");
+    if (newPassword && newPassword !== confirmNewPassword) {
+      showCustomModal("Erro", "A confirmação de senha não corresponde à nova senha.", "error");
       return;
     }
-
+    setLoading(true);
     try {
-      const dadosAtualizados = { name: nome, email: email };
-      const response = await sheets.putAtualizarUsuario(userId, dadosAtualizados);
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser) throw new Error("Usuário não encontrado");
+      const user = JSON.parse(storedUser);
+      const idUser = user.idUser;
+      const dadosAtualizados = {
+        name: nome,
+        email: email,
+      };
+      if (newPassword) {
+        dadosAtualizados.password = newPassword;
+        dadosAtualizados.confirmPassword = confirmNewPassword;
+      }
+
+      const response = await sheets.putAtualizarUsuario(idUser, dadosAtualizados);
       
-      Alert.alert("Sucesso", response.data.message);
-      
+      if (response.data && response.data.requiresEmailVerification) {
+        setVerifyModalVisible(true);
+      } else if (response.data && response.data.user) {
+        await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
+        showCustomModal("Sucesso", response.data.message || "Perfil atualizado!", "success");
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setIsEditing(false);
+      } else {
+        showCustomModal("Erro", response.data.message || "Resposta da API incompleta. Perfil pode não ter sido atualizado corretamente.", "error");
+      }
     } catch (error) {
-      console.error("Erro ao atualizar usuário:", error.response?.data || error.message);
-      Alert.alert("Erro", "Não foi possível atualizar o perfil. " + (error.response?.data?.error || ""));
+      showCustomModal("Erro", "Não foi possível atualizar o perfil.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Deletar usuário (confirmado)
+  const handleDeleteUser = async () => {
+    try {
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser) throw new Error("Usuário não encontrado");
+      const user = JSON.parse(storedUser);
+      const idUser = user.idUser;
+
+      const response = await sheets.deleteUsuario(idUser);
+
+     if (response.data && response.data.auth) {
+  await SecureStore.deleteItemAsync("user");
+  await SecureStore.deleteItemAsync("tokenUsuario");
+
+  showCustomModal("Sucesso", response.data.message || "Conta deletada!", "success");
+
+  setTimeout(() => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Principal" }],
+    });
+  }, 1500);
+
+
+      } else {
+        showCustomModal("Erro", response.data.error || "Erro ao deletar usuário", "error");
+      }
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error.response?.data || error.message);
+      showCustomModal("Erro", "Não foi possível deletar o usuário.", "error");
+    } finally {
+      setDeleteModalVisible(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async (code) => {
+    try {
+      const storedUser = await SecureStore.getItemAsync("user");
+      if (!storedUser) throw new Error("Usuário não encontrado");
+      const user = JSON.parse(storedUser);
+      
+      const response = await sheets.postVerifyUpdate({
+        email: email,
+        code: code,
+      });
+
+      if (response.data.auth && response.data.user) {
+        await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
+        return { success: true, message: response.data.message || "E-mail atualizado com sucesso!" };
+      } else {
+        return { success: false, error: response.data.error || "Código de verificação inválido." };
+      }
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || "Erro ao verificar o código." };
     }
   };
 
   const dynamicStyles = StyleSheet.create({
-    background: {
-      flex: 1,
-      width,
-      height,
-      alignItems: "center",
-    },
+    background: { flex: 1, width, height, alignItems: "center" },
     header: {
       backgroundColor: "rgba(177, 16, 16, 1)",
       height: height * 0.1,
@@ -110,12 +218,7 @@ export default function PerfilScreen() {
       elevation: 10,
       marginTop: height * 0.12,
     },
-    logo: {
-      width: width * 0.6,
-      height: width * 0.25,
-      resizeMode: "contain",
-      marginBottom: height * 0.02,
-    },
+    logo: { width: width * 0.6, height: width * 0.25, resizeMode: "contain", marginBottom: height * 0.02 },
     inputContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -128,12 +231,7 @@ export default function PerfilScreen() {
       borderRadius: 8,
       marginBottom: height * 0.025,
     },
-    inputField: {
-      flex: 1,
-      fontSize: width * 0.04,
-      color: "#333",
-      paddingVertical: 0,
-    },
+    inputField: { flex: 1, fontSize: width * 0.04, color: "#333", paddingVertical: 0 },
     button: {
       backgroundColor: "rgb(177, 16, 16)",
       paddingVertical: height * 0.02,
@@ -150,41 +248,21 @@ export default function PerfilScreen() {
       elevation: 6,
       marginBottom: height * 0.015,
     },
-    buttonText: {
-      color: "white",
-      fontWeight: "bold",
-      fontSize: width * 0.045,
-    },
-    link: {
-      fontSize: width * 0.045,
-      color: "rgb(152, 0, 0)",
-      fontWeight: "bold",
-      textDecorationLine: "underline",
-    },
+    buttonText: { color: "white", fontWeight: "bold", fontSize: width * 0.045 },
+    link: { fontSize: width * 0.045, color: "rgb(152, 0, 0)", fontWeight: "bold", textDecorationLine: "underline" },
   });
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <ImageBackground
-        style={dynamicStyles.background}
-        source={require("../img/fundo.png")}
-      >
+      <ImageBackground style={dynamicStyles.background} source={require("../img/fundo.png")}>
         <View style={dynamicStyles.header}>
           <TouchableOpacity onPress={() => navigation.navigate("Principal")}>
-            <MaterialCommunityIcons
-              name="home-circle-outline"
-              size={60}
-              color="#fff"
-            />
+            <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
           </TouchableOpacity>
         </View>
 
         <View style={dynamicStyles.card}>
-          <Image
-            source={require("../img/logo.png")}
-            style={dynamicStyles.logo}
-            resizeMode="contain"
-          />
+          <Image source={require("../img/logo.png")} style={dynamicStyles.logo} resizeMode="contain" />
 
           <View style={dynamicStyles.inputContainer}>
             <TextInput
@@ -193,6 +271,8 @@ export default function PerfilScreen() {
               placeholderTextColor="#999"
               value={nome}
               onChangeText={setNome}
+              editable={isEditing}
+              selectTextOnFocus={isEditing}
             />
           </View>
 
@@ -203,18 +283,96 @@ export default function PerfilScreen() {
               placeholderTextColor="#999"
               value={email}
               onChangeText={setEmail}
+              editable={isEditing}
               keyboardType="email-address"
             />
           </View>
+          
+          {isEditing && (
+            <>
+              <View style={dynamicStyles.inputContainer}>
+                <TextInput
+                  style={dynamicStyles.inputField}
+                  placeholder="Nova Senha"
+                  placeholderTextColor="#999"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                />
+              </View>
+              <View style={dynamicStyles.inputContainer}>
+                <TextInput
+                  style={dynamicStyles.inputField}
+                  placeholder="Confirmar Nova Senha"
+                  placeholderTextColor="#999"
+                  value={confirmNewPassword}
+                  onChangeText={setConfirmNewPassword}
+                  secureTextEntry
+                />
+              </View>
+            </>
+          )}
 
-          <TouchableOpacity style={dynamicStyles.button} onPress={handleUpdateUser}>
-            <Text style={dynamicStyles.buttonText}>Editar perfil</Text>
-          </TouchableOpacity>
+          {isEditing ? (
+            <TouchableOpacity 
+              style={dynamicStyles.button} 
+              onPress={handleUpdateUser}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={dynamicStyles.buttonText}>Salvar</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={dynamicStyles.button} onPress={() => setSenhaModalVisible(true)}>
+              <Text style={dynamicStyles.buttonText}>Editar perfil</Text>
+            </TouchableOpacity>
+          )}
 
-          <TouchableOpacity>
-            <Text style={dynamicStyles.link}>Meus pedidos</Text>
+          {/* Botão para abrir modal de confirmação */}
+          <TouchableOpacity
+            style={[dynamicStyles.button, { backgroundColor: "red" }]}
+            onPress={() => setDeleteModalVisible(true)}
+          >
+            <Text style={dynamicStyles.buttonText}>Deletar Perfil</Text>
           </TouchableOpacity>
         </View>
+
+        <ConfirmPasswordModal
+          visible={senhaModalVisible}
+          onValidatePassword={handleValidatePasswordAndEnableEdit}
+          onCancel={() => setSenhaModalVisible(false)}
+        />
+        
+        <VerifyCodeModal
+          visible={verifyModalVisible}
+          onClose={() => setVerifyModalVisible(false)}
+          onVerify={handleVerifyEmailCode}
+          email={email}
+        />
+        {deleteModalVisible && (
+          <CustomModal
+            open={deleteModalVisible}
+            onClose={() => setDeleteModalVisible(false)}
+            title="Confirmação"
+            message="Tem certeza que deseja excluir sua conta?"
+            type="warning"
+            actions={[
+              { text: "Cancelar", onPress: () => setDeleteModalVisible(false), style: "cancel" },
+              { text: "Confirmar", onPress: handleDeleteUser, style: "destructive" },
+            ]}
+          />
+        )}
+
+        <CustomModal
+          open={customModalVisible}
+          onClose={onDismissCustomModal}
+          title={customModalTitle}
+          message={customModalMessage}
+          type={customModalType}
+        />
       </ImageBackground>
     </SafeAreaView>
   );

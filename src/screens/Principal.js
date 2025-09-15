@@ -86,6 +86,7 @@ function Principal() {
     setFilterModalVisible(!isFilterModalVisible);
   };
 
+
   const toggleDetailModal = (item) => {
     setSelectedItem(item);
     setDetailModalVisible(!isDetailModalVisible);
@@ -103,7 +104,7 @@ function Principal() {
 
   const handleLogout = () => {
     navigation.navigate("Home");
-  };
+
 
   const handleProfile = () => {
     navigation.navigate("Perfil");
