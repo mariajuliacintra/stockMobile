@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import sheets from "../../services/axios"; // Assumindo que este serviço já existe
+import sheets from "../../services/axios"; 
 import CustomModal from "../mod/CustomModal";
 import UpdatePasswordModal from "./UpdatePasswordModal";
 
@@ -41,7 +41,6 @@ function CodeVerificationModal({ visible, onClose, email }) {
       setInternalModalMessage(response.data.message);
       setInternalModalType("success");
       setInternalModalVisible(true);
-
       setTimeout(() => {
         setInternalModalVisible(false);
         setUpdatePasswordModalVisible(true);
@@ -190,7 +189,7 @@ function CodeVerificationModal({ visible, onClose, email }) {
         onClose={(success) => {
           setUpdatePasswordModalVisible(false);
           if (success) {
-            onClose(true); // Encerra o fluxo todo, fechando o modal de login
+            onClose(true); 
           }
         }}
         email={email}

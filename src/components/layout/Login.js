@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Modal,
-  StyleSheet,
+  StyleSheet, 
   Text,
   TextInput,
   TouchableOpacity,
@@ -107,13 +107,6 @@ async function handleLogin() {
       shadowRadius: 10,
       elevation: 10,
     },
-    closeButton: {
-      position: "absolute",
-      top: 10,
-      right: 10,
-      padding: 5,
-      zIndex: 1,
-    },
     headerImage: {
       width: width * 0.6,
       height: width * 0.25,
@@ -196,9 +189,6 @@ async function handleLogin() {
           style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
         >
           <View style={dynamicStyles.modal}>
-            <TouchableOpacity style={dynamicStyles.closeButton} onPress={handleCloseLogin}>
-              <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
-            </TouchableOpacity>
 
             <Image source={require("../../img/logo.png")} style={dynamicStyles.headerImage} />
 
@@ -214,7 +204,6 @@ async function handleLogin() {
             </View>
 
             <View style={dynamicStyles.loginInputContainer}>
-              <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
               <TextInput
                 placeholder="senha"
                 value={usuario.password}

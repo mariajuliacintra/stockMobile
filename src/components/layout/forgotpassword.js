@@ -13,7 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import sheets from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
-import CodeVerificationModal from "./CodeVerificationModal"; // Importe o novo modal
+import CodeVerificationModal from "./CodeVerificationModal"; 
 
 const { width, height } = Dimensions.get("window");
 
@@ -22,7 +22,7 @@ function ForgotPasswordModal({ visible, onClose }) {
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
-  const [codeModalVisible, setCodeModalVisible] = useState(false); // Novo estado para o modal de código
+  const [codeModalVisible, setCodeModalVisible] = useState(false);
 
   const handleSendRecoveryEmail = async () => {
     try {
@@ -33,8 +33,8 @@ function ForgotPasswordModal({ visible, onClose }) {
       
       setTimeout(() => {
         setInternalModalVisible(false);
-        onClose(false); // Feche o modal de "esqueci a senha"
-        setCodeModalVisible(true); // Abra o modal de verificação
+        onClose(false); 
+        setCodeModalVisible(true); 
       }, 800);
       
     } catch (error) {
@@ -184,7 +184,7 @@ function ForgotPasswordModal({ visible, onClose }) {
       <CodeVerificationModal
         visible={codeModalVisible}
         onClose={handleCloseCodeModal}
-        email={email} // Passa o e-mail para o novo modal
+        email={email}
       />
     </>
   );
