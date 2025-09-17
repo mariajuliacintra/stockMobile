@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Modal,
-  StyleSheet, 
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -18,6 +18,7 @@ import ForgotPasswordModal from "./forgotpassword";
 import CustomModal from "../mod/CustomModal";
 import api from "../../services/axios";
 
+
 const { width, height } = Dimensions.get("window");
 
 function Login({ visible, onClose, onOpenCadastro }) {
@@ -32,7 +33,8 @@ function Login({ visible, onClose, onOpenCadastro }) {
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalMessage, setInternalModalMessage] = useState("");
   const [internalModalType, setInternalModalType] = useState("info");
-  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
+  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] =
+    useState(false);
   const [loginModalVisible, setLoginModalVisible] = useState(visible);
 
   useEffect(() => {
@@ -47,45 +49,66 @@ function Login({ visible, onClose, onOpenCadastro }) {
     if (onClose) onClose();
   }
 
-async function armazenarDados(user, token) {
-  try {
-    await SecureStore.setItemAsync("user", JSON.stringify(user));
-    await SecureStore.setItemAsync("tokenUsuario", token);
-  } catch (erro) {
-    console.error("Erro ao salvar dados no SecureStore:", erro);
+  async function armazenarDados(user, token) {
+    try {
+      let userString;
+      try {
+        userString = JSON.stringify(user);
+      } catch (err) {
+        console.error("Erro ao converter usuário para JSON:", err, user);
+        return;
+      }
+      const tokenString = token ? String(token) : null;
+      console.log(tokenString)
+      if (userString) {
+        await SecureStore.setItemAsync("user", userString);
+      }
+      if (tokenString) {
+        await SecureStore.setItemAsync("tokenUsuario", tokenString);
+      }
+      console.log("Dados armazenados com sucesso!");
+    } catch (erro) {
+      console.error("Erro ao salvar dados no SecureStore:", erro);
+    }
   }
-}
 
-async function handleLogin() {
-  try {
-    const response = await api.postLogin(usuario);
+  async function handleLogin() {
+    try {
+      const response = await api.postLogin(usuario);
+      //const token = response.data.token;
+      console.log("token", token);
 
-    setInternalModalMessage(response.data.message);
-    setInternalModalType("success");
-    setInternalModalVisible(true);
+      setInternalModalMessage(response.data.message);
+      setInternalModalType("success");
+      setInternalModalVisible(true);
 
-    const user = response.data.user;
-    const token = response.data.token;
+      const user = response.data.user;
+      const token = response.data.user?.[0]?.token;
+      console.log(token);
+      
+      // ✅ agora salva corretamente
+      await armazenarDados(user, token);
+      console.log(armazenarDados(user,token))
 
-    // ✅ agora salva corretamente
-    await armazenarDados(user, token);
+      setUsuario({
+        email: "",
+        password: "",
+        showSenha: true,
+      });
 
-    setUsuario({
-      email: "",
-      password: "",
-      showSenha: true,
-    });
-
-    setTimeout(() => {
-      handleCloseLogin();
-      navigation.navigate("Principal");
-    }, 1000);
-  } catch (error) {
-    setInternalModalMessage(error.response?.data?.error || "Erro desconhecido");
-    setInternalModalType("error");
-    setInternalModalVisible(true);
+      setTimeout(() => {
+        handleCloseLogin();
+        navigation.navigate("Principal");
+      }, 1000);
+    } catch (error) {
+      setInternalModalMessage(
+        error.response?.data?.error || "Erro desconhecido"
+      );
+      setInternalModalType("error");
+      setInternalModalVisible(true);
+    }
   }
-}
+  
 
   const dynamicStyles = StyleSheet.create({
     overlay: {
@@ -186,18 +209,31 @@ async function handleLogin() {
       <View style={dynamicStyles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
         >
           <View style={dynamicStyles.modal}>
-
-            <Image source={require("../../img/logo.png")} style={dynamicStyles.headerImage} />
+            <Image
+              source={require("../../img/logo.png")}
+              style={dynamicStyles.headerImage}
+            />
 
             <View style={dynamicStyles.loginInputContainer}>
-              <Ionicons name="person-outline" size={width * 0.05} color="gray" />
+              <Ionicons
+                name="person-outline"
+                size={width * 0.05}
+                color="gray"
+              />
               <TextInput
                 placeholder="e-mail"
                 value={usuario.email}
-                onChangeText={(value) => setUsuario({ ...usuario, email: value })}
+                onChangeText={(value) =>
+                  setUsuario({ ...usuario, email: value })
+                }
                 style={dynamicStyles.loginInputField}
                 placeholderTextColor="gray"
               />
@@ -208,16 +244,29 @@ async function handleLogin() {
                 placeholder="senha"
                 value={usuario.password}
                 secureTextEntry={usuario.showSenha}
-                onChangeText={(value) => setUsuario({ ...usuario, password: value })}
+                onChangeText={(value) =>
+                  setUsuario({ ...usuario, password: value })
+                }
                 style={dynamicStyles.loginInputField}
                 placeholderTextColor="gray"
               />
-              <TouchableOpacity onPress={() => setUsuario({ ...usuario, showSenha: !usuario.showSenha })}>
-                <Ionicons name={usuario.showSenha ? "eye-off-outline" : "eye-outline"} size={width * 0.05} color="gray" />
+              <TouchableOpacity
+                onPress={() =>
+                  setUsuario({ ...usuario, showSenha: !usuario.showSenha })
+                }
+              >
+                <Ionicons
+                  name={usuario.showSenha ? "eye-off-outline" : "eye-outline"}
+                  size={width * 0.05}
+                  color="gray"
+                />
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity onPress={handleLogin} style={dynamicStyles.confirmButton}>
+            <TouchableOpacity
+              onPress={handleLogin}
+              style={dynamicStyles.confirmButton}
+            >
               <Text style={dynamicStyles.confirmButtonText}>Login</Text>
             </TouchableOpacity>
 
@@ -227,7 +276,9 @@ async function handleLogin() {
               style={dynamicStyles.buttonToCadastro}
               onPress={() => setForgotPasswordModalVisible(true)}
             >
-              <Text style={dynamicStyles.textButtonToCadastro}>Esqueceu a senha?</Text>
+              <Text style={dynamicStyles.textButtonToCadastro}>
+                Esqueceu a senha?
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -238,7 +289,9 @@ async function handleLogin() {
                 else navigation.navigate("Cadastro");
               }}
             >
-              <Text style={dynamicStyles.textButtonToCadastro}>Cadastre-se</Text>
+              <Text style={dynamicStyles.textButtonToCadastro}>
+                Cadastre-se
+              </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
