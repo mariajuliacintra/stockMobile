@@ -15,7 +15,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
-import ItemDetailModal from "../components/layout/ItemDetailModal"; // Importação adicionada
+import ItemDetailModal from "../components/layout/ItemDetailModal";
 
 const { width } = Dimensions.get("window");
 
@@ -30,8 +30,9 @@ const categoryMapping = {
 
 function Principal() {
   const navigation = useNavigation();
-  const [allItems, setAllItems] = useState([]); // Nova lista para armazenar todos os itens
-  const [items, setItems] = useState([]); // Lista para exibição (filtrada)
+
+  const [allItems, setAllItems] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -39,72 +40,66 @@ function Principal() {
   const [isDetailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Efeito para carregar todos os itens da API apenas uma vez
+  // Carrega todos os itens
   useEffect(() => {
     const fetchAllItems = async () => {
       setLoading(true);
       try {
-        // Remove os parâmetros de busca, pois a rota da API não os utiliza
         const response = await sheets.getAllItems();
         setAllItems(response.data);
       } catch (error) {
-        console.error("Erro ao buscar todos os itens:", error);
+        console.error("Erro ao buscar itens:", error);
         setAllItems([]);
       } finally {
         setLoading(false);
       }
     };
     fetchAllItems();
-  }, []); // Array de dependência vazio para rodar apenas uma vez
+  }, []);
 
-  // Efeito para filtrar a lista de itens baseada na busca e nos filtros
+  // Filtra itens por busca e categorias
   useEffect(() => {
-    let filteredItems = allItems;
+    let filtered = allItems;
 
-    // Filtra por termo de busca
     if (searchTerm) {
-      filteredItems = filteredItems.filter(item =>
+      filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filtra por categorias selecionadas
     if (selectedCategories.length > 0) {
-      filteredItems = filteredItems.filter(item =>
+      filtered = filtered.filter(item =>
         selectedCategories.includes(item.category)
       );
     }
 
-    setItems(filteredItems);
-  }, [searchTerm, selectedCategories, allItems]); // Dependências para disparar o filtro
+    setItems(filtered);
+  }, [searchTerm, selectedCategories, allItems]);
 
+  // Abre/fecha modal de filtros
   const toggleFilterModal = () => {
-    // Limpa a lista de categorias selecionadas ao abrir o modal
-    if (!isFilterModalVisible) {
-      setSelectedCategories([]);
-    }
     setFilterModalVisible(!isFilterModalVisible);
   };
 
-
+  // Abre/fecha modal de detalhes do item
   const toggleDetailModal = (item) => {
     setSelectedItem(item);
     setDetailModalVisible(!isDetailModalVisible);
   };
 
+  // Seleciona/desmarca categoria
   const handleCategoryToggle = (category) => {
-    setSelectedCategories(prev => {
-      if (prev.includes(category)) {
-        return prev.filter(cat => cat !== category);
-      } else {
-        return [...prev, category];
-      }
-    });
+    setSelectedCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(cat => cat !== category)
+        : [...prev, category]
+    );
   };
 
+  // Navegação
   const handleLogout = () => {
     navigation.navigate("Home");
-
+  };
 
   const handleProfile = () => {
     navigation.navigate("Perfil");
@@ -112,17 +107,17 @@ function Principal() {
 
   return (
     <View style={styles.container}>
-      {/* Header com botões de Perfil e Sair */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfile} style={styles.profile}>
-          <Ionicons name="person-circle-outline" color="#FFFFFF" size={40} />
+          <Ionicons name="person-circle-outline" color="#FFF" size={40} />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <AntDesign name="logout" color="#FFF" size={25} />
         </TouchableOpacity>
       </View>
 
-      {/* Barra de Pesquisa e Botão de Filtro */}
+      {/* Barra de pesquisa */}
       <View style={styles.searchBarContainer}>
         <TextInput
           style={styles.searchInput}
@@ -136,7 +131,7 @@ function Principal() {
         </TouchableOpacity>
       </View>
 
-      {/* Exibição dos itens ou mensagem de carregamento */}
+      {/* Lista de itens */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#600000" />
@@ -149,19 +144,19 @@ function Principal() {
               <Text style={styles.messageText}>Nenhum item encontrado.</Text>
             </View>
           ) : (
-            items.map((item) => (
+            items.map(item => (
               <CardType
                 key={item.idItem}
                 title={item.name}
                 description={item.description}
-                onPress={() => toggleDetailModal(item)} // Abre o modal de detalhes
+                onPress={() => toggleDetailModal(item)}
               />
             ))
           )}
         </ScrollView>
       )}
 
-      {/* Modal de Filtros Avançados */}
+      {/* Modal de filtros */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -178,7 +173,7 @@ function Principal() {
                 onPress={() => handleCategoryToggle(key)}
               >
                 <Ionicons
-                  name={selectedCategories.includes(key) ? "checkbox-outline" : "square-outline"}
+                  name={selectedCategories.includes(key) ? "checkbox" : "square-outline"}
                   size={24}
                   color="#600000"
                 />
@@ -186,13 +181,13 @@ function Principal() {
               </TouchableOpacity>
             ))}
             <TouchableOpacity style={styles.closeButton} onPress={toggleFilterModal}>
-              <Text style={styles.buttonText}>Filtrar</Text>
+              <Text style={styles.buttonText}>Aplicar</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* NOVO: Componente do Modal de Detalhes separado */}
+      {/* Modal de detalhes */}
       <ItemDetailModal
         isVisible={isDetailModalVisible}
         onClose={() => setDetailModalVisible(false)}
@@ -203,10 +198,7 @@ function Principal() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#E4E4E4",
-  },
+  container: { flex: 1, backgroundColor: "#E4E4E4" },
   header: {
     backgroundColor: "rgba(177, 16, 16, 1)",
     height: 80,
@@ -219,43 +211,29 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 10,
   },
   searchInput: {
     flex: 1,
     height: 40,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     marginRight: 10,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   filterButton: {
-    backgroundColor: '#600000',
+    backgroundColor: "#600000",
     borderRadius: 8,
     padding: 10,
   },
-  filterButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  itemsContainer: {
-    flex: 1,
-    width: "100%",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#600000",
-  },
+  filterButtonText: { color: "#FFF", fontWeight: "bold" },
+  itemsContainer: { flex: 1, width: "100%" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 10, fontSize: 16, color: "#600000" },
   profile: {
     backgroundColor: "#600000",
     borderRadius: 50,
@@ -277,65 +255,26 @@ const styles = StyleSheet.create({
     marginLeft: -22,
     marginRight: -10,
   },
-  messageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 50,
-    paddingHorizontal: 20,
-  },
-  messageText: {
-    fontSize: 18,
-    color: '#600000',
-    textAlign: 'center',
-  },
-  // Estilos do Modal
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
+  messageContainer: { alignItems: "center", justifyContent: "center", marginTop: 50, paddingHorizontal: 20 },
+  messageText: { fontSize: 18, color: "#600000", textAlign: "center" },
+  centeredView: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
   modalView: {
     margin: 20,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 35,
-    alignItems: "left",
+    alignItems: "flex-start",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  checkboxText: {
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  closeButton: {
-    backgroundColor: '#600000',
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-    marginTop: 15,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center"
-  }
+  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
+  checkboxContainer: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  checkboxText: { marginLeft: 8, fontSize: 16 },
+  closeButton: { backgroundColor: "#600000", borderRadius: 20, padding: 10, elevation: 2, marginTop: 15 },
+  buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
 });
 
 export default Principal;
