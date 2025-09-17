@@ -18,6 +18,7 @@ import api from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
 import VerificationModal from "./VerificationModal";
 
+
 const { width, height } = Dimensions.get("window");
 
 const InputField = ({ iconName, placeholder, value, onChangeText, secureTextEntry, onToggleSecureEntry }) => (
