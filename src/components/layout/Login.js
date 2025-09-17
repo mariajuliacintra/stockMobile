@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Modal,
-  StyleSheet, 
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -47,45 +47,54 @@ function Login({ visible, onClose, onOpenCadastro }) {
     if (onClose) onClose();
   }
 
-async function armazenarDados(user, token) {
-  try {
-    await SecureStore.setItemAsync("user", JSON.stringify(user));
-    await SecureStore.setItemAsync("tokenUsuario", token);
-  } catch (erro) {
-    console.error("Erro ao salvar dados no SecureStore:", erro);
+  // Função corrigida: Agora serializa tanto o 'user' quanto o 'token'.
+  async function armazenarDados(user, token) {
+    try {
+      let userString;
+      try {
+        userString = JSON.stringify(user);
+      } catch (err) {
+        console.error("Erro ao converter usuário para JSON:", err, user);
+        return;
+      }
+      const tokenString = String(token);
+      await SecureStore.setItemAsync("user", userString);
+      await SecureStore.setItemAsync("tokenUsuario", tokenString);
+      console.log("Dados armazenados com sucesso!");
+    } catch (erro) {
+      console.error("Erro ao salvar dados no SecureStore:", erro);
+    }
   }
-}
 
-async function handleLogin() {
-  try {
-    const response = await api.postLogin(usuario);
+  async function handleLogin() {
+    try {
+      const response = await api.postLogin(usuario);
 
-    setInternalModalMessage(response.data.message);
-    setInternalModalType("success");
-    setInternalModalVisible(true);
+      setInternalModalMessage(response.data.message);
+      setInternalModalType("success");
+      setInternalModalVisible(true);
 
-    const user = response.data.user;
-    const token = response.data.token;
+      const user = response.data.user;
+      const token = response.data.token;
 
-    // ✅ agora salva corretamente
-    await armazenarDados(user, token);
+      await armazenarDados(user, token);
 
-    setUsuario({
-      email: "",
-      password: "",
-      showSenha: true,
-    });
+      setUsuario({
+        email: "",
+        password: "",
+        showSenha: true,
+      });
 
-    setTimeout(() => {
-      handleCloseLogin();
-      navigation.navigate("Principal");
-    }, 1000);
-  } catch (error) {
-    setInternalModalMessage(error.response?.data?.error || "Erro desconhecido");
-    setInternalModalType("error");
-    setInternalModalVisible(true);
+      setTimeout(() => {
+        handleCloseLogin();
+        navigation.navigate("Principal");
+      }, 1000);
+    } catch (error) {
+      setInternalModalMessage(error.response?.data?.error || "Erro desconhecido");
+      setInternalModalType("error");
+      setInternalModalVisible(true);
+    }
   }
-}
 
   const dynamicStyles = StyleSheet.create({
     overlay: {
@@ -189,9 +198,7 @@ async function handleLogin() {
           style={{ flex: 1, justifyContent: "center", alignItems: "center", width: "100%" }}
         >
           <View style={dynamicStyles.modal}>
-
             <Image source={require("../../img/logo.png")} style={dynamicStyles.headerImage} />
-
             <View style={dynamicStyles.loginInputContainer}>
               <Ionicons name="person-outline" size={width * 0.05} color="gray" />
               <TextInput
@@ -202,7 +209,6 @@ async function handleLogin() {
                 placeholderTextColor="gray"
               />
             </View>
-
             <View style={dynamicStyles.loginInputContainer}>
               <TextInput
                 placeholder="senha"
@@ -216,20 +222,16 @@ async function handleLogin() {
                 <Ionicons name={usuario.showSenha ? "eye-off-outline" : "eye-outline"} size={width * 0.05} color="gray" />
               </TouchableOpacity>
             </View>
-
             <TouchableOpacity onPress={handleLogin} style={dynamicStyles.confirmButton}>
               <Text style={dynamicStyles.confirmButtonText}>Login</Text>
             </TouchableOpacity>
-
             <View style={dynamicStyles.separator} />
-
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
               onPress={() => setForgotPasswordModalVisible(true)}
             >
               <Text style={dynamicStyles.textButtonToCadastro}>Esqueceu a senha?</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
               onPress={() => {
@@ -243,7 +245,6 @@ async function handleLogin() {
           </View>
         </KeyboardAvoidingView>
       </View>
-
       <CustomModal
         open={internalModalVisible}
         onClose={() => setInternalModalVisible(false)}
@@ -251,7 +252,6 @@ async function handleLogin() {
         message={internalModalMessage}
         type={internalModalType}
       />
-
       <ForgotPasswordModal
         visible={forgotPasswordModalVisible}
         onClose={() => setForgotPasswordModalVisible(false)}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -17,14 +16,14 @@ import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import * as SecureStore from "expo-secure-store";
 import ConfirmPasswordModal from "../components/layout/ConfirmPasswordModal";
-import VerifyCodeModal from "../components/layout/VerificationModal"; 
+import VerifyCodeModal from "../components/layout/VerificationModal";
 import CustomModal from "../components/mod/CustomModal"; // Importe seu CustomModal
 
 export default function PerfilScreen() {
   const navigation = useNavigation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [currentEmail, setCurrentEmail] = useState(""); 
+  const [currentEmail, setCurrentEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [senhaModalVisible, setSenhaModalVisible] = useState(false);
@@ -52,18 +51,37 @@ export default function PerfilScreen() {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // 🕵️‍♂️ LOG 1: Iniciando a busca pelos dados do usuário
+      console.log("useEffect: Iniciando a busca pelos dados do usuário.");
       try {
         const storedUserData = await SecureStore.getItemAsync("user");
+
+        // 🕵️‍♂️ LOG 2: Mostrando o valor bruto do SecureStore
+        console.log("SecureStore: Valor bruto para a chave 'user':", storedUserData);
+
         if (storedUserData) {
-          const userData = JSON.parse(storedUserData);
+          const userData = JSON.parse(storedUserData)[0];
+          
+          // 🕵️‍♂️ LOG 3: Mostrando o objeto do usuário após o JSON.parse
+          console.log("JSON.parse: Dados do usuário processados:", userData);
+
           setNome(userData.name || "");
           setEmail(userData.email || "");
           setCurrentEmail(userData.email || "");
+
+          // 🕵️‍♂️ LOG 4: Verificando se os estados foram definidos
+          console.log("Estado 'nome' definido para:", userData.name);
+          console.log("Estado 'email' definido para:", userData.email);
+
         } else {
+          // 🕵️‍♂️ LOG 5: Caso não encontre dados
+          console.log("SecureStore: Nenhum dado de usuário encontrado.");
           showCustomModal("Erro", "Usuário não encontrado, faça login novamente.", "error");
           navigation.navigate("Login");
         }
       } catch (error) {
+        // 🕵️‍♂️ LOG 6: Em caso de erro
+        console.error("Erro ao carregar dados do usuário:", error.message, error);
         showCustomModal("Erro", "Não foi possível carregar os dados do usuário.", "error");
       }
     };
@@ -71,29 +89,39 @@ export default function PerfilScreen() {
   }, [navigation]);
 
   const handleValidatePasswordAndEnableEdit = async (senhaAtual) => {
-    try {
-      const storedUser = await SecureStore.getItemAsync("user");
-      if (!storedUser) throw new Error("Usuário não encontrado");
-      const user = JSON.parse(storedUser);
-      const idUser = user.idUser;
+  try {
+    const storedUser = await SecureStore.getItemAsync("user");
+    const storedToken = await SecureStore.getItemAsync("tokenUsuario"); // 👈 O token está sendo recuperado aqui.
 
-      const response = await sheets.postValidatePassword(idUser, {
-        password: senhaAtual,
-      });
-
-      if (response.data.isValid) {
-        setIsEditing(true);
-        return true;
-      } else {
-        return false;
-      }
-    } catch (error) {
-      console.error("Erro ao validar senha:", error.response?.data || error.message);
+    if (!storedUser || !storedToken) {
+      console.error("Erro: Usuário ou token de autenticação não encontrado.");
       return false;
     }
-  };
+
+    const user = JSON.parse(storedUser)[0]; // 👈 A correção que fizemos antes
+    const idUser = user.idUser;
+
+    // 💡 O ponto crucial: crie um objeto de headers e inclua o token JWT.
+    const headers = {
+      'Authorization': `Bearer ${storedToken}`,
+      'Content-Type': 'application/json'
+    };
+
+    const response = await sheets.postValidatePassword(
+      idUser,
+      { password: senhaAtual },
+      { headers: headers } // 👈 Envie o objeto de headers com a requisição.
+    );
+
+    return response.data.isValid;
+  } catch (error) {
+    console.error("Erro ao validar senha:", error.response?.data || error.message);
+    return false;
+  }
+};
 
   const handleUpdateUser = async () => {
+    console.log("handleUpdateUser: Iniciando atualização do usuário.");
     if (newPassword && newPassword !== confirmNewPassword) {
       showCustomModal("Erro", "A confirmação de senha não corresponde à nova senha.", "error");
       return;
@@ -101,7 +129,10 @@ export default function PerfilScreen() {
     setLoading(true);
     try {
       const storedUser = await SecureStore.getItemAsync("user");
-      if (!storedUser) throw new Error("Usuário não encontrado");
+      if (!storedUser) {
+        console.error("handleUpdateUser: Erro, usuário não encontrado para atualização.");
+        throw new Error("Usuário não encontrado");
+      }
       const user = JSON.parse(storedUser);
       const idUser = user.idUser;
       const dadosAtualizados = {
@@ -112,12 +143,15 @@ export default function PerfilScreen() {
         dadosAtualizados.password = newPassword;
         dadosAtualizados.confirmPassword = confirmNewPassword;
       }
-
-      const response = await sheets.putAtualizarUsuario(idUser, dadosAtualizados);
+      console.log("handleUpdateUser: Enviando dados para a API:", dadosAtualizados);
       
+      const response = await sheets.putAtualizarUsuario(idUser, dadosAtualizados);
+      console.log("handleUpdateUser: Resposta da API de atualização:", response.data);
+
       if (response.data && response.data.requiresEmailVerification) {
         setVerifyModalVisible(true);
       } else if (response.data && response.data.user) {
+        console.log("handleUpdateUser: Atualização local do usuário no SecureStore.");
         await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
         showCustomModal("Sucesso", response.data.message || "Perfil atualizado!", "success");
         setNewPassword("");
@@ -127,35 +161,41 @@ export default function PerfilScreen() {
         showCustomModal("Erro", response.data.message || "Resposta da API incompleta. Perfil pode não ter sido atualizado corretamente.", "error");
       }
     } catch (error) {
+      console.error("Erro ao atualizar o perfil:", error.response?.data || error.message);
       showCustomModal("Erro", "Não foi possível atualizar o perfil.", "error");
     } finally {
       setLoading(false);
+      console.log("handleUpdateUser: Processo de atualização finalizado.");
     }
   };
 
-  // Deletar usuário (confirmado)
   const handleDeleteUser = async () => {
+    console.log("handleDeleteUser: Iniciando exclusão do usuário.");
     try {
       const storedUser = await SecureStore.getItemAsync("user");
-      if (!storedUser) throw new Error("Usuário não encontrado");
+      if (!storedUser) {
+        console.error("handleDeleteUser: Erro, usuário não encontrado para exclusão.");
+        throw new Error("Usuário não encontrado");
+      }
       const user = JSON.parse(storedUser);
       const idUser = user.idUser;
 
       const response = await sheets.deleteUsuario(idUser);
+      console.log("handleDeleteUser: Resposta da API de exclusão:", response.data);
 
-     if (response.data && response.data.auth) {
-  await SecureStore.deleteItemAsync("user");
-  await SecureStore.deleteItemAsync("tokenUsuario");
+      if (response.data && response.data.auth) {
+        await SecureStore.deleteItemAsync("user");
+        await SecureStore.deleteItemAsync("tokenUsuario");
+        console.log("handleDeleteUser: Dados do usuário deletados do SecureStore.");
 
-  showCustomModal("Sucesso", response.data.message || "Conta deletada!", "success");
+        showCustomModal("Sucesso", response.data.message || "Conta deletada!", "success");
 
-  setTimeout(() => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Principal" }],
-    });
-  }, 1500);
-
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Principal" }],
+          });
+        }, 1500);
 
       } else {
         showCustomModal("Erro", response.data.error || "Erro ao deletar usuário", "error");
@@ -169,23 +209,27 @@ export default function PerfilScreen() {
   };
 
   const handleVerifyEmailCode = async (code) => {
+    console.log("handleVerifyEmailCode: Iniciando verificação de código.");
     try {
       const storedUser = await SecureStore.getItemAsync("user");
       if (!storedUser) throw new Error("Usuário não encontrado");
       const user = JSON.parse(storedUser);
-      
+
       const response = await sheets.postVerifyUpdate({
         email: email,
         code: code,
       });
+      console.log("handleVerifyEmailCode: Resposta da verificação:", response.data);
 
       if (response.data.auth && response.data.user) {
         await SecureStore.setItemAsync("user", JSON.stringify(response.data.user));
+        console.log("handleVerifyEmailCode: E-mail atualizado e salvo localmente.");
         return { success: true, message: response.data.message || "E-mail atualizado com sucesso!" };
       } else {
         return { success: false, error: response.data.error || "Código de verificação inválido." };
       }
     } catch (error) {
+      console.error("handleVerifyEmailCode: Erro ao verificar o código:", error.response?.data?.error || error.message);
       return { success: false, error: error.response?.data?.error || "Erro ao verificar o código." };
     }
   };
@@ -286,7 +330,7 @@ export default function PerfilScreen() {
               keyboardType="email-address"
             />
           </View>
-          
+
           {isEditing && (
             <>
               <View style={dynamicStyles.inputContainer}>
@@ -313,8 +357,8 @@ export default function PerfilScreen() {
           )}
 
           {isEditing ? (
-            <TouchableOpacity 
-              style={dynamicStyles.button} 
+            <TouchableOpacity
+              style={dynamicStyles.button}
               onPress={handleUpdateUser}
               disabled={loading}
             >
@@ -344,13 +388,28 @@ export default function PerfilScreen() {
           onValidatePassword={handleValidatePasswordAndEnableEdit}
           onCancel={() => setSenhaModalVisible(false)}
         />
-        
+
         <VerifyCodeModal
           visible={verifyModalVisible}
           onClose={() => setVerifyModalVisible(false)}
-          onVerify={handleVerifyEmailCode}
-          email={email}
+          formData={{ email: email || currentEmail || "" }} // garante que sempre tenha um valor
+          onVerificationSuccess={async () => {
+            // Atualiza o usuário no SecureStore após verificação
+            try {
+              const storedUser = await SecureStore.getItemAsync("user");
+              if (storedUser) {
+                const user = JSON.parse(storedUser);
+                user.email = email; // atualiza o email
+                await SecureStore.setItemAsync("user", JSON.stringify(user));
+              }
+              showCustomModal("Sucesso", "E-mail atualizado com sucesso!", "success");
+            } catch (error) {
+              showCustomModal("Erro", "Não foi possível atualizar os dados localmente.", "error");
+            }
+            setVerifyModalVisible(false);
+          }}
         />
+
         {deleteModalVisible && (
           <CustomModal
             open={deleteModalVisible}
@@ -376,3 +435,7 @@ export default function PerfilScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  // Seus estilos estáticos podem ir aqui para evitar recriação
+});
