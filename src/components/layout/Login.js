@@ -47,42 +47,45 @@ function Login({ visible, onClose, onOpenCadastro }) {
     if (onClose) onClose();
   }
 
-  async function armazenarDados(idUser, token) {
-    try {
-      await SecureStore.setItemAsync("idUsuario", idUser.toString());
-      await SecureStore.setItemAsync("tokenUsuario", token.toString());
-    } catch (erro) {}
+async function armazenarDados(user, token) {
+  try {
+    await SecureStore.setItemAsync("user", JSON.stringify(user));
+    await SecureStore.setItemAsync("tokenUsuario", token);
+  } catch (erro) {
+    console.error("Erro ao salvar dados no SecureStore:", erro);
   }
+}
 
-  async function handleLogin() {
-    try {
-      const response = await api.postLogin(usuario);
+async function handleLogin() {
+  try {
+    const response = await api.postLogin(usuario);
 
-      setInternalModalMessage(response.data.message);
-      setInternalModalType("success");
-      setInternalModalVisible(true);
+    setInternalModalMessage(response.data.message);
+    setInternalModalType("success");
+    setInternalModalVisible(true);
 
-      const idUser = response.data.user.idUser;
-      const token = response.data.token;
+    const user = response.data.user;
+    const token = response.data.token;
 
-      await armazenarDados(idUser, token);
+    // ✅ agora salva corretamente
+    await armazenarDados(user, token);
 
-      setUsuario({
-        email: "",
-        password: "",
-        showSenha: true,
-      });
+    setUsuario({
+      email: "",
+      password: "",
+      showSenha: true,
+    });
 
-      setTimeout(() => {
-        handleCloseLogin();
-        navigation.navigate("Principal");
-      }, 1000);
-    } catch (error) {
-      setInternalModalMessage(error.response?.data?.error || "Erro desconhecido");
-      setInternalModalType("error");
-      setInternalModalVisible(true);
-    }
+    setTimeout(() => {
+      handleCloseLogin();
+      navigation.navigate("Principal");
+    }, 1000);
+  } catch (error) {
+    setInternalModalMessage(error.response?.data?.error || "Erro desconhecido");
+    setInternalModalType("error");
+    setInternalModalVisible(true);
   }
+}
 
   const dynamicStyles = StyleSheet.create({
     overlay: {
