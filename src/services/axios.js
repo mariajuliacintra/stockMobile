@@ -4,7 +4,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.85:5000/stock/",
+  baseURL: "http://10.89.240.82:5000/stock/",
   headers: {
     accept: "application/json",
   },
@@ -13,7 +13,6 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
-    console.log("Token recuperado do SecureStore:", token ? "Token encontrado" : "Token não encontrado");
     if (token) {
       // CORREÇÃO AQUI: Adicione 'Bearer ' antes do token
       config.headers["Authorization"] = token;

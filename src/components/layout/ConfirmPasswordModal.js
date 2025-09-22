@@ -12,14 +12,16 @@ import {
 export default function ConfirmPasswordModal({
   visible,
   onCancel,
-  onValidatePassword, // <<< Recebe a função de validação
+  onValidatePassword,
+  onSuccess,
+  showCustomModal,
 }) {
   const [senhaAtual, setSenhaAtual] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
     if (!senhaAtual) {
-      alert("Digite sua senha atual.");
+      showCustomModal("Aviso", "Digite sua senha atual.", "info");
       return;
     }
 
@@ -28,13 +30,13 @@ export default function ConfirmPasswordModal({
     try {
       const isValid = await onValidatePassword(senhaAtual);
       if (isValid) {
-        onCancel(); // Se for válida, fecha o modal. A edição será habilitada no PerfilScreen.
+        onSuccess();
       } else {
-        alert("Senha incorreta!");
+        showCustomModal("Erro", "Senha incorreta!", "error");
       }
     } catch (error) {
       console.error(error);
-      alert("Erro ao validar senha.");
+      showCustomModal("Erro", "Erro ao validar senha.", "error");
     } finally {
       setLoading(false);
       setSenhaAtual("");
