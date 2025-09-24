@@ -9,11 +9,13 @@ const api = axios.create({
     accept: "application/json",
   },
 });
+
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
     if (token) {
-      config.headers.Authorization = token;
+      // CORREÇÃO AQUI: Adicione 'Bearer ' antes do token
+      config.headers["Authorization"] = token;
     }
     return config;
   },
@@ -24,24 +26,24 @@ const sheets = {
   postLogin: (user) => api.post("user/login/", user),
   postSendVerificationCode: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
-
-  putAtualizarUsuario: (user) => api.put("/user/:idUser", user),
-  postRecoveryPassword: (data) => api.post("/user/recovery-password", data),
-  postValidateRecoveryCode: (data) => api.post('/user/validate-recovery-code', data),
-  postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
-  
-  getAllItems: () => api.get("items"),
-
-
-  postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
   putAtualizarUsuario: (idUser, user) => api.put(`/user/${idUser}`, user),
-  postVerifyUpdate: (data) => api.post("/user/verify-update", data),
   postRecoveryPassword: (data) => api.post("/user/recovery-password", data),
-  postValidateRecoveryCode: (data) => api.post('/user/validate-recovery-code', data),
-  postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
+  postValidateRecoveryCode: (data) =>
+    api.post("/user/validate-recovery-code", data),
+  postVerifyRecoveryPassword: (email) =>
+    api.post("user/verify-recovery-password", { email }),
+  getAllItems: () => api.get("items"),
+  postValidatePassword: (idUser, data) =>
+    api.post(`/user/validate-password/${idUser}`, data),
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
-  getAllItems: () => api.get("item"),
+
+  // Funções de item
+  getAllItems: () => api.get("/items"),
   getItemsByCategory: (category) => api.get(`item/${category}`),
 
-}
+  // Função para atualizar a quantidade do lote
+  updateLotQuantity: (idLot, payload) =>
+    api.put(`lot/quantity/${idLot}`, payload),
+};
+
 export default sheets;
