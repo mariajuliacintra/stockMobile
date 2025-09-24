@@ -28,12 +28,22 @@ const sheets = {
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
   putAtualizarUsuario: (idUser, user) => api.put(`/user/${idUser}`, user),
   postRecoveryPassword: (data) => api.post("/user/recovery-password", data),
-  postValidateRecoveryCode: (data) => api.post('/user/validate-recovery-code', data),
-  postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
+  postValidateRecoveryCode: (data) =>
+    api.post("/user/validate-recovery-code", data),
+  postVerifyRecoveryPassword: (email) =>
+    api.post("user/verify-recovery-password", { email }),
   getAllItems: () => api.get("items"),
-  postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
+  postValidatePassword: (idUser, data) =>
+    api.post(`/user/validate-password/${idUser}`, data),
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
+
+  // Funções de item
+  getAllItems: () => api.get("/items"),
   getItemsByCategory: (category) => api.get(`item/${category}`),
+
+  // Função para atualizar a quantidade do lote
+  updateLotQuantity: (idLot, payload) =>
+    api.put(`lot/quantity/${idLot}`, payload),
 };
 
 export default sheets;
