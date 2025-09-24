@@ -37,7 +37,7 @@ const sheets = {
   getAllItems: () => api.get("/items"),
   getItemsByCategory: (category) => api.get(`item/${category}`),
 
-  // Função para atualizar a quantidade do lote
+  getUserById: (idUser) => api.get(`/user/${idUser}`),
   updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
 };
 

@@ -87,7 +87,7 @@ export default function Register({ visible, onClose, onOpenLogin }) {
     } catch (error) {
       setCustomModal({
         visible: true,
-        message: error.response?.data?.error || "Erro ao enviar o código.",
+        message: error.response?.data?.details || "Erro ao enviar o código.",
         type: "error",
       });
     } finally {
