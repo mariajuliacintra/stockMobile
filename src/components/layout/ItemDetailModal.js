@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,7 +12,7 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import sheets from "../../services/axios";
 import * as SecureStore from "expo-secure-store";
-import * as jwtDecode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [quantityChange, setQuantityChange] = useState("");
@@ -21,44 +21,74 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
+  useEffect(() => {
+    if (item) {
+      console.log("Item recebido no modal:", item);
+      console.log("Imagem do item:", item.image);
+      if (item.image && item.image.data) {
+        console.log("Tamanho do base64:", item.image.data.length);
+        console.log("Tipo da imagem:", item.image.type);
+      } else {
+        console.log("Item não possui imagem ou image.data está undefined");
+      }
+    }
+  }, [item]);
+
   const handleTransaction = async () => {
-    if (
-      !quantityChange ||
-      isNaN(quantityChange) ||
-      parseFloat(quantityChange) <= 0
-    ) {
+    if (!quantityChange || isNaN(quantityChange) || parseFloat(quantityChange) <= 0) {
       setMessage({
         type: "error",
-        text: "Por favor, insira uma quantidade válida.",
+        text: "Por favor, insira uma quantidade válida e positiva.",
       });
       return;
     }
 
     setLoading(true);
     setMessage(null);
+
     try {
       const token = await SecureStore.getItemAsync("tokenUsuario");
-      const decodedToken = jwtDecode.default(token);
-      const fkIdUser = decodedToken.idUser;
+      if (!token) throw new Error("Token de usuário ausente.");
+      const decodedToken = jwtDecode(token);
+      const fkIdUser = decodedToken?.idUser;
+      if (!fkIdUser) throw new Error("Usuário inválido no token.");
+
+      const qtyNum = parseFloat(quantityChange);
+      const quantityForApi = actionDescription === "OUT" ? -Math.abs(qtyNum) : qtyNum;
+      const isAjust = false;
 
       const payload = {
+        quantity: quantityForApi,
         fkIdUser,
-        fkIdItem: item.idItem,
-        actionDescription,
-        quantityChange: parseFloat(quantityChange),
+        isAjust,
       };
 
-      await sheets.addTransaction(payload);
-      setMessage({
-        type: "success",
-        text: "Transação registrada com sucesso!",
-      });
+      const idItem = item.idItem;
+      if (!idItem) {
+        setMessage({ type: "error", text: "ID do item não encontrado no objeto item." });
+        return;
+      }
+
+      if (Array.isArray(item.lots) && item.lots.length > 1) {
+        setMessage({
+          type: "error",
+          text: "Este item possui mais de um lote. Selecione um lote específico ou use o endpoint de lote.",
+        });
+        return;
+      }
+
+      await sheets.updateLotQuantity(idItem, payload);
+
+      setMessage({ type: "success", text: "Quantidade do lote atualizada com sucesso!" });
       setQuantityChange("");
     } catch (error) {
       console.error("Erro ao registrar a transação:", error);
       setMessage({
         type: "error",
-        text: "Erro ao registrar a transação. Verifique suas permissões e a quantidade.",
+        text:
+          error?.message && error.message.includes("ID")
+            ? error.message
+            : "Erro ao registrar a transação. Item não encontrado.",
       });
     } finally {
       setLoading(false);
@@ -78,23 +108,21 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>{item.name}</Text>
 
-          {item.image && (
-            <Image
-              source={{ uri: item.image }}
-              style={styles.itemImage}
-              resizeMode="contain"
-            />
-          )}
+          {item.image && item.image.data ? (
+  <Image
+    source={{ uri: `data:${item.image.type};base64,${item.image.data}` }}
+    style={styles.itemImage}
+    resizeMode="contain"
+  />
+) : (
+  <Text>Imagem não disponível</Text>
+)}
+
 
           <Text style={styles.modalText}>Descrição: {item.description}</Text>
-          <Text style={styles.modalText}>
-            Categoria: {item.category?.value}
-          </Text>
-          {item.brand && (
-            <Text style={styles.modalText}>Marca: {item.brand}</Text>
-          )}
+          <Text style={styles.modalText}>Categoria: {item.category?.value}</Text>
+          {item.brand && <Text style={styles.modalText}>Marca: {item.brand}</Text>}
 
-          {/* Renderiza technicalSpecs corretamente */}
           {item.technicalSpecs && Array.isArray(item.technicalSpecs) && (
             <View style={{ marginBottom: 8 }}>
               <Text style={styles.modalText}>Especificações:</Text>
@@ -104,30 +132,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                 </Text>
               ))}
             </View>
-          )}
-
-          {item.aliases && (
-            <Text style={styles.modalText}>Aliases: {item.aliases}</Text>
-          )}
-          {item.batchCode && (
-            <Text style={styles.modalText}>
-              Código do Lote: {item.batchCode}
-            </Text>
-          )}
-          {item.lotNumber && (
-            <Text style={styles.modalText}>
-              Número do Lote: {item.lotNumber}
-            </Text>
-          )}
-          {item.expirationDate && (
-            <Text style={styles.modalText}>
-              Data de Vencimento: {item.expirationDate}
-            </Text>
-          )}
-          {item.quantity && (
-            <Text style={styles.modalText}>
-              Quantidade em Estoque: {item.quantity}
-            </Text>
           )}
 
           <View style={styles.transactionContainer}>
@@ -179,7 +183,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Modal interno para selecionar ação IN/OUT */}
+        {/* Modal de escolha de ação */}
         <Modal
           animationType="fade"
           transparent={true}
@@ -232,6 +236,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    width: "90%",
   },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
   modalText: {
@@ -240,13 +245,21 @@ const styles = StyleSheet.create({
     textAlign: "left",
     width: "100%",
   },
-  itemImage: { width: 150, height: 150, marginBottom: 15, borderRadius: 10 },
+  itemImage: {
+    width: 150,
+    height: 150,
+    marginBottom: 15,
+    borderRadius: 10,
+    alignSelf: "center",
+  },
   closeButton: {
     backgroundColor: "#600000",
     borderRadius: 20,
     padding: 10,
     elevation: 2,
     marginTop: 15,
+    width: "100%",
+    alignItems: "center",
   },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
   transactionContainer: {
@@ -254,6 +267,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 15,
     marginBottom: 10,
+    width: "100%",
   },
   actionButton: {
     flexDirection: "row",
@@ -278,6 +292,8 @@ const styles = StyleSheet.create({
     padding: 10,
     elevation: 2,
     marginTop: 15,
+    width: "100%",
+    alignItems: "center",
   },
   messageText: { textAlign: "center", marginTop: 10, fontWeight: "bold" },
   pickerModalView: {
