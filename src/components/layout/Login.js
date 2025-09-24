@@ -49,6 +49,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
     if (onClose) onClose();
   }
 
+
   async function armazenarDados(user, token) {
     try {
       let userString;
@@ -75,14 +76,17 @@ function Login({ visible, onClose, onOpenCadastro }) {
   async function handleLogin() {
     try {
       const response = await api.postLogin(usuario);
+
       //const token = response.data.token;
       console.log("token", token);
+
 
       setInternalModalMessage(response.data.message);
       setInternalModalType("success");
       setInternalModalVisible(true);
 
       const user = response.data.user;
+
       const token = response.data.user?.[0]?.token;
       console.log(token);
       
@@ -108,7 +112,7 @@ function Login({ visible, onClose, onOpenCadastro }) {
       setInternalModalVisible(true);
     }
   }
-  
+
 
   const dynamicStyles = StyleSheet.create({
     overlay: {
@@ -217,11 +221,11 @@ function Login({ visible, onClose, onOpenCadastro }) {
           }}
         >
           <View style={dynamicStyles.modal}>
+
             <Image
               source={require("../../img/logo.png")}
               style={dynamicStyles.headerImage}
             />
-
             <View style={dynamicStyles.loginInputContainer}>
               <Ionicons
                 name="person-outline"
@@ -238,7 +242,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
                 placeholderTextColor="gray"
               />
             </View>
-
             <View style={dynamicStyles.loginInputContainer}>
               <TextInput
                 placeholder="senha"
@@ -267,11 +270,10 @@ function Login({ visible, onClose, onOpenCadastro }) {
               onPress={handleLogin}
               style={dynamicStyles.confirmButton}
             >
+
               <Text style={dynamicStyles.confirmButtonText}>Login</Text>
             </TouchableOpacity>
-
             <View style={dynamicStyles.separator} />
-
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
               onPress={() => setForgotPasswordModalVisible(true)}
@@ -280,7 +282,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
                 Esqueceu a senha?
               </Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={dynamicStyles.buttonToCadastro}
               onPress={() => {
@@ -296,7 +297,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
           </View>
         </KeyboardAvoidingView>
       </View>
-
       <CustomModal
         open={internalModalVisible}
         onClose={() => setInternalModalVisible(false)}
@@ -304,7 +304,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
         message={internalModalMessage}
         type={internalModalType}
       />
-
       <ForgotPasswordModal
         visible={forgotPasswordModalVisible}
         onClose={() => setForgotPasswordModalVisible(false)}

@@ -117,10 +117,12 @@ export default function PerfilScreen() {
         );
       } finally {
         setIsDataLoading(false);
+
       }
     };
     fetchUserData();
   }, [navigation]);
+
 
 const handleValidatePassword = async (senhaAtual) => {
   console.log("Iniciando validação de senha.");
@@ -193,7 +195,6 @@ const handleValidatePassword = async (senhaAtual) => {
   }
 };
 
-
   const handleUpdateUser = async () => {
     console.log("handleUpdateUser: Iniciando atualização do usuário.");
     if (newPassword && newPassword !== confirmNewPassword) {
@@ -262,6 +263,7 @@ const handleValidatePassword = async (senhaAtual) => {
           response.data.message || "Perfil atualizado!",
           "success"
         );
+
         setNewPassword("");
         setConfirmNewPassword("");
         setIsEditing(false);
@@ -274,6 +276,7 @@ const handleValidatePassword = async (senhaAtual) => {
         );
       }
     } catch (error) {
+
       if (error.response?.status === 401) {
         showCustomModal(
           "Sessão Expirada",
@@ -409,6 +412,7 @@ const handleValidatePassword = async (senhaAtual) => {
           success: true,
           message: response.data.message || "E-mail atualizado com sucesso!",
         };
+
       } else {
         return {
           success: false,
@@ -638,6 +642,7 @@ const handleValidatePassword = async (senhaAtual) => {
         <VerifyCodeModal
           visible={verifyModalVisible}
           onClose={() => setVerifyModalVisible(false)}
+
           formData={{ email: email || currentEmail || "" }}
           onVerificationSuccess={async () => {
             try {
@@ -671,6 +676,7 @@ const handleValidatePassword = async (senhaAtual) => {
           onCancel={() => setDeleteModalVisible(false)}
         />
 
+
         {/* O componente CustomModal "ouve" as mudanças de estado controladas por showCustomModal. */}
         <CustomModal
           open={customModalVisible}
@@ -683,3 +689,7 @@ const handleValidatePassword = async (senhaAtual) => {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  // Seus estilos estáticos podem ir aqui para evitar recriação
+});
