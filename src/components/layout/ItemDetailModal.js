@@ -12,7 +12,7 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import sheets from "../../services/axios";
 import * as SecureStore from "expo-secure-store";
-import {jwtDecode} from "jwt-decode";
+import jwtDecode from "jwt-decode";
 
 const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [quantityChange, setQuantityChange] = useState("");
@@ -20,22 +20,57 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [isActionPickerVisible, setActionPickerVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [imageDataUri, setImageDataUri] = useState(null);
+  const [imageLoading, setImageLoading] = useState(false);
 
-  useEffect(() => {
-    if (item) {
-      console.log("Item recebido no modal:", item);
-      console.log("Imagem do item:", item.image);
-      if (item.image && item.image.data) {
-        console.log("Tamanho do base64:", item.image.data.length);
-        console.log("Tipo da imagem:", item.image.type);
-      } else {
-        console.log("Item não possui imagem ou image.data está undefined");
+  // LOGS DE TESTE APROFUNDADO
+  // Busque a imagem embutida no objeto item
+useEffect(() => {
+  // Log de depuração
+  console.log("Modal foi renderizado com item:", item?.name);
+  console.log("Modal está visível?", isVisible);
+  console.log("Objeto de imagem existe?", !!item?.image);
+
+  if (!isVisible || !item || !item.image || !item.image.data) {
+      console.log("Condição para exibir imagem não foi satisfeita.");
+      setImageDataUri(null);
+      setImageLoading(false);
+      return;
+  }
+
+  const imageData = item.image.data;
+  console.log("Tipo dos dados da imagem:", typeof imageData);
+  console.log("Tamanho dos dados da imagem:", imageData.length);
+
+  if (typeof imageData === 'string' && imageData.length > 0) {
+      setImageLoading(true);
+      try {
+          const mimeType = item.image.type || 'image/png';
+          
+          // Refatoração: Remove caracteres inválidos para Base64
+          const base64Data = imageData.replace(/[^A-Z0-9+/=]/gi, ''); 
+          
+          setImageDataUri(`data:${mimeType};base64,${base64Data}`);
+          console.log("URI da imagem criada com sucesso.");
+      } catch (error) {
+          console.error("Erro ao processar imagem embutida:", error);
+          setImageDataUri(null);
+      } finally {
+          setImageLoading(false);
       }
-    }
-  }, [item]);
+  } else {
+      console.log("Os dados da imagem não são uma string válida.");
+      setImageDataUri(null);
+      setImageLoading(false);
+  }
+}, [isVisible, item]);
 
   const handleTransaction = async () => {
-    if (!quantityChange || isNaN(quantityChange) || parseFloat(quantityChange) <= 0) {
+    if (
+      !quantityChange ||
+      isNaN(quantityChange) ||
+      parseFloat(quantityChange) <= 0
+    ) {
       setMessage({
         type: "error",
         text: "Por favor, insira uma quantidade válida e positiva.",
@@ -54,20 +89,11 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       if (!fkIdUser) throw new Error("Usuário inválido no token.");
 
       const qtyNum = parseFloat(quantityChange);
-      const quantityForApi = actionDescription === "OUT" ? -Math.abs(qtyNum) : qtyNum;
-      const isAjust = false;
+      const quantityForApi =
+        actionDescription === "OUT" ? -Math.abs(qtyNum) : qtyNum;
+      const payload = { quantity: quantityForApi, fkIdUser, isAjust: false };
 
-      const payload = {
-        quantity: quantityForApi,
-        fkIdUser,
-        isAjust,
-      };
-
-      const idItem = item.idItem;
-      if (!idItem) {
-        setMessage({ type: "error", text: "ID do item não encontrado no objeto item." });
-        return;
-      }
+      if (!item.idItem) throw new Error("ID do item não encontrado.");
 
       if (Array.isArray(item.lots) && item.lots.length > 1) {
         setMessage({
@@ -77,18 +103,18 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
         return;
       }
 
-      await sheets.updateLotQuantity(idItem, payload);
-
-      setMessage({ type: "success", text: "Quantidade do lote atualizada com sucesso!" });
+      await sheets.updateLotQuantity(item.idItem, payload);
+      setMessage({
+        type: "success",
+        text: "Quantidade do lote atualizada com sucesso!",
+      });
       setQuantityChange("");
     } catch (error) {
-      console.error("Erro ao registrar a transação:", error);
       setMessage({
         type: "error",
-        text:
-          error?.message && error.message.includes("ID")
-            ? error.message
-            : "Erro ao registrar a transação. Item não encontrado.",
+        text: error?.message?.includes("ID")
+          ? error.message
+          : "Erro ao registrar a transação. Item não encontrado.",
       });
     } finally {
       setLoading(false);
@@ -108,27 +134,38 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>{item.name}</Text>
 
-          {item.image && item.image.data ? (
-  <Image
-    source={{ uri: `data:${item.image.type};base64,${item.image.data}` }}
-    style={styles.itemImage}
-    resizeMode="contain"
-  />
-) : (
-  <Text>Imagem não disponível</Text>
-)}
-
+          {imageLoading ? (
+            <ActivityIndicator
+              size="large"
+              color="#600000"
+              style={{ marginBottom: 15 }}
+            />
+          ) : imageDataUri ? (
+            <Image
+              source={{ uri: imageDataUri }}
+              style={styles.itemImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={{ alignSelf: "center", marginBottom: 15 }}>
+              Imagem não disponível
+            </Text>
+          )}
 
           <Text style={styles.modalText}>Descrição: {item.description}</Text>
-          <Text style={styles.modalText}>Categoria: {item.category?.value}</Text>
-          {item.brand && <Text style={styles.modalText}>Marca: {item.brand}</Text>}
+          <Text style={styles.modalText}>
+            Categoria: {item.category?.value}
+          </Text>
+          {item.brand && (
+            <Text style={styles.modalText}>Marca: {item.brand}</Text>
+          )}
 
           {item.technicalSpecs && Array.isArray(item.technicalSpecs) && (
             <View style={{ marginBottom: 8 }}>
               <Text style={styles.modalText}>Especificações:</Text>
               {item.technicalSpecs.map((spec) => (
                 <Text key={spec.idTechnicalSpec} style={styles.modalText}>
-                  • {spec.technicalSpecKey}: {spec.technicalSpecValue}
+                  {spec.technicalSpecKey}: {spec.technicalSpecValue}
                 </Text>
               ))}
             </View>
@@ -183,7 +220,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Modal de escolha de ação */}
         <Modal
           animationType="fade"
           transparent={true}
@@ -218,6 +254,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
   );
 };
 
+// Styles mantidos
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,

@@ -36,9 +36,14 @@ const sheets = {
   // Funções de item
   getAllItems: () => api.get("/items"),
   getItemsByCategory: (category) => api.get(`item/${category}`),
+  getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
+  
 
   // Função para atualizar a quantidade do lote
   updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
+
+  //rota para imagem
+  getImage: (idImage) => api.get(`image/${idImage}`, { responseType: "arraybuffer" }),
 };
 
 export default sheets;
