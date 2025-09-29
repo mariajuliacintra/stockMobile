@@ -16,7 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import * as SecureStore from "expo-secure-store";
 import ConfirmPasswordModal from "../components/layout/ConfirmPasswordModal";
-import VerifyCodeModal from "../components/layout/VerificationModal";
+import VerificationModal from "../components/layout/VerificationModal";
 import CustomModal from "../components/mod/CustomModal";
 import DelecaoModal from "../components/mod/ConfirmarDelecaoModal";
 
@@ -31,11 +31,9 @@ export default function PerfilScreen() {
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isDataLoading, setIsDataLoading] = useState(true);
   const [userId, setUserId] = useState(null);
   const { width, height } = useWindowDimensions();
 
-  // CustomModal
   const [customModalVisible, setCustomModalVisible] = useState(false);
   const [customModalTitle, setCustomModalTitle] = useState("");
   const [customModalMessage, setCustomModalMessage] = useState("");
@@ -48,10 +46,10 @@ export default function PerfilScreen() {
   };
   const onDismissCustomModal = () => setCustomModalVisible(false);
 
-  // Deleção
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
-  // Busca ID do usuário do SecureStore e carrega dados da API
+  // Carregar dados do usuário
   useEffect(() => {
     const fetchUserData = async () => {
       setIsDataLoading(true);
@@ -62,10 +60,10 @@ export default function PerfilScreen() {
           setIsDataLoading(false);
           return;
         }
-  
+
         const response = await sheets.getUserById(idUser);
         const user = response.data?.user?.[0];
-  
+
         if (user) {
           setNome(user.name || "");
           setEmail(user.email || "");
@@ -81,11 +79,11 @@ export default function PerfilScreen() {
         setIsDataLoading(false);
       }
     };
-  
+
     fetchUserData();
   }, []);
-  
-  // Validação de senha
+
+  // Validação da senha atual
   const handleValidatePassword = async (senhaAtual) => {
     try {
       const storedToken = await SecureStore.getItemAsync("tokenUsuario");
@@ -97,10 +95,7 @@ export default function PerfilScreen() {
         );
         return false;
       }
-      const headers = {
-        Authorization: `Bearer ${storedToken}`,
-        "Content-Type": "application/json",
-      };
+      const headers = { Authorization: storedToken };
       const response = await sheets.postValidatePassword(
         userId,
         { password: senhaAtual },
@@ -113,7 +108,7 @@ export default function PerfilScreen() {
         isValid = response.data.data[0].isValid;
       else if (typeof response.data?.data?.isValid === "boolean") isValid = response.data.data.isValid;
       else if (response.data?.success === true && typeof response.data?.details === "string" &&
-               response.data.details.toLowerCase().includes("válida")) isValid = true;
+                response.data.details.toLowerCase().includes("válida")) isValid = true;
 
       return Boolean(isValid);
     } catch (error) {
@@ -123,7 +118,7 @@ export default function PerfilScreen() {
     }
   };
 
-  // Atualização de usuário
+  // Atualizar perfil
   const handleUpdateUser = async () => {
     if (newPassword && newPassword !== confirmNewPassword) {
       showCustomModal(
@@ -133,6 +128,7 @@ export default function PerfilScreen() {
       );
       return;
     }
+
     setLoading(true);
     try {
       const storedToken = await SecureStore.getItemAsync("tokenUsuario");
@@ -145,37 +141,60 @@ export default function PerfilScreen() {
         setLoading(false);
         return;
       }
+
       const dadosAtualizados = { name: nome, email: email };
       if (newPassword) {
         dadosAtualizados.password = newPassword;
         dadosAtualizados.confirmPassword = confirmNewPassword;
       }
-      const headers = { Authorization: `Bearer ${storedToken}`, "Content-Type": "application/json" };
+
+      const headers = { Authorization: storedToken };
       const response = await sheets.putAtualizarUsuario(userId, dadosAtualizados, { headers });
 
-      if (response.data?.requiresEmailVerification) setVerifyModalVisible(true);
-      else if (response.data?.user) {
-        await SecureStore.setItemAsync("user", JSON.stringify([response.data.user]));
-        showCustomModal("Sucesso", response.data.message || "Perfil atualizado!", "success");
+      const responseData = response.data;
+
+      const requiresVerification = Array.isArray(responseData.data) && 
+                                   responseData.data[0]?.requiresEmailVerification;
+
+      if (requiresVerification) {
+        // Abre o modal de código de verificação
+        setVerifyModalVisible(true);
+        const message = responseData.message || "Seu e-mail foi alterado. Por favor, insira o código enviado para concluir a verificação.";
+        showCustomModal("Verificação Pendente", message, "info");
+      } else if (responseData?.user) {
+        const updatedUser = responseData.user;
+        const userToStore = Array.isArray(updatedUser) ? updatedUser[0] : updatedUser;
+
+        setNome(userToStore.name || nome);
+        setEmail(userToStore.email || email);
+        setCurrentEmail(userToStore.email || email);
+
+        await SecureStore.setItemAsync("user", JSON.stringify([userToStore]));
+
+        showCustomModal(
+          "Sucesso",
+          responseData.message || "Perfil atualizado!",
+          "success"
+        );
         setNewPassword("");
         setConfirmNewPassword("");
         setIsEditing(false);
       } else {
         showCustomModal(
           "Erro",
-          response.data.message || "Resposta da API incompleta.",
+          responseData.message || "Resposta da API incompleta ou falha na atualização.",
           "error"
         );
       }
     } catch (error) {
-      console.error("Erro ao atualizar o perfil:", error.response?.data || error.message);
+      console.error("Erro ao atualizar o perfil:", error.response?.data.details || error.message);
       showCustomModal("Erro", "Não foi possível atualizar o perfil.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Exclusão de usuário
+  // Deletar usuário
   const handleDeleteUser = async () => {
     try {
       const storedToken = await SecureStore.getItemAsync("tokenUsuario");
@@ -188,18 +207,26 @@ export default function PerfilScreen() {
         setDeleteModalVisible(false);
         return;
       }
-      const headers = { Authorization: `Bearer ${storedToken}`, "Content-Type": "application/json" };
+      const headers = { Authorization: storedToken };
       const response = await sheets.deleteUsuario(userId, { headers });
 
-      if (response.data?.auth) {
-        await SecureStore.deleteItemAsync("user");
+      if (response.data?.success) {
         await SecureStore.deleteItemAsync("tokenUsuario");
         await SecureStore.deleteItemAsync("userId");
-        showCustomModal(response.data.message ? "Sucesso" : "Sucesso", response.data.message || "Conta deletada!", "success");
-        setTimeout(() => navigation.reset({ index: 0, routes: [{ name: "Principal" }] }), 1500);
+
+        showCustomModal(
+          response.data.message,
+          response.data.details,
+          "success"
+        );
+
+        setTimeout(() => {
+          navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+        }, 1500);
       } else {
         showCustomModal("Erro", response.data.error || "Erro ao deletar usuário", "error");
       }
+
     } catch (error) {
       console.error("Erro ao deletar usuário:", error.response?.data || error.message);
       showCustomModal("Erro", "Não foi possível deletar o usuário.", "error");
@@ -269,7 +296,13 @@ export default function PerfilScreen() {
     loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   });
 
-  if (isDataLoading) return <View style={dynamicStyles.loaderContainer}><ActivityIndicator size="large" color="#B11010" /></View>;
+  if (isDataLoading) {
+    return (
+      <View style={dynamicStyles.loaderContainer}>
+        <ActivityIndicator size="large" color="rgb(177, 16, 16)" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -359,18 +392,14 @@ export default function PerfilScreen() {
           showCustomModal={showCustomModal}
         />
 
-        <VerifyCodeModal
+        <VerificationModal
           visible={verifyModalVisible}
           onClose={() => setVerifyModalVisible(false)}
-          formData={{ email: email || currentEmail || "" }}
-          onVerificationSuccess={async () => {
-            try {
-              setCurrentEmail(email);
-              showCustomModal("Sucesso", "E-mail atualizado com sucesso!", "success");
-            } catch (error) {
-              showCustomModal("Erro", "Não foi possível atualizar os dados localmente.", "error");
-            }
-            setVerifyModalVisible(false);
+          formData={{ idUser: userId, email }}
+          mode="update"
+          onVerificationSuccess={(updatedUser) => {
+            showCustomModal("Sucesso", "E-mail atualizado com sucesso!", "success");
+            setEmail(updatedUser.email || email);
           }}
         />
 
@@ -393,3 +422,4 @@ export default function PerfilScreen() {
     </SafeAreaView>
   );
 }
+  

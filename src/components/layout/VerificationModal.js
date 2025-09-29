@@ -29,6 +29,7 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
       await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
       await SecureStore.setItemAsync("tokenUsuario", token.toString());
     } catch (erro) {
+      console.error("Erro ao armazenar dados:", erro);
     }
   }
 
@@ -50,33 +51,48 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
 
       const response = await sheets.postFinalizarCadastro(dataParaVerificacao);
       console.log("Resposta da API:", response.data);
-      if (Array.isArray(response.data.user) && response.data.user.length > 0) {
-        const usuario = response.data.user[0]; // pega o primeiro usuário do array
+
+      // Se sucesso e usuário válido
+      if (response.data.success && Array.isArray(response.data.user) && response.data.user.length > 0) {
+        const usuario = response.data.user[0];
         const idUsuario = usuario.idUser;
         const token = usuario.token;
-      
+
         setInternalModalMessage(response.data.message || "Cadastro realizado com sucesso!");
         setInternalModalType("success");
         setInternalModalVisible(true);
-      
+
         await armazenarDados(idUsuario, token);
-      
+
         setTimeout(() => {
           onClose();
-          onVerificationSuccess();
+          onVerificationSuccess(usuario);
         }, 800);
+
       } else {
-        setInternalModalMessage("Resposta da API incompleta. O cadastro pode não ter sido concluído.");
+        // Código inválido ou expirado
+        setInternalModalMessage(response.data.message || "Código incorreto ou expirado.");
         setInternalModalType("error");
         setInternalModalVisible(true);
+
+        // Reseta o código após mostrar erro
+        setTimeout(() => {
+          setVerificationCode("");
+        }, 500);
       }
-      
+
     } catch (error) {
       setInternalModalMessage(error.response?.data?.error || "Erro ao verificar o código.");
       setInternalModalType("error");
       setInternalModalVisible(true);
-    } 
-    
+
+      // Reseta o código após mostrar erro
+      setTimeout(() => {
+        setVerificationCode("");
+      }, 500);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -91,7 +107,7 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
             <Text style={styles.instructionText}>
               Um código foi enviado para o e-mail: <Text style={{ fontWeight: "bold" }}>{formData.email}</Text>. Por favor, digite o código abaixo.
             </Text>
-            
+
             <View style={[styles.inputContainer, styles.disabledInputContainer]}>
               <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
               <Text style={[styles.inputField, styles.disabledInputText]}>{formData.email}</Text>
@@ -128,87 +144,86 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
 }
 
 const styles = StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.7)",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    modal: {
-      backgroundColor: "white",
-      padding: width * 0.06,
-      borderRadius: 15,
-      width: width * 0.85,
-      maxWidth: 400,
-      alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 5 },
-      shadowOpacity: 0.35,
-      shadowRadius: 10,
-      elevation: 10,
-    },
-    titleText: {
-      fontSize: width * 0.05,
-      fontWeight: "bold",
-      marginBottom: height * 0.02,
-      color: "#333",
-    },
-    instructionText: {
-      fontSize: width * 0.04,
-      color: "gray",
-      textAlign: "center",
-      marginBottom: height * 0.03,
-    },
-    closeButton: {
-      position: "absolute",
-      top: 10,
-      right: 10,
-      padding: 5,
-      zIndex: 1,
-    },
-    inputContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        width: "100%",
-        borderWidth: 1,
-        borderColor: "#ddd",
-        backgroundColor: "#f5f5f5",
-        paddingVertical: height * 0.015,
-        paddingHorizontal: width * 0.03,
-        borderRadius: 8,
-        marginBottom: height * 0.025,
-    },
-    inputField: {
-      flex: 1,
-      fontSize: width * 0.04,
-      color: "#333",
-      paddingVertical: 0,
-    },
-    confirmButton: {
-      backgroundColor: "rgb(177, 16, 16)",
-      paddingVertical: height * 0.02,
-      paddingHorizontal: width * 0.08,
-      borderRadius: 10,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      width: "100%",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.25,
-      shadowRadius: 5,
-      elevation: 6,
-    },
-    confirmButtonText: {
-      color: "white",
-      fontWeight: "bold",
-      fontSize: width * 0.045,
-    },
-   
-    disabledInputContainer: {
-      backgroundColor: "#e8e8e8", 
-    },
-    disabledInputText: {
-      color: "#666", 
-    },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modal: {
+    backgroundColor: "white",
+    padding: width * 0.06,
+    borderRadius: 15,
+    width: width * 0.85,
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  titleText: {
+    fontSize: width * 0.05,
+    fontWeight: "bold",
+    marginBottom: height * 0.02,
+    color: "#333",
+  },
+  instructionText: {
+    fontSize: width * 0.04,
+    color: "gray",
+    textAlign: "center",
+    marginBottom: height * 0.03,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    padding: 5,
+    zIndex: 1,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#f5f5f5",
+    paddingVertical: height * 0.015,
+    paddingHorizontal: width * 0.03,
+    borderRadius: 8,
+    marginBottom: height * 0.025,
+  },
+  inputField: {
+    flex: 1,
+    fontSize: width * 0.04,
+    color: "#333",
+    paddingVertical: 0,
+  },
+  confirmButton: {
+    backgroundColor: "rgb(177, 16, 16)",
+    paddingVertical: height * 0.02,
+    paddingHorizontal: width * 0.08,
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  confirmButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: width * 0.045,
+  },
+  disabledInputContainer: {
+    backgroundColor: "#e8e8e8", 
+  },
+  disabledInputText: {
+    color: "#666", 
+  },
 });
