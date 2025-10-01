@@ -1,5 +1,3 @@
-// axios.js
-
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
@@ -14,7 +12,6 @@ api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
     if (token) {
-      // CORREÇÃO AQUI: Adicione 'Bearer ' antes do token
       config.headers["Authorization"] = token;
     }
     return config;
@@ -33,14 +30,16 @@ const sheets = {
   postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
   postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
-  verifyUpdate: (data) => api.post("/user/verify-update", data), // ✅ corrigido
+  verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
-
-  // Itens
-  getAllItems: () => api.get("/items"),
-  getItemsByCategory: (category) => api.get(`item/${category}`),
-  updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
   TransactionUser: (userId) => api.get(`/transactions/user/${userId}`), 
+  //Lot/Items
+  updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
+  getAllItems: () => api.get("/items"),
+
+  getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
+  
+  
 };
 
 export default sheets;
