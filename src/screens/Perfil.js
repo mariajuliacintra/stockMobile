@@ -19,6 +19,7 @@ import ConfirmPasswordModal from "../components/layout/ConfirmPasswordModal";
 import VerificationModal from "../components/layout/VerificationModal";
 import CustomModal from "../components/mod/CustomModal";
 import DelecaoModal from "../components/mod/ConfirmarDelecaoModal";
+import TransactionModal from "../components/layout/TransactionModal";
 
 export default function PerfilScreen() {
   const navigation = useNavigation();
@@ -48,8 +49,8 @@ export default function PerfilScreen() {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [transactionsModalVisible, setTransactionsModalVisible] = useState(false);
 
-  // Carregar dados do usuário
   useEffect(() => {
     const fetchUserData = async () => {
       setIsDataLoading(true);
@@ -154,10 +155,9 @@ export default function PerfilScreen() {
       const responseData = response.data;
 
       const requiresVerification = Array.isArray(responseData.data) && 
-                                   responseData.data[0]?.requiresEmailVerification;
+        responseData.data[0]?.requiresEmailVerification;
 
       if (requiresVerification) {
-        // Abre o modal de código de verificação
         setVerifyModalVisible(true);
         const message = responseData.message || "Seu e-mail foi alterado. Por favor, insira o código enviado para concluir a verificação.";
         showCustomModal("Verificação Pendente", message, "info");
@@ -306,16 +306,27 @@ export default function PerfilScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <ImageBackground style={dynamicStyles.background} source={require("../img/fundo.png")}>
+      <ImageBackground
+        style={dynamicStyles.background}
+        source={require("../img/fundo.png")}
+      >
         <View style={dynamicStyles.header}>
           <TouchableOpacity onPress={() => navigation.navigate("Principal")}>
-            <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
+            <MaterialCommunityIcons
+              name="home-circle-outline"
+              size={60}
+              color="#fff"
+            />
           </TouchableOpacity>
         </View>
-
+  
         <View style={dynamicStyles.card}>
-          <Image source={require("../img/logo.png")} style={dynamicStyles.logo} resizeMode="contain" />
-
+          <Image
+            source={require("../img/logo.png")}
+            style={dynamicStyles.logo}
+            resizeMode="contain"
+          />
+  
           <View style={dynamicStyles.inputContainer}>
             <TextInput
               style={dynamicStyles.inputField}
@@ -327,7 +338,7 @@ export default function PerfilScreen() {
               selectTextOnFocus={isEditing}
             />
           </View>
-
+  
           <View style={dynamicStyles.inputContainer}>
             <TextInput
               style={dynamicStyles.inputField}
@@ -339,7 +350,7 @@ export default function PerfilScreen() {
               keyboardType="email-address"
             />
           </View>
-
+  
           {isEditing && (
             <>
               <View style={dynamicStyles.inputContainer}>
@@ -364,45 +375,93 @@ export default function PerfilScreen() {
               </View>
             </>
           )}
-
+  
           {isEditing ? (
-            <TouchableOpacity style={dynamicStyles.button} onPress={handleUpdateUser} disabled={loading}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={dynamicStyles.buttonText}>Salvar</Text>}
+            <TouchableOpacity
+              style={dynamicStyles.button}
+              onPress={handleUpdateUser}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={dynamicStyles.buttonText}>Salvar</Text>
+              )}
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={dynamicStyles.button} onPress={() => setSenhaModalVisible(true)}>
+            <TouchableOpacity
+              style={dynamicStyles.button}
+              onPress={() => setSenhaModalVisible(true)}
+            >
               <Text style={dynamicStyles.buttonText}>Editar perfil</Text>
             </TouchableOpacity>
           )}
-
-          <TouchableOpacity style={[dynamicStyles.button, { backgroundColor: "red" }]} onPress={() => setDeleteModalVisible(true)}>
-            <Text style={dynamicStyles.buttonText}>Deletar Perfil</Text>
-          </TouchableOpacity>
+  
+          {isEditing ? (
+            <TouchableOpacity
+              style={[dynamicStyles.button, { backgroundColor: "red" }]}
+              onPress={() => setDeleteModalVisible(true)}
+            >
+              <Text style={dynamicStyles.buttonText}>Deletar Perfil</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => setTransactionsModalVisible(true)} // 🔹 abre modal
+            >
+              <Text
+                style={{
+                  color: "red",
+                  textDecorationLine: "underline",
+                  fontSize: width * 0.045,
+                  fontWeight: "bold",
+                  marginTop: height * 0.02,
+                }}
+              >
+                Minhas Transações
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
-
+  
+        {/* Modais */}
         <ConfirmPasswordModal
           visible={senhaModalVisible}
           onValidatePassword={handleValidatePassword}
           onSuccess={() => {
             setIsEditing(true);
             setSenhaModalVisible(false);
-            showCustomModal("Sucesso", "Senha confirmada! Agora você pode editar seu perfil.", "success");
+            showCustomModal(
+              "Sucesso",
+              "Senha confirmada! Agora você pode editar seu perfil.",
+              "success"
+            );
           }}
           onCancel={() => setSenhaModalVisible(false)}
           showCustomModal={showCustomModal}
         />
+  
+  <VerificationModal
+  visible={verifyModalVisible}
+  onClose={() => setVerifyModalVisible(false)}
+  formData={{ email }}
+  mode="update"
+  onVerificationSuccess={async (updatedUser) => {
+    if (!updatedUser) return;
 
-        <VerificationModal
-          visible={verifyModalVisible}
-          onClose={() => setVerifyModalVisible(false)}
-          formData={{ idUser: userId, email }}
-          mode="update"
-          onVerificationSuccess={(updatedUser) => {
-            showCustomModal("Sucesso", "E-mail atualizado com sucesso!", "success");
-            setEmail(updatedUser.email || email);
-          }}
-        />
+    setEmail(updatedUser.email || email);
+    setCurrentEmail(updatedUser.email || email);
+    setIsEditing(false);
 
+    // Atualiza SecureStore com os dados do usuário
+    await SecureStore.setItemAsync("user", JSON.stringify([updatedUser]));
+
+    showCustomModal("Sucesso", "E-mail atualizado com sucesso!", "success");
+  }}
+/>
+
+
+
+  
         <DelecaoModal
           visible={deleteModalVisible}
           title="Confirmação"
@@ -410,7 +469,7 @@ export default function PerfilScreen() {
           onConfirm={handleDeleteUser}
           onCancel={() => setDeleteModalVisible(false)}
         />
-
+  
         <CustomModal
           open={customModalVisible}
           onClose={onDismissCustomModal}
@@ -418,8 +477,14 @@ export default function PerfilScreen() {
           message={customModalMessage}
           type={customModalType}
         />
+
+        {/* 🔹 Modal de transações */}
+        <TransactionModal
+          visible={transactionsModalVisible}
+          onClose={() => setTransactionsModalVisible(false)}
+          userId={userId}
+        />
       </ImageBackground>
     </SafeAreaView>
-  );
+  );  
 }
-  

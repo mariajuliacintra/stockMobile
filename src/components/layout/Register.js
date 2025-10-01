@@ -181,11 +181,13 @@ export default function Register({ visible, onClose, onOpenLogin }) {
       <Login visible={loginModalVisible} onClose={() => setLoginModalVisible(false)} onOpenCadastro={() => {}} />
 
       <VerificationModal
-        visible={verificationModalVisible}
-        onClose={() => setVerificationModalVisible(false)}
-        formData={formData}
-        onVerificationSuccess={handleVerificationSuccess}
-      />
+  visible={verificationModalVisible}
+  onClose={() => setVerificationModalVisible(false)}
+  formData={formData}
+  onVerificationSuccess={handleVerificationSuccess}
+  mode="register"
+/>
+
 
       <CustomModal
         open={customModal.visible}

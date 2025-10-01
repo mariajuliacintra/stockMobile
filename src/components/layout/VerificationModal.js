@@ -16,7 +16,13 @@ import CustomModal from "../mod/CustomModal";
 
 const { width, height } = Dimensions.get("window");
 
-export default function VerificationModal({ visible, onClose, formData, onVerificationSuccess }) {
+export default function VerificationModal({
+  visible,
+  onClose,
+  formData,
+  onVerificationSuccess,
+  mode = "register", // register ou update
+}) {
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,6 +41,7 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
 
   async function handleCodeVerification() {
     setIsLoading(true);
+
     if (!formData.email || !verificationCode) {
       setInternalModalMessage("Por favor, insira o e-mail e o código de verificação.");
       setInternalModalType("error");
@@ -44,57 +51,75 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
     }
 
     try {
-      const dataParaVerificacao = {
-        email: formData.email,
-        code: verificationCode,
-      };
+      let response;
 
-      const response = await sheets.postFinalizarCadastro(dataParaVerificacao);
+      if (mode === "register") {
+        response = await sheets.postFinalizarCadastro({
+          email: formData.email,
+          code: verificationCode,
+        });
+      } else if (mode === "update") {
+        response = await sheets.verifyUpdate({
+          email: formData.email,
+          code: verificationCode,
+        });
+      }
+
+      // 🔹 Log completo da resposta
+      console.log("==== Verificação API ====");
+      console.log("Mode:", mode);
+      console.log("Form Data:", formData);
+      console.log("Código inserido:", verificationCode);
       console.log("Resposta da API:", response.data);
+      console.log("========================");
 
-      // Se sucesso e usuário válido
-      if (response.data.success && Array.isArray(response.data.user) && response.data.user.length > 0) {
-        const usuario = response.data.user[0];
-        const idUsuario = usuario.idUser;
-        const token = usuario.token;
-
-        setInternalModalMessage(response.data.message || "Cadastro realizado com sucesso!");
+      if (response.data.success) {
+        setInternalModalMessage(
+          response.data.message || response.data.details || "Verificação concluída com sucesso!"
+        );
         setInternalModalType("success");
         setInternalModalVisible(true);
 
-        await armazenarDados(idUsuario, token);
+        if (mode === "register" && Array.isArray(response.data.user) && response.data.user.length > 0) {
+          const usuario = response.data.user[0];
+          const idUsuario = usuario.idUser;
+          const token = usuario.token;
+
+          await armazenarDados(idUsuario, token);
+          onVerificationSuccess(usuario);
+        }
+
+        if (mode === "update") {
+          const updatedUser = response.data.data; // API envia dados do usuário atualizado
+          console.log("Usuário atualizado retornado:", updatedUser);
+          onVerificationSuccess(updatedUser || {});
+        }
 
         setTimeout(() => {
           onClose();
-          onVerificationSuccess(usuario);
         }, 800);
-
       } else {
-        // Código inválido ou expirado
-        setInternalModalMessage(response.data.message || "Código incorreto ou expirado.");
+        setInternalModalMessage(
+          response.data.details || response.data.error || "Código incorreto ou expirado."
+        );
         setInternalModalType("error");
         setInternalModalVisible(true);
-
-        // Reseta o código após mostrar erro
-        setTimeout(() => {
-          setVerificationCode("");
-        }, 500);
+        setTimeout(() => setVerificationCode(""), 500);
       }
-
     } catch (error) {
-      setInternalModalMessage(error.response?.data?.error || "Erro ao verificar o código.");
+      console.error("Erro ao chamar a API:", error);
+      setInternalModalMessage(
+        error.response?.data?.details || error.response?.data?.error || "Erro ao verificar o código."
+      );
       setInternalModalType("error");
       setInternalModalVisible(true);
-
-      // Reseta o código após mostrar erro
-      setTimeout(() => {
-        setVerificationCode("");
-      }, 500);
+      setTimeout(() => setVerificationCode(""), 500);
     } finally {
       setIsLoading(false);
     }
   }
 
+  // 🔹 JSX dentro da função (return correto)
   return (
     <>
       <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
@@ -105,7 +130,8 @@ export default function VerificationModal({ visible, onClose, formData, onVerifi
             </TouchableOpacity>
             <Text style={styles.titleText}>Verificação de E-mail</Text>
             <Text style={styles.instructionText}>
-              Um código foi enviado para o e-mail: <Text style={{ fontWeight: "bold" }}>{formData.email}</Text>. Por favor, digite o código abaixo.
+              Um código foi enviado para o e-mail: <Text style={{ fontWeight: "bold" }}>{formData.email}</Text>. 
+              {mode === "register" ? " Complete o cadastro abaixo." : " Confirme a atualização abaixo."}
             </Text>
 
             <View style={[styles.inputContainer, styles.disabledInputContainer]}>
@@ -221,9 +247,9 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
   },
   disabledInputContainer: {
-    backgroundColor: "#e8e8e8", 
+    backgroundColor: "#e8e8e8",
   },
   disabledInputText: {
-    color: "#666", 
+    color: "#666",
   },
 });

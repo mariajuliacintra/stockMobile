@@ -23,6 +23,7 @@ api.interceptors.request.use(
 );
 
 const sheets = {
+  // Usuário
   postLogin: (user) => api.post("user/login/", user),
   postSendVerificationCode: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
@@ -32,13 +33,14 @@ const sheets = {
   postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
   postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
+  verifyUpdate: (data) => api.post("/user/verify-update", data), // ✅ corrigido
+  getUserById: (idUser) => api.get(`/user/${idUser}`),
 
-  // Funções de item
+  // Itens
   getAllItems: () => api.get("/items"),
   getItemsByCategory: (category) => api.get(`item/${category}`),
-
-  getUserById: (idUser) => api.get(`/user/${idUser}`),
   updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
+  TransactionUser: (userId) => api.get(`/transactions/user/${userId}`), 
 };
 
 export default sheets;
