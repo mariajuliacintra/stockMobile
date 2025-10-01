@@ -87,7 +87,7 @@ export default function Register({ visible, onClose, onOpenLogin }) {
     } catch (error) {
       setCustomModal({
         visible: true,
-        message: error.response?.data?.error || "Erro ao enviar o código.",
+        message: error.response?.data?.details || "Erro ao enviar o código.",
         type: "error",
       });
     } finally {
@@ -181,11 +181,13 @@ export default function Register({ visible, onClose, onOpenLogin }) {
       <Login visible={loginModalVisible} onClose={() => setLoginModalVisible(false)} onOpenCadastro={() => {}} />
 
       <VerificationModal
-        visible={verificationModalVisible}
-        onClose={() => setVerificationModalVisible(false)}
-        formData={formData}
-        onVerificationSuccess={handleVerificationSuccess}
-      />
+  visible={verificationModalVisible}
+  onClose={() => setVerificationModalVisible(false)}
+  formData={formData}
+  onVerificationSuccess={handleVerificationSuccess}
+  mode="register"
+/>
+
 
       <CustomModal
         open={customModal.visible}

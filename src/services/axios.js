@@ -1,5 +1,3 @@
-// axios.js
-
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
@@ -14,7 +12,6 @@ api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
     if (token) {
-      // CORREÇÃO AQUI: Adicione 'Bearer ' antes do token
       config.headers["Authorization"] = token;
     }
     return config;
@@ -23,6 +20,7 @@ api.interceptors.request.use(
 );
 
 const sheets = {
+  // Usuário
   postLogin: (user) => api.post("user/login/", user),
   postSendVerificationCode: (user) => api.post("user/register/", user),
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
@@ -32,18 +30,16 @@ const sheets = {
   postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
   postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
-
-  // Funções de item
+  verifyUpdate: (data) => api.post("/user/verify-update", data),
+  getUserById: (idUser) => api.get(`/user/${idUser}`),
+  TransactionUser: (userId) => api.get(`/transactions/user/${userId}`), 
+  //Lot/Items
+  updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
   getAllItems: () => api.get("/items"),
-  getItemsByCategory: (category) => api.get(`item/${category}`),
+
   getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
   
-
-  // Função para atualizar a quantidade do lote
-  updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
-
-  //rota para imagem
-  getImage: (idImage) => api.get(`image/${idImage}`, { responseType: "arraybuffer" }),
+  
 };
 
 export default sheets;
