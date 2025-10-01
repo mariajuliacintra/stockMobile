@@ -12,7 +12,7 @@ api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
     if (token) {
-      config.headers["Authorization"] = token;
+      config.headers["Authorization"] = token; // sem Bearer
     }
     return config;
   },
@@ -26,20 +26,28 @@ const sheets = {
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
   putAtualizarUsuario: (idUser, user) => api.put(`/user/${idUser}`, user),
   postRecoveryPassword: (data) => api.post("/user/recovery-password", data),
-  postValidateRecoveryCode: (data) => api.post("/user/validate-recovery-code", data),
-  postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
-  postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
+  postValidateRecoveryCode: (data) =>
+    api.post("/user/validate-recovery-code", data),
+  postVerifyRecoveryPassword: (email) =>
+    api.post("user/verify-recovery-password", { email }),
+  postValidatePassword: (idUser, data) =>
+    api.post(`/user/validate-password/${idUser}`, data),
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
   verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
-  TransactionUser: (userId) => api.get(`/transactions/user/${userId}`), 
-  //Lot/Items
-  updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
-  getAllItems: () => api.get("/items"),
+  TransactionUser: (userId) => api.get(`/transactions/user/${userId}`),
+
+  // Itens / Lotes
+  updateLotQuantity: (idLot, payload) =>
+    api.put(`lot/quantity/${idLot}`, payload),
+getCategories: () => api.get("/category"),
+
+  getAllItems: (params) => api.get("/items", { params }),
+
+  filterItems: (payload, page = 1, limit = 10) =>
+    api.post(`/items/filter?page=${page}&limit=${limit}`, payload),
 
   getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
-  
-  
 };
 
 export default sheets;

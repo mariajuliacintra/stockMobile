@@ -12,7 +12,8 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import sheets from "../../services/axios";
 import * as SecureStore from "expo-secure-store";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+import CustomModal from "../mod/CustomModal";
 
 const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [detailedItem, setDetailedItem] = useState(null);
@@ -21,7 +22,20 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [isActionPickerVisible, setActionPickerVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [message, setMessage] = useState(null);
+
+  // 🔹 Estados para o CustomModal
+  const [customModalVisible, setCustomModalVisible] = useState(false);
+  const [customModalTitle, setCustomModalTitle] = useState("");
+  const [customModalMessage, setCustomModalMessage] = useState("");
+  const [customModalType, setCustomModalType] = useState("info");
+
+  const showCustomModal = (title, message, type = "info") => {
+    setCustomModalTitle(title);
+    setCustomModalMessage(message);
+    setCustomModalType(type);
+    setCustomModalVisible(true);
+  };
+  const onDismissCustomModal = () => setCustomModalVisible(false);
 
   useEffect(() => {
     if (!isVisible || !item?.idItem) return;
@@ -29,7 +43,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
     const fetchItemDetails = async () => {
       setFetching(true);
       setDetailedItem(null);
-      setMessage(null);
       try {
         console.log("Modal aberto. Buscando detalhes do item ID:", item.idItem);
         const response = await sheets.getItemByIdDetails(item.idItem);
@@ -38,11 +51,11 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
         if (response.data?.success && response.data?.item?.length > 0) {
           setDetailedItem(response.data.item[0]);
         } else {
-          setMessage({ type: "error", text: "Não foi possível carregar os detalhes do item." });
+          showCustomModal("Erro", "Não foi possível carregar os detalhes do item.", "error");
         }
       } catch (error) {
         console.error("Erro ao buscar detalhes do item:", error);
-        setMessage({ type: "error", text: "Erro ao buscar detalhes do item." });
+        showCustomModal("Erro", "Erro ao buscar detalhes do item.", "error");
       } finally {
         setFetching(false);
       }
@@ -53,15 +66,11 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
 
   const handleTransaction = async () => {
     if (!quantityChange || isNaN(quantityChange) || parseFloat(quantityChange) <= 0) {
-      setMessage({
-        type: "error",
-        text: "Por favor, insira uma quantidade válida e positiva.",
-      });
+      showCustomModal("Erro", "Por favor, insira uma quantidade válida e positiva.", "error");
       return;
     }
 
     setLoading(true);
-    setMessage(null);
 
     try {
       const token = await SecureStore.getItemAsync("tokenUsuario");
@@ -76,162 +85,154 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
 
       const idItem = detailedItem?.idItem;
       if (!idItem) {
-        setMessage({ type: "error", text: "ID do item não encontrado." });
+        showCustomModal("Erro", "ID do item não encontrado.", "error");
         return;
       }
 
-      if (Array.isArray(detailedItem.lots) && detailedItem.lots.length > 1) {
-        setMessage({
-          type: "error",
-          text: "Este item possui mais de um lote. Selecione um lote específico ou use o endpoint de lote.",
-        });
-        return;
-      }
+      const response = await sheets.updateLotQuantity(idItem, payload);
+      console.log("Resposta updateLotQuantity:", response.data);
 
-      await sheets.updateLotQuantity(idItem, payload);
-      setMessage({ type: "success", text: "Quantidade do lote atualizada com sucesso!" });
-      setQuantityChange("");
+      if (response.data?.success) {
+        showCustomModal("Sucesso", "Quantidade do lote atualizada com sucesso!", "success");
+        setQuantityChange("");
+        onClose(); // 🔹 Fecha o modal principal após sucesso
+      } else {
+        showCustomModal("Erro", response.data?.message || "Erro ao registrar a transação.", "error");
+      }
     } catch (error) {
       console.error("Erro ao registrar a transação:", error);
-      setMessage({
-        type: "error",
-        text: error?.message || "Erro ao registrar a transação.",
-      });
+      showCustomModal("Erro", error?.message || "Erro ao registrar a transação.", "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isVisible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          {fetching ? (
-            <ActivityIndicator size="large" color="#600000" style={{ margin: 20 }} />
-          ) : detailedItem ? (
-            <>
-              <Text style={styles.modalTitle}>{detailedItem.name}</Text>
+    <>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isVisible}
+        onRequestClose={onClose}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            {fetching ? (
+              <ActivityIndicator size="large" color="#600000" style={{ margin: 20 }} />
+            ) : detailedItem ? (
+              <>
+                <Text style={styles.modalTitle}>{detailedItem.name}</Text>
 
-              {detailedItem.image ? (
-                <Image
-                  source={{ uri: `data:${detailedItem.image.type};base64,${detailedItem.image.data}` }}
-                  style={styles.itemImage}
-                  resizeMode="contain"
-                />
-              ) : (
-                <Text style={{ alignSelf: "center", marginBottom: 15 }}>Imagem não disponível</Text>
-              )}
-
-              <Text style={styles.modalText}>Descrição: {detailedItem.description}</Text>
-              <Text style={styles.modalText}>Categoria: {detailedItem.category?.value}</Text>
-              {detailedItem.brand && <Text style={styles.modalText}>Marca: {detailedItem.brand}</Text>}
-
-              {/* Aqui mostramos a quantidade total */}
-              <Text style={styles.modalText}>
-                Quantidade disponível: {detailedItem.totalQuantity}
-              </Text>
-
-              {detailedItem.technicalSpecs?.length > 0 && (
-                <View style={{ marginBottom: 8 }}>
-                  <Text style={styles.modalText}>Especificações:</Text>
-                  {detailedItem.technicalSpecs.map((spec) => (
-                    <Text key={spec.idTechnicalSpec} style={styles.modalText}>
-                      • {spec.technicalSpecKey}: {spec.technicalSpecValue}
-                    </Text>
-                  ))}
-                </View>
-              )}
-
-              <View style={styles.transactionContainer}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => setActionPickerVisible(true)}
-                >
-                  <Text style={styles.actionButtonText}>
-                    {actionDescription === "IN" ? "Entrada" : "Saída"}
-                  </Text>
-                  <Ionicons name="caret-down-outline" size={20} color="#fff" />
-                </TouchableOpacity>
-
-                <TextInput
-                  style={styles.quantityInput}
-                  placeholder="Quantidade"
-                  placeholderTextColor="#888"
-                  keyboardType="numeric"
-                  value={quantityChange}
-                  onChangeText={setQuantityChange}
-                />
-              </View>
-
-              <TouchableOpacity
-                style={styles.transactButton}
-                onPress={handleTransaction}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
+                {detailedItem.image ? (
+                  <Image
+                    source={{ uri: `data:${detailedItem.image.type};base64,${detailedItem.image.data}` }}
+                    style={styles.itemImage}
+                    resizeMode="contain"
+                  />
                 ) : (
-                  <Text style={styles.buttonText}>Registrar Transação</Text>
+                  <Text style={{ alignSelf: "center", marginBottom: 15 }}>Imagem não disponível</Text>
                 )}
-              </TouchableOpacity>
 
-              {message && (
-                <Text
-                  style={[
-                    styles.messageText,
-                    { color: message.type === "success" ? "green" : "red" },
-                  ]}
+                <Text style={styles.modalText}>Descrição: {detailedItem.description}</Text>
+                <Text style={styles.modalText}>Categoria: {detailedItem.category?.value}</Text>
+                {detailedItem.brand && <Text style={styles.modalText}>Marca: {detailedItem.brand}</Text>}
+                <Text style={styles.modalText}>Quantidade disponível: {detailedItem.totalQuantity}</Text>
+
+                {detailedItem.technicalSpecs?.length > 0 && (
+                  <View style={{ marginBottom: 8 }}>
+                    <Text style={styles.modalText}>Especificações:</Text>
+                    {detailedItem.technicalSpecs.map((spec) => (
+                      <Text key={spec.idTechnicalSpec} style={styles.modalText}>
+                        • {spec.technicalSpecKey}: {spec.technicalSpecValue}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
+                <View style={styles.transactionContainer}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => setActionPickerVisible(true)}
+                  >
+                    <Text style={styles.actionButtonText}>
+                      {actionDescription === "IN" ? "Entrada" : "Saída"}
+                    </Text>
+                    <Ionicons name="caret-down-outline" size={20} color="#fff" />
+                  </TouchableOpacity>
+
+                  <TextInput
+                    style={styles.quantityInput}
+                    placeholder="Quantidade"
+                    placeholderTextColor="#888"
+                    keyboardType="numeric"
+                    value={quantityChange}
+                    onChangeText={setQuantityChange}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.transactButton}
+                  onPress={handleTransaction}
+                  disabled={loading}
                 >
-                  {message.text}
-                </Text>
-              )}
-            </>
-          ) : (
-            <Text style={{ margin: 20, textAlign: "center" }}>Item não encontrado</Text>
-          )}
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Registrar Transação</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <Text style={{ margin: 20, textAlign: "center" }}>Item não encontrado</Text>
+            )}
 
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.buttonText}>Fechar</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Modal de escolha de ação */}
-        <Modal
-          animationType="fade"
-          transparent={true}
-          visible={isActionPickerVisible}
-          onRequestClose={() => setActionPickerVisible(false)}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.pickerModalView}>
-              <TouchableOpacity
-                style={styles.pickerOption}
-                onPress={() => {
-                  setActionDescription("IN");
-                  setActionPickerVisible(false);
-                }}
-              >
-                <Text style={styles.pickerOptionText}>Entrada</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.pickerOption}
-                onPress={() => {
-                  setActionDescription("OUT");
-                  setActionPickerVisible(false);
-                }}
-              >
-                <Text style={styles.pickerOptionText}>Saída</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.buttonText}>Fechar</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </View>
-    </Modal>
+
+          {/* Modal de escolha de ação */}
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={isActionPickerVisible}
+            onRequestClose={() => setActionPickerVisible(false)}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.pickerModalView}>
+                <TouchableOpacity
+                  style={styles.pickerOption}
+                  onPress={() => {
+                    setActionDescription("IN");
+                    setActionPickerVisible(false);
+                  }}
+                >
+                  <Text style={styles.pickerOptionText}>Entrada</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.pickerOption}
+                  onPress={() => {
+                    setActionDescription("OUT");
+                    setActionPickerVisible(false);
+                  }}
+                >
+                  <Text style={styles.pickerOptionText}>Saída</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        </View>
+      </Modal>
+
+      {/* 🔹 CustomModal para mensagens da API */}
+      <CustomModal
+        open={customModalVisible}
+        onClose={onDismissCustomModal}
+        title={customModalTitle}
+        message={customModalMessage}
+        type={customModalType}
+      />
+    </>
   );
 };
 
@@ -248,7 +249,6 @@ const styles = StyleSheet.create({
   actionButtonText: { color: "#fff", fontWeight: "bold", marginRight: 5 },
   quantityInput: { flex: 1, height: 40, borderColor: "#ccc", borderWidth: 1, borderRadius: 8, paddingHorizontal: 10 },
   transactButton: { backgroundColor: "#600000", borderRadius: 20, padding: 10, elevation: 2, marginTop: 15, width: "100%", alignItems: "center" },
-  messageText: { textAlign: "center", marginTop: 10, fontWeight: "bold" },
   pickerModalView: { margin: 50, backgroundColor: "white", borderRadius: 10, padding: 20, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
   pickerOption: { padding: 15, width: "100%", alignItems: "center" },
   pickerOptionText: { fontSize: 16, fontWeight: "bold" },
