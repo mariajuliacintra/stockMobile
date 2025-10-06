@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.82:5000/stock/",
+  baseURL: "http://10.89.240.107:5000/stock/",
   headers: {
     accept: "application/json",
   },
@@ -36,11 +36,18 @@ const sheets = {
   verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
   TransactionUser: (userId) => api.get(`/transactions/user/${userId}`),
+  getAllUsers: (page = 1, limit = 10) =>
+    api.get("/users", {
+      params: {
+        page: page,
+        limit: limit,
+      },
+    }),
 
   // Itens / Lotes
   updateLotQuantity: (idLot, payload) =>
     api.put(`lot/quantity/${idLot}`, payload),
-getCategories: () => api.get("/category"),
+  getCategories: () => api.get("/category"),
 
   getAllItems: (params) => api.get("/items", { params }),
 

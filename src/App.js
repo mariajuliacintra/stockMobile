@@ -1,6 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import Principal from "./screens/Principal";
+import NoUsersScreen from "./screens/NoUsersScreen";
 import Home from "./screens/Home";
 import Perfil from "./screens/Perfil";
 import Itens from "./screens/Itens"
@@ -17,6 +18,7 @@ export default function App() {
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Perfil" component={Perfil} />
         <Stack.Screen name="Itens" component={Itens}/>
+        <Stack.Screen name="NoUsers" component={NoUsersScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
