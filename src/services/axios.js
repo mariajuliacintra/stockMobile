@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.82:5000/stock/",
+  baseURL: "http://10.89.240.107:5000/stock/",
   headers: {
     accept: "application/json",
   },
@@ -12,7 +12,7 @@ api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
     if (token) {
-      config.headers["Authorization"] = token;
+      config.headers["Authorization"] = token; // sem Bearer
     }
     return config;
   },
@@ -32,14 +32,18 @@ const sheets = {
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
   verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
-  TransactionUser: (userId) => api.get(`/transactions/user/${userId}`), 
-  //Lot/Items
+  TransactionUser: (userId) => api.get(`/transactions/user/${userId}`),
+
+  // Itens / Lotes
   updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
-  getAllItems: () => api.get("/items"),
+  getCategories: () => api.get("/category"),
+
+  getAllItems: (params) => api.get("/items", { params }),
+
+  filtroItems: (body) => api.post("/items/filter?page=1&limit=50", body),
+
 
   getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
-  
-  
 };
 
 export default sheets;

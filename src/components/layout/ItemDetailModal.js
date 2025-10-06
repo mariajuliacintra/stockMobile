@@ -12,7 +12,7 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import sheets from "../../services/axios";
 import * as SecureStore from "expo-secure-store";
-import jwtDecode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [detailedItem, setDetailedItem] = useState(null);
