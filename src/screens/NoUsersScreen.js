@@ -1,5 +1,3 @@
-// UsersScreen.js
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,34 +7,36 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
-  useWindowDimensions,
+  useWindowDimensions, 
 } from "react-native";
-// ÍCONES
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"; 
-import { Feather, FontAwesome5 } from "@expo/vector-icons"; 
+import EditUserModal from '../components/layout/EditUserModal';
+import CreateUserModal from '../components/layout/CreateUserModal';
+import { useNavigation } from "@react-navigation/native"; 
+import * as SecureStore from 'expo-secure-store';
 
-import sheets from "../services/axios"; 
-import CreateUserModal from '../components/layout/CreateUserModal'; // 💡 Novo Modal
-// Importe seu CustomModal real se ele não for globalmente acessível
-// import CustomModal from "../components/mod/CustomModal"; 
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { Feather, FontAwesome5 } from "@expo/vector-icons";
+import sheets from "../services/axios";
+import ConfirmarDelecaoModal from '../components/mod/ConfirmarDelecaoModal';
+
 
 const UsersScreen = () => {
+  const navigation = useNavigation(); 
+  const [editUserModalVisible, setEditUserModalVisible] = useState(false);
+  const [userToEdit, setUserToEdit] = useState(null);
   const { width, height } = useWindowDimensions();
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [createUserModalVisible, setCreateUserModalVisible] = useState(false);
 
-  // 💡 Funções de Alerta (Adapte para o seu CustomModal)
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+
   const showCustomModal = (title, message, type = "info") => {
-    // ESTA É UMA IMPLEMENTAÇÃO SIMPLIFICADA PARA O SEU CUSTOM MODAL. 
-    // VOCÊ DEVE SUBSTITUIR ISSO PELA SUA LÓGICA REAL DE EXIBIÇÃO DO CustomModal.
-    console.log(`[ALERTA - ${type.toUpperCase()}] ${title}: ${message}`);
-    alert(`${title}: ${message}`); 
+
   };
-  // Fim das Funções de Alerta
-  
-  // Estilos Dinâmicos do Cabeçalho (Baseado no PerfilScreen)
+
   const dynamicStyles = StyleSheet.create({
     topBar: {
       backgroundColor: "rgba(177, 16, 16, 1)",
@@ -55,20 +55,19 @@ const UsersScreen = () => {
     },
   });
 
-  // 💡 Lógica de Requisição (Função getAllUsers)
+  // Lógica de Requisição
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await sheets.getAllUsers(1, 10);
+      const response = await sheets.getAllUsers(1, 10); 
 
       if (response.data && response.data.success) {
-        const paginationObject = response.data.data[0];
-        // Mapeia os dados para simplificar o 'role', como no protótipo (Comum/Administrador)
+        const paginationObject = response.data.data[0]; 
+        
         const userList = (paginationObject?.users || []).map(user => ({
-            ...user,
-            displayRole: user.role === 'manager' ? 'Administrador' : 'Comum'
+          ...user,
+          displayRole: user.role === 'manager' ? 'Administrador' : 'Comum'
         }));
 
         if (Array.isArray(userList)) {
@@ -98,36 +97,87 @@ const UsersScreen = () => {
   }, []);
 
   const handleEditPress = (userId) => {
-    console.log(`Editar Usuário: ${userId}`);
+    const user = users.find(u => String(u.idUser) === String(userId));
+    if (user) {
+        setUserToEdit(user);
+        setEditUserModalVisible(true);
+    } else {
+      showCustomModal("Erro", "Usuário não encontrado.", "error");
+    }
   };
 
   const handleDeletePress = (userId) => {
-    console.log(`Deletar Usuário: ${userId}`);
+    const user = users.find(u => String(u.idUser) === String(userId));
+    if (user) {
+      setUserToDelete(user);
+      setDeleteModalVisible(true);
+    } else {
+      showCustomModal("Erro", "Usuário não encontrado para deleção.", "error");
+    }
   };
+
+  const handleConfirmDelete = () => {
+    if (userToDelete) {
+      executeDeleteUser(userToDelete.idUser);
+      setDeleteModalVisible(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const executeDeleteUser = async (userId) => {
+    setIsLoading(true);
+
+    try {
+      const storedToken = await SecureStore.getItemAsync("tokenUsuario");
+      
+      if (!userId || !storedToken) {
+        showCustomModal("Erro", "Dados de usuário ou token de acesso ausentes.", "error");
+        return;
+      }
+      
+      const headers = { Authorization: storedToken };
+      const response = await sheets.deleteUsuario(userId, { headers }); 
+
+      if (response.data?.success) {
+        showCustomModal(response.data.message || "Sucesso", response.data.details || "Usuário deletado com sucesso.", "success");
+        fetchUsers(); 
+      } else {
+        showCustomModal("Erro", response.data.error || "Erro ao deletar usuário", "error");
+      }
+    } catch (error) {
+      showCustomModal("Erro", "Não foi possível deletar o usuário.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
 
   const handleAddPress = () => {
-    // 💡 Abre o modal de criação de usuário
     setCreateUserModalVisible(true);
   };
-  
-  // 💡 Função para recarregar a lista após o sucesso do registro/verificação
+
   const handleUserRegistrationSuccess = () => {
-      showCustomModal("Sucesso", "A lista será recarregada para mostrar o novo usuário.", "success");
-      fetchUsers();
+    showCustomModal("Sucesso", "A lista será recarregada para mostrar o novo usuário.", "success");
+    fetchUsers();
+  };
+  const handleUserUpdateSuccess = () => {
+    fetchUsers(); 
+    setEditUserModalVisible(false);
+  };
+
+  const handleNavigateToHome = () => {
+    navigation.navigate('Principal'); 
   };
 
 
-  // Componente de Cabeçalho (Baseado no PerfilScreen)
   const AppHeader = () => (
     <View style={dynamicStyles.topBar}>
-      {/* Botão home (Adapte a navegação para sua rota "Principal" ou similar) */}
-      <TouchableOpacity onPress={() => console.log('Navegar para Principal')}>
+      <TouchableOpacity onPress={handleNavigateToHome}>
         <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
       </TouchableOpacity>
     </View>
   );
 
-  // Função para renderizar cada item da lista
   const renderUserItem = ({ item }) => (
     <View style={styles.userItem}>
       <View style={styles.userInfo}>
@@ -138,17 +188,17 @@ const UsersScreen = () => {
           Cargo: {item.displayRole || 'Comum'}
         </Text>
       </View>
-      
+
       <View style={styles.actionIcons}>
-        <TouchableOpacity 
-            onPress={() => handleEditPress(item.idUser)}
-            style={styles.iconButton}
+        <TouchableOpacity
+          onPress={() => handleEditPress(item.idUser)}
+          style={styles.iconButton}
         >
           <Feather name="edit-2" size={18} color="#4B5563" />
         </TouchableOpacity>
-        <TouchableOpacity 
-            onPress={() => handleDeletePress(item.idUser)}
-            style={styles.iconButton}
+        <TouchableOpacity
+          onPress={() => handleDeletePress(item.idUser)}
+          style={styles.iconButton}
         >
           <FontAwesome5 name="trash-alt" size={18} color="#D9534F" />
         </TouchableOpacity>
@@ -157,101 +207,120 @@ const UsersScreen = () => {
   );
 
 
-  // --- Renderização Condicional ---
-
   if (isLoading) {
     return (
       <View style={styles.fullScreenContainer}>
         <AppHeader />
-        <View style={[styles.cardContainer, styles.loadingCard, { marginTop: height * 0.12 }]}>
+        <View style={styles.loadingWrapper}>
+          <View style={[styles.cardContainer, styles.loadingCard]}>
             <ActivityIndicator size="large" color="rgba(177, 16, 16, 1)" />
             <Text style={styles.loadingText}>Carregando Usuários...</Text>
+          </View>
         </View>
       </View>
     );
   }
 
-  // Conteúdo principal (Lista ou "Nenhum Usuário")
   const listContent = users.length === 0 ? (
     <View style={styles.noUsersContent}>
-        <Text style={styles.noUsers}>Nenhum usuário encontrado</Text>
-        <TouchableOpacity onPress={fetchUsers} style={{ marginTop: 10 }}>
-            <Text style={styles.retryText}>Recarregar Lista</Text>
-        </TouchableOpacity>
+      <Text style={styles.noUsers}>Nenhum usuário encontrado</Text>
+      <TouchableOpacity onPress={fetchUsers} style={{ marginTop: 10 }}>
+        <Text style={styles.retryText}>Recarregar Lista</Text>
+      </TouchableOpacity>
     </View>
   ) : (
     <FlatList
-        data={users}
-        keyExtractor={(item) => String(item.idUser)}
-        renderItem={renderUserItem}
-        contentContainerStyle={styles.listContent}
-        style={styles.list}
+      data={users}
+      keyExtractor={(item) => String(item.idUser)}
+      renderItem={renderUserItem}
+      contentContainerStyle={styles.listContent}
+      style={styles.list}
+      scrollEnabled={false} 
+      nestedScrollEnabled={true} 
     />
   );
-  
+
   return (
     <View style={styles.fullScreenContainer}>
-      {/* Cabeçalho Fixo */}
       <AppHeader />
-      
-      {/* Conteúdo da Tela */}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        nestedScrollEnabled={true} 
+      >
         <View style={styles.cardContainer}>
-          {/* Cabeçalho do Card: "Lista de Usuários" + Ícone de Adição */}
           <View style={styles.cardHeader}>
             <Text style={styles.title}>Lista de Usuários</Text>
-            {/* 💡 Botão Verde para Criar Usuário */}
             <TouchableOpacity onPress={handleAddPress}>
               <Feather name="plus-square" size={24} color="#4CAF50" />
             </TouchableOpacity>
           </View>
-          
+
           {error ? (
-              <View style={styles.noUsersContent}>
-                  <Text style={styles.errorText}>❌ {error}</Text>
-                  <TouchableOpacity onPress={fetchUsers}>
-                      <Text style={styles.retryText}>Tentar Novamente</Text>
-                  </TouchableOpacity>
-              </View>
+            <View style={styles.noUsersContent}>
+              <Text style={styles.errorText}>❌ {error}</Text>
+              <TouchableOpacity onPress={fetchUsers}>
+                <Text style={styles.retryText}>Tentar Novamente</Text>
+              </TouchableOpacity>
+            </View>
           ) : (
-              listContent
+            listContent
           )}
         </View>
       </ScrollView>
 
-      {/* 💡 Modal de Criação de Usuário */}
-      <CreateUserModal 
-          visible={createUserModalVisible}
-          onClose={() => setCreateUserModalVisible(false)}
-          showCustomModal={showCustomModal} // Passa a função de alerta
-          onRegistrationSuccess={handleUserRegistrationSuccess} // Recarrega a lista
+      <CreateUserModal
+        visible={createUserModalVisible}
+        onClose={() => setCreateUserModalVisible(false)}
+        showCustomModal={showCustomModal}
+        onRegistrationSuccess={handleUserRegistrationSuccess}
+      />
+      <EditUserModal
+        visible={editUserModalVisible}
+        onClose={() => setEditUserModalVisible(false)}
+        showCustomModal={showCustomModal}
+        user={userToEdit} 
+        onUpdateSuccess={handleUserUpdateSuccess}
       />
       
+      <ConfirmarDelecaoModal
+        visible={deleteModalVisible}
+        title="Excluir Usuário"
+        message={userToDelete ? `Tem certeza que deseja excluir o usuário "${userToDelete.name}"? Esta ação é irreversível.` : "Confirme a exclusão deste usuário."}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+            setDeleteModalVisible(false);
+            setUserToDelete(null);
+        }}
+      />
+
     </View>
   );
 };
 
 export default UsersScreen;
 
-// ----------------------------------------------------------------------
-// --- ESTILOS ---
-// ----------------------------------------------------------------------
-
 const styles = StyleSheet.create({
   fullScreenContainer: {
     flex: 1,
-    backgroundColor: "#d9d9d9", // Fundo cinza claro
+    backgroundColor: "#d9d9d9", 
   },
-  
+
+  loadingWrapper: {
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+  },
+
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 90, // Espaço para o cabeçalho fixo
+    paddingTop: 90,
     paddingBottom: 40,
     paddingHorizontal: 16,
   },
-  
+
   cardContainer: {
     backgroundColor: "#fff",
     borderRadius: 15,
@@ -279,7 +348,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
-  
+
   userItem: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -296,7 +365,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  
+
   userInfo: {
     flex: 1,
   },
@@ -322,7 +391,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 
-  // Estilos de Estado
   loadingCard: {
     alignItems: 'center',
     justifyContent: 'center',

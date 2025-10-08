@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   StyleSheet,
@@ -12,97 +12,119 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import sheets from "../../services/axios";
-import CustomModal from "../mod/CustomModal";
-import VerificationModal from "./VerificationModal";
+import sheets from "../../services/axios"; // ⚠️ Verifique o caminho
+import * as SecureStore from 'expo-secure-store';
+// 🟢 IMPORTAÇÃO DO MODAL DE VERIFICAÇÃO (AJUSTE O CAMINHO SE NECESSÁRIO)
+import VerificationModal from './VerificationModal'; 
+// Assumindo que CustomModal é injetado via prop ou importado
+// import CustomModal from "../mod/CustomModal"; 
 
 const { width, height } = Dimensions.get("window");
 
-export default function CreateUserModal({
+export default function EditUserModal({
   visible,
   onClose,
   showCustomModal,
-  onRegistrationSuccess,
+  user, 
+  onUpdateSuccess, 
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("user");
   const [isLoading, setIsLoading] = useState(false);
 
+  // 🟢 ESTADOS PARA VERIFICAÇÃO
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [formDataForVerification, setFormDataForVerification] = useState({});
 
-  const clearForm = () => {
-    setName("");
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setRole("user");
-    setIsLoading(false);
-  };
-
-  const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !role) {
-      showCustomModal("Atenção", "Todos os campos são obrigatórios.", "warning");
-      return;
+  useEffect(() => {
+    if (visible && user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
+      setRole(user.role || "user");
     }
+  }, [visible, user]);
 
-    if (password !== confirmPassword) {
-      showCustomModal("Erro", "As senhas não coincidem.", "error");
+  const handleUpdate = async () => {
+    if (!name || !email || !role) {
+      showCustomModal("Atenção", "Nome, e-mail e cargo são obrigatórios.", "warning");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await sheets.registerUserByManager({
-        name,
-        email,
-        password,
-        confirmPassword,
-        role,
-      });
+      const storedToken = await SecureStore.getItemAsync("tokenUsuario");
+      if (!user.idUser || !storedToken) {
+        showCustomModal("Erro", "Dados de usuário ou token de acesso ausentes.", "error");
+        setIsLoading(false);
+        return;
+      }
+
+      const dadosAtualizados = { 
+        name, 
+        email, 
+        role 
+      };
+
+      const headers = { Authorization: storedToken };
+      // ⚠️ Use a ROTA CORRETA da sua API para atualizar o usuário!
+      const response = await sheets.putAtualizarUsuario(user.idUser, dadosAtualizados, { headers }); 
 
       const responseData = response.data;
 
-      if (responseData.success) {
-        showCustomModal("Atenção!", responseData.message, "info");
+      const requiresVerification =
+          Array.isArray(responseData.data) && responseData.data[0]?.requiresEmailVerification;
 
-        // prepara dados para modal de verificação
-        setFormDataForVerification({ email });
-        setVerifyModalVisible(true);
-        onClose();
+      // 🟢 TRATAMENTO DE VERIFICAÇÃO DE E-MAIL (COMO NA TELA DE PERFIL)
+      if (requiresVerification) {
+          setFormDataForVerification({ email: email, userId: user.idUser }); // Passa o novo e-mail e ID
+          setVerifyModalVisible(true);
+          onClose(); // Fecha o modal de edição
+          showCustomModal(
+            "Verificação Pendente", 
+            responseData.message || "E-mail alterado. Insira o código enviado para concluir a verificação.", 
+            "info"
+          );
+      } else if (responseData.success) {
+        showCustomModal("Sucesso", responseData.message || "Usuário atualizado com sucesso!", "success");
+        onUpdateSuccess(); // Recarrega a lista
+        onClose(); // Fecha o modal
       } else {
         showCustomModal(
           "Erro",
-          responseData.details ||
-            responseData.error ||
-            "Falha ao registrar usuário.",
+          responseData.details || responseData.error || "Falha ao atualizar usuário.",
           "error"
         );
       }
+
     } catch (error) {
       const errorMsg =
         error.response?.data?.details ||
         error.response?.data?.error ||
-        "Erro de conexão ao tentar registrar.";
+        "Erro de conexão ao tentar atualizar.";
       showCustomModal("Erro", errorMsg, "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleVerificationSuccess = (user) => {
+  // 🟢 FUNÇÃO DE SUCESSO APÓS VERIFICAÇÃO
+  const handleVerificationSuccess = () => {
     showCustomModal(
       "Sucesso",
-      "Usuário criado e verificado com sucesso!",
+      "E-mail verificado e usuário atualizado com sucesso!",
       "success"
     );
-    clearForm();
-    onRegistrationSuccess(user);
-    setVerifyModalVisible(false);
+    onUpdateSuccess(); // Recarregar a lista na UsersScreen
+    setVerifyModalVisible(false); // Fecha o modal de verificação
+  };
+  
+  const handleClose = () => {
+    onClose();
+    setName("");
+    setEmail("");
+    setRole("user");
   };
 
   return (
@@ -111,16 +133,13 @@ export default function CreateUserModal({
         animationType="slide"
         transparent={true}
         visible={visible}
-        onRequestClose={onClose}
+        onRequestClose={handleClose}
       >
         <View style={styles.overlay}>
           <View style={styles.modal}>
             <TouchableOpacity
               style={styles.closeButton}
-              onPress={() => {
-                onClose();
-                clearForm();
-              }}
+              onPress={handleClose}
             >
               <Ionicons
                 name="close-circle-outline"
@@ -129,8 +148,10 @@ export default function CreateUserModal({
               />
             </TouchableOpacity>
 
-            <Text style={styles.titleText}>Criar Novo Usuário</Text>
+            <Text style={styles.titleText}>Editar Usuário: {user?.name}</Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ width: "100%" }}>
+              {/* ... Campos de Nome, Email, Cargo (invariáveis) ... */}
+
               {/* Nome */}
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={width * 0.05} color="gray" />
@@ -157,32 +178,6 @@ export default function CreateUserModal({
                 />
               </View>
 
-              {/* Senha */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Senha Inicial"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholderTextColor="gray"
-                  secureTextEntry
-                />
-              </View>
-
-              {/* Confirmar Senha */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
-                <TextInput
-                  style={styles.inputField}
-                  placeholder="Confirmar Senha"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholderTextColor="gray"
-                  secureTextEntry
-                />
-              </View>
-
               {/* Picker de Função */}
               <View style={[styles.inputContainer, styles.pickerContainer]}>
                 <Ionicons name="briefcase-outline" size={width * 0.05} color="gray" />
@@ -198,14 +193,14 @@ export default function CreateUserModal({
 
               {/* Botão */}
               <TouchableOpacity
-                onPress={handleRegister}
-                style={styles.confirmButton}
+                onPress={handleUpdate}
+                style={[styles.confirmButton, { backgroundColor: '#FF2C2C' }]}
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.confirmButtonText}>Cadastrar Usuário</Text>
+                  <Text style={styles.confirmButtonText}>Salvar Alterações</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -213,15 +208,13 @@ export default function CreateUserModal({
         </View>
       </Modal>
 
+      {/* 🟢 RENDERIZAÇÃO DO MODAL DE VERIFICAÇÃO */}
       <VerificationModal
         visible={verifyModalVisible}
-        onClose={() => {
-          setVerifyModalVisible(false);
-          onRegistrationSuccess();
-        }}
+        onClose={() => setVerifyModalVisible(false)}
         formData={formDataForVerification}
         onVerificationSuccess={handleVerificationSuccess}
-        mode="register"
+        mode="update" // Modo de atualização para verificação de e-mail
       />
     </>
   );
@@ -230,6 +223,7 @@ export default function CreateUserModal({
 const { width: W, height: H } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
+  // ... (Estilos, mantidos iguais)
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
@@ -290,7 +284,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   confirmButton: {
-    backgroundColor: "#FF2C2C",
+    backgroundColor: "#FF2C2C", // Base
     paddingVertical: H * 0.02,
     borderRadius: 10,
     alignItems: "center",

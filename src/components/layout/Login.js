@@ -52,56 +52,63 @@ function Login({ visible, onClose, onOpenCadastro }) {
     try {
       if (token) {
         await SecureStore.setItemAsync("tokenUsuario", String(token));
-        console.log("Token armazenado com sucesso!");
       }
       if (idUser) {
-        await SecureStore.setItemAsync("userId", String(idUser));
-        console.log("ID do usuário armazenado com sucesso!");
+        await SecureStore.setItemAsync("userId", String(idUser)); 
       }
     } catch (erro) {
-      console.error("Erro ao salvar token ou ID do usuário:", erro);
     }
   }
 
-  async function handleLogin() {
-    try {
-      const response = await api.postLogin(usuario);
+async function handleLogin() {
+  try {
+    const response = await api.postLogin(usuario);
 
-      // Obtém os dados do usuário retornados pela API
-      const userData = response.data?.user?.[0];
+    // Obtém os dados do usuário retornados pela API
+    const userData = response.data?.user?.[0];
 
-      if (!userData || !userData.token || !userData.idUser) {
-        setInternalModalMessage("Resposta inválida da API. Tente novamente.");
-        setInternalModalType("error");
-        setInternalModalVisible(true);
-        return;
-      }
-
-      // Armazena token e idUser
-      await armazenarTokenETipoUsuario(userData.token, userData.idUser);
-
-      setInternalModalMessage(response.data.message || "Login realizado!");
-      setInternalModalType("success");
-      setInternalModalVisible(true);
-
-      setUsuario({
-        email: "",
-        password: "",
-        showSenha: true,
-      });
-
-      setTimeout(() => {
-        handleCloseLogin();
-        navigation.navigate("Principal");
-      }, 1000);
-    } catch (error) {
-      setInternalModalMessage(
-        error.response?.data?.details || "Erro desconhecido"
-      );
+    if (!userData || !userData.token || !userData.idUser) {
+      setInternalModalMessage("Resposta inválida da API. Tente novamente.");
       setInternalModalType("error");
       setInternalModalVisible(true);
+      return;
     }
+
+    // Armazena token, idUser e role
+    await armazenarTokenETipoUsuario(userData.token, userData.idUser, userData.role);
+    await SecureStore.setItemAsync("userRole", userData.role);
+await SecureStore.setItemAsync("userEmail", userData.email);
+
+    setInternalModalMessage(response.data.message || "Login realizado!");
+    setInternalModalType("success");
+    setInternalModalVisible(true);
+
+    // Limpa campos de login
+    setUsuario({
+      email: "",
+      password: "",
+      showSenha: true,
+    });
+
+    // Redireciona conforme o tipo de usuário
+    setTimeout(() => {
+      handleCloseLogin();
+
+      if (userData.role === "manager" || userData.isManager) {
+        navigation.navigate("Principal"); // Tela do gerente
+      } else {
+        navigation.navigate("Principal"); // Tela do usuário comum
+      }
+    }, 1000);
+  } catch (error) {
+    setInternalModalMessage(
+      error.response?.data?.details || "Erro desconhecido"
+    );
+    setInternalModalType("error");
+    setInternalModalVisible(true);
   }
+}
+
 
   const dynamicStyles = StyleSheet.create({
     overlay: {

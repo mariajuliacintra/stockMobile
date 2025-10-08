@@ -66,10 +66,8 @@ function Principal() {
         setTotalPages(response.data.totalPages);
         setPage(pageToLoad);
       } else {
-        console.error("Resposta da API sem sucesso:", response.data.message);
       }
     } catch (error) {
-      console.error("Erro ao buscar itens:", error);
       setItems([]);
     } finally {
       setLoading(false);

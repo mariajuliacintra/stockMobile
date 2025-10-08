@@ -35,7 +35,7 @@ export default function PerfilScreen() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const { width, height } = useWindowDimensions();
-
+  const [isManager, setIsManager] = useState(false);
   const [customModalVisible, setCustomModalVisible] = useState(false);
   const [customModalTitle, setCustomModalTitle] = useState("");
   const [customModalMessage, setCustomModalMessage] = useState("");
@@ -52,6 +52,20 @@ export default function PerfilScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [transactionsModalVisible, setTransactionsModalVisible] = useState(false);
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      const storedRole = await SecureStore.getItemAsync("userRole");
+      const storedEmail = await SecureStore.getItemAsync("userEmail");
+  
+      if (storedRole === "manager" || (storedEmail && storedEmail.includes("@sp.senai.br"))) {
+        setIsManager(true);
+      }
+    };
+    fetchRole();
+  }, []);
+  
+  
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -76,7 +90,6 @@ export default function PerfilScreen() {
           showCustomModal("Erro", "Usuário não encontrado.", "error");
         }
       } catch (error) {
-        console.error("Erro ao carregar dados do usuário:", error);
         showCustomModal("Erro", "Não foi possível carregar os dados do usuário.", "error");
       } finally {
         setIsDataLoading(false);
@@ -107,7 +120,6 @@ export default function PerfilScreen() {
 
       return Boolean(isValid);
     } catch (error) {
-      console.error("Erro na validação de senha:", error);
       showCustomModal("Erro", "Erro ao validar senha.", "error");
       return false;
     }
@@ -165,7 +177,6 @@ export default function PerfilScreen() {
         showCustomModal("Erro", responseData.message || "Resposta da API incompleta ou falha na atualização.", "error");
       }
     } catch (error) {
-      console.error("Erro ao atualizar o perfil:", error.response?.data.details || error.message);
       showCustomModal("Erro", "Não foi possível atualizar o perfil.", "error");
     } finally {
       setLoading(false);
@@ -197,7 +208,6 @@ export default function PerfilScreen() {
         showCustomModal("Erro", response.data.error || "Erro ao deletar usuário", "error");
       }
     } catch (error) {
-      console.error("Erro ao deletar usuário:", error.response?.data || error.message);
       showCustomModal("Erro", "Não foi possível deletar o usuário.", "error");
     } finally {
       setDeleteModalVisible(false);
@@ -276,17 +286,20 @@ export default function PerfilScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ImageBackground style={dynamicStyles.background} source={require("../img/fundo.png")}>
-        <View style={dynamicStyles.header}>
-          {/* Botão home */}
-          <TouchableOpacity onPress={() => navigation.navigate("Principal")}>
-            <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
-          </TouchableOpacity>
+      <View style={dynamicStyles.header}>
+  {/* Botão home */}
+  <TouchableOpacity onPress={() => navigation.navigate("Principal")}>
+    <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
+  </TouchableOpacity>
 
-          {/* Botão engrenagem */}
-          <TouchableOpacity onPress={() => navigation.navigate("NoUsers")} style={{ marginLeft: 15 }}>
-            <MaterialCommunityIcons name="account-cog-outline" size={60} color="#fff" />
-          </TouchableOpacity>
-        </View>
+  {/* Botão engrenagem (só para managers) */}
+  {isManager && (
+    <TouchableOpacity onPress={() => navigation.navigate("NoUsers")} style={{ marginLeft: 15 }}>
+      <MaterialCommunityIcons name="account-cog-outline" size={60} color="#fff" />
+    </TouchableOpacity>
+  )}
+</View>
+
 
         {/* Card */}
         <View style={dynamicStyles.card}>
