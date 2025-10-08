@@ -16,6 +16,8 @@ import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
 import ItemDetailModal from "../components/layout/ItemDetailModal";
+import CreateItemModal from "../components/layout/createItemModal";
+import * as SecureStore from "expo-secure-store";
 
 const { width } = Dimensions.get("window");
 
@@ -23,8 +25,8 @@ function Principal() {
   const navigation = useNavigation();
 
   const [items, setItems] = useState([]);
-  const [categorias, setCategorias] = useState([]); // 🔹 categorias dinâmicas
-  const [selectedCategories, setSelectedCategories] = useState([]); // IDs selecionados
+  const [categorias, setCategorias] = useState([]); 
+  const [selectedCategories, setSelectedCategories] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +35,23 @@ function Principal() {
   const [isDetailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // 🔍 Buscar itens (por nome e categoria) usando uma única rota
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [userId, setUserId] = useState(null);
+
+  // 🔹 Buscar userId do SecureStore
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const id = await SecureStore.getItemAsync("userId");
+        if (id) setUserId(Number(id));
+      } catch (error) {
+        console.error("Erro ao carregar ID do usuário:", error);
+      }
+    };
+    fetchUserId();
+  }, []);
+
+  // 🔍 Buscar itens
   const fetchItems = async () => {
     setLoading(true);
     try {
@@ -58,7 +76,7 @@ function Principal() {
     }
   };
 
-  // 📦 Buscar categorias da API
+  // 📦 Buscar categorias
   const fetchCategorias = async () => {
     setLoadingCategorias(true);
     try {
@@ -75,7 +93,7 @@ function Principal() {
     }
   };
 
-  // ⌨️ Atualizar pesquisa ao digitar ou ao mudar categoria
+  // Atualiza pesquisa
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchItems();
@@ -83,7 +101,7 @@ function Principal() {
     return () => clearTimeout(delay);
   }, [searchTerm, selectedCategories]);
 
-  // 🔄 Buscar categorias quando o modal abrir
+  // Buscar categorias quando o modal abrir
   useEffect(() => {
     if (isFilterModalVisible) fetchCategorias();
   }, [isFilterModalVisible]);
@@ -209,7 +227,14 @@ function Principal() {
             >
               <Text style={styles.buttonText}>Aplicar Filtros</Text>
             </TouchableOpacity>
-            
+
+            {/* Botão correto para abrir modal de criar item */}
+            <TouchableOpacity
+              style={[styles.closeButton, { marginTop: 10 }]}
+              onPress={() => setShowCreateModal(true)}
+            >
+              <Text style={styles.buttonText}>Adicionar Item</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -220,6 +245,15 @@ function Principal() {
         onClose={() => setDetailModalVisible(false)}
         item={selectedItem}
       />
+
+      {/* Modal de Criação de Item */}
+      {userId && (
+        <CreateItemModal
+          visible={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          fkIdUser={userId}
+        />
+      )}
     </View>
   );
 }
@@ -323,12 +357,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     marginBottom: 5,
-  },
-  textAdicionar: {
-    color: "black",
-    fontSize: "20",
-    alignItems: "center",
-    flexDirection: "row"
   },
   checkboxBox: {
     width: 24,
