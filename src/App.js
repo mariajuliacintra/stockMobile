@@ -6,6 +6,7 @@ import Home from "./screens/Home";
 import Perfil from "./screens/Perfil";
 import Itens from "./screens/Itens"
 import { StatusBar } from "react-native";
+import FileScreen from "../src/screens/FileScreen";
 
 const Stack = createStackNavigator();
 
@@ -19,6 +20,11 @@ export default function App() {
         <Stack.Screen name="Perfil" component={Perfil} />
         <Stack.Screen name="Itens" component={Itens}/>
         <Stack.Screen name="NoUsers" component={NoUsersScreen} />
+        <Stack.Screen
+  name="Arquivos"
+  component={FileScreen}
+  options={{ headerShown: false }}
+/>
       </Stack.Navigator>
     </NavigationContainer>
   );

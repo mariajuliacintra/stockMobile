@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
@@ -31,14 +32,26 @@ function Principal() {
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [isDetailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isManager, setIsManager] = useState(false); // 👈 novo estado
 
   // Estados para a paginação
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // ✅ Verifica se o usuário é manager
+  useEffect(() => {
+    const fetchRole = async () => {
+      const storedRole = await SecureStore.getItemAsync("userRole");
+      const storedEmail = await SecureStore.getItemAsync("userEmail");
+      if (storedRole === "manager" || (storedEmail && storedEmail.includes("@sp.senai.br"))) {
+        setIsManager(true);
+      }
+    };
+    fetchRole();
+  }, []);
+
   // Função para buscar itens da API
   const fetchItems = async (pageToLoad = 1) => {
-    // Define o estado de loading correto
     if (pageToLoad === 1) {
       setLoading(true);
     } else {
@@ -51,13 +64,11 @@ function Principal() {
         page: pageToLoad,
         limit: 10,
         searchTerm,
-        // A API espera 'categoryValue', não a 'key' do seu mapeamento
         categories: selectedCategories.join(","),
       };
       const response = await sheets.getAllItems(params, token);
 
       if (response.data && response.data.success) {
-        // Se for a primeira página, substitui os itens, caso contrário, concatena
         if (pageToLoad === 1) {
           setItems(response.data.items);
         } else {
@@ -66,6 +77,7 @@ function Principal() {
         setTotalPages(response.data.totalPages);
         setPage(pageToLoad);
       } else {
+        setItems([]);
       }
     } catch (error) {
       setItems([]);
@@ -75,38 +87,30 @@ function Principal() {
     }
   };
 
-  // Efeito para buscar a primeira página quando o componente é montado
-  // e sempre que o termo de busca ou categorias mudam.
   useEffect(() => {
-    setItems([]); // Limpa a lista para uma nova busca
-    setPage(1); // Reseta a página para 1
+    setItems([]);
+    setPage(1);
     fetchItems(1);
   }, [searchTerm, selectedCategories]);
 
-  // Carrega mais itens quando o usuário chega ao final da lista
   const handleScroll = ({ nativeEvent }) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
     const isCloseToBottom =
       layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
-
-    // Verifica se pode carregar mais itens
     if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
       fetchItems(page + 1);
     }
   };
 
-  // Abre/fecha modal de filtros
   const toggleFilterModal = () => {
     setFilterModalVisible(!isFilterModalVisible);
   };
 
-  // Abre/fecha modal de detalhes do item
   const toggleDetailModal = (item) => {
     setSelectedItem(item);
     setDetailModalVisible(!isDetailModalVisible);
   };
 
-  // Seleciona/desmarca categoria
   const handleCategoryToggle = (category) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
@@ -115,7 +119,6 @@ function Principal() {
     );
   };
 
-  // Navegação
   const handleLogout = () => {
     navigation.navigate("Home");
   };
@@ -124,13 +127,31 @@ function Principal() {
     navigation.navigate("Perfil");
   };
 
+  const handleArquivos = () => {
+    navigation.navigate("Arquivos"); // tela que você ainda vai criar
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfile} style={styles.profile}>
           <Ionicons name="person-circle-outline" color="#FFF" size={40} />
         </TouchableOpacity>
+
+        {isManager && (
+          <TouchableOpacity
+            onPress={handleArquivos}
+            style={styles.folderButton}
+          >
+            <MaterialCommunityIcons
+              name="folder-outline"
+              color="#FFF"
+              size={40}
+            />
+          </TouchableOpacity>
+        )}
+
+        {/* Botão logout */}
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <AntDesign name="logout" color="#FFF" size={25} />
         </TouchableOpacity>
@@ -233,6 +254,37 @@ const styles = StyleSheet.create({
     width: width,
     paddingRight: 20,
   },
+  profile: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 10,
+  },
+  folderButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 32,
+  },
+  logoutButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginLeft: -22,
+    marginRight: -10,
+  },
   searchBarContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -257,27 +309,6 @@ const styles = StyleSheet.create({
   itemsContainer: { flex: 1, width: "100%" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 10, fontSize: 16, color: "#600000" },
-  profile: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 8.5,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginRight: 30,
-  },
-  logoutButton: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginLeft: -22,
-    marginRight: -10,
-  },
   messageContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -304,12 +335,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  checkboxText: { marginLeft: 8, fontSize: 16 },
   closeButton: {
     backgroundColor: "#600000",
     borderRadius: 20,
