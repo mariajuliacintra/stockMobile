@@ -4,10 +4,12 @@ import * as SecureStore from "expo-secure-store";
 const api = axios.create({
   baseURL: "http://10.89.240.82:5000/stock/",
   headers: {
-    accept: "application/json",
+    Accept: "application/json",
+    "Content-Type": "application/json",
   },
 });
 
+// Interceptor para adicionar o token em todas as requisições
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
@@ -55,7 +57,18 @@ const sheets = {
   filterItems: (payload, page = 1, limit = 10) =>
     api.post(`/items/filter?page=${page}&limit=${limit}`, payload),
 
+  // Itens / Lotes
+  updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
+  getAllItems: (params) => api.get("items", { params }),
   getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
+
+  createItem: (payload) => api.post("item", payload), // POST /stock/item
+  filtroItems: (body) => api.post("items/filter?page=1&limit=50", body),
+
+  // Dropdowns
+  getCategories: () => api.get("category"),
+  getLocations: () => api.get("location"),
+  getTechnicalSpecs: () => api.get("technicalSpec"),
 };
 
 export default sheets;
