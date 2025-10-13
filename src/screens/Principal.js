@@ -26,17 +26,19 @@ function Principal() {
   const navigation = useNavigation();
 
   const [items, setItems] = useState([]);
-  const [categorias, setCategorias] = useState([]); 
-  const [selectedCategories, setSelectedCategories] = useState([]); 
+  const [categorias, setCategorias] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [isDetailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [isManager, setIsManager] = useState(false); // 👈 novo estado
-
+  const [isManager, setIsManager] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [userId, setUserId] = useState(null);
 
@@ -52,13 +54,6 @@ function Principal() {
     fetchRole();
   }, []);
 
-  // Função para buscar itens da API
-  const fetchItems = async (pageToLoad = 1) => {
-    if (pageToLoad === 1) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
   // 🔹 Buscar userId do SecureStore
   useEffect(() => {
     const fetchUserId = async () => {
@@ -73,16 +68,14 @@ function Principal() {
   }, []);
 
   // 🔍 Buscar itens
-  const fetchItems = async () => {
-    setLoading(true);
-    try {
-      const token = await SecureStore.getItemAsync("tokenUsuario");
-      const params = {
-        page: pageToLoad,
-        limit: 10,
-        searchTerm,
-        categories: selectedCategories.join(","),
+  const fetchItems = async (pageToLoad = 1) => {
+    if (pageToLoad === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
 
+    try {
       const body = {
         name: searchTerm.trim() || "",
         idCategory: selectedCategories.length > 0 ? selectedCategories : [],
@@ -90,68 +83,74 @@ function Principal() {
 
       const response = await sheets.filtroItems(body);
 
-      if (response.data.success) {  // assumindo que exista um flag de sucesso
-  const newItems = response.data.items || [];
+      if (response.data.success) {
+        const newItems = response.data.items || [];
 
-  if (pageToLoad === 1) {
-    setItems(newItems);
-  } else {
-    setItems((prevItems) => [...prevItems, ...newItems]);
-  }
+        if (pageToLoad === 1) {
+          setItems(newItems);
+        } else {
+          setItems((prevItems) => [...prevItems, ...newItems]);
+        }
 
-  setTotalPages(response.data.totalPages || 1);
-  setPage(pageToLoad);
-} else {
-  setItems([]);
-  console.error("Erro: resposta sem sucesso", response.data);
-}
-
-// 📦 Buscar categorias
-const fetchCategorias = async () => {
-  setLoadingCategorias(true);
-  try {
-    const response = await sheets.getCategories();
-    if (response.data && Array.isArray(response.data.categories)) {
-      setCategorias(response.data.categories);
-    } else {
-      console.error("Formato inesperado de categorias:", response.data);
+        setTotalPages(response.data.totalPages || 1);
+        setPage(pageToLoad);
+      } else {
+        setItems([]);
+        console.error("Erro: resposta sem sucesso", response.data);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar itens:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
-  } catch (error) {
-    console.error("Erro ao buscar categorias:", error);
-  } finally {
-    setLoadingCategorias(false);
-  }
-};
+  };
 
-// Atualiza pesquisa com debounce
-useEffect(() => {
-  const delay = setTimeout(() => {
-    setItems([]);
-    setPage(1);
-    fetchItems(1);
-  }, 500);
+  // 📦 Buscar categorias
+  const fetchCategorias = async () => {
+    setLoadingCategorias(true);
+    try {
+      const response = await sheets.getCategories();
+      if (response.data && Array.isArray(response.data.categories)) {
+        setCategorias(response.data.categories);
+      } else {
+        console.error("Formato inesperado de categorias:", response.data);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar categorias:", error);
+    } finally {
+      setLoadingCategorias(false);
+    }
+  };
 
-  return () => clearTimeout(delay);
-}, [searchTerm, selectedCategories]);
+  // Atualiza pesquisa com debounce
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      setItems([]);
+      setPage(1);
+      fetchItems(1);
+    }, 500);
 
-// Buscar categorias quando o modal abrir
-useEffect(() => {
-  if (isFilterModalVisible) fetchCategorias();
-}, [isFilterModalVisible]);
+    return () => clearTimeout(delay);
+  }, [searchTerm, selectedCategories]);
 
-// Infinite scroll
-const handleScroll = ({ nativeEvent }) => {
-  const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-  const isCloseToBottom =
-    layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
-  if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
-    fetchItems(page + 1);
-  }
-};
+  // Buscar categorias quando o modal abrir
+  useEffect(() => {
+    if (isFilterModalVisible) fetchCategorias();
+  }, [isFilterModalVisible]);
 
-// Alterna modal
-const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
+  // Infinite scroll
+  const handleScroll = ({ nativeEvent }) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
+    if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
+      fetchItems(page + 1);
+    }
+  };
 
+  // Alterna modal de filtro
+  const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
 
   const toggleDetailModal = (item) => {
     setSelectedItem(item);
@@ -166,36 +165,24 @@ const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
     );
   };
 
-
   const handleLogout = () => navigation.navigate("Home");
   const handleProfile = () => navigation.navigate("Perfil");
-
-
-  const handleArquivos = () => {
-    navigation.navigate("Arquivos"); // tela que você ainda vai criar
-  };
+  const handleArquivos = () => navigation.navigate("Arquivos");
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfile} style={styles.profile}>
           <Ionicons name="person-circle-outline" color="#FFF" size={40} />
         </TouchableOpacity>
 
         {isManager && (
-          <TouchableOpacity
-            onPress={handleArquivos}
-            style={styles.folderButton}
-          >
-            <MaterialCommunityIcons
-              name="folder-outline"
-              color="#FFF"
-              size={40}
-            />
+          <TouchableOpacity onPress={handleArquivos} style={styles.folderButton}>
+            <MaterialCommunityIcons name="folder-outline" color="#FFF" size={40} />
           </TouchableOpacity>
         )}
 
-        {/* Botão logout */}
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <AntDesign name="logout" color="#FFF" size={25} />
         </TouchableOpacity>
@@ -210,10 +197,7 @@ const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
           value={searchTerm}
           onChangeText={setSearchTerm}
         />
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={toggleFilterModal}
-        >
+        <TouchableOpacity style={styles.filterButton} onPress={toggleFilterModal}>
           <Text style={styles.filterButtonText}>Filtros</Text>
         </TouchableOpacity>
       </View>
@@ -225,7 +209,7 @@ const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
           <Text style={styles.loadingText}>Carregando itens...</Text>
         </View>
       ) : (
-        <ScrollView style={styles.itemsContainer}>
+        <ScrollView style={styles.itemsContainer} onScroll={handleScroll} scrollEventThrottle={400}>
           {items.length === 0 ? (
             <View style={styles.messageContainer}>
               <Text style={styles.messageText}>Nenhum item encontrado.</Text>
@@ -272,9 +256,7 @@ const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
                           selected && styles.checkboxBoxSelected,
                         ]}
                       >
-                        {selected && (
-                          <Ionicons name="checkmark" size={18} color="#FFF" />
-                        )}
+                        {selected && <Ionicons name="checkmark" size={18} color="#FFF" />}
                       </View>
                       <Text style={styles.checkboxLabel}>{cat.categoryValue}</Text>
                     </TouchableOpacity>
@@ -293,7 +275,6 @@ const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
               <Text style={styles.buttonText}>Aplicar Filtros</Text>
             </TouchableOpacity>
 
-            {/* Botão correto para abrir modal de criar item */}
             <TouchableOpacity
               style={[styles.closeButton, { marginTop: 10 }]}
               onPress={() => setShowCreateModal(true)}

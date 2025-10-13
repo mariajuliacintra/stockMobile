@@ -18,29 +18,33 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import CustomModal from "../mod/CustomModal";
 import * as ImagePicker from "expo-image-picker";
 import { Camera } from "expo-camera";
+import * as SecureStore from "expo-secure-store";
 
 // --- Constants ---
 // ADIÇÃO 1: Adicionamos um uniqueId para usar como key estável no map.
-const initialSpecsState = () => ({ uniqueId: Date.now() + Math.random(), id: "", value: "" });
+const initialSpecsState = () => ({
+  uniqueId: Date.now() + Math.random(),
+  id: "",
+  value: "",
+});
 const initialImageState = null;
 
 // ALTERAÇÃO 1: Mover o componente para fora do componente principal.
 const SpecValueInput = ({ spec, index, onSpecChange, specsList }) => {
-    const specData = specsList.find((s) => s.idTechnicalSpec === spec.id);
-    const placeholder = specData
-      ? `Digite o valor de ${specData.technicalSpecKey}`
-      : "Digite o valor";
-  
-    return (
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        value={spec.value || ""}
-        onChangeText={(val) => onSpecChange(index, "value", val)}
-      />
-    );
-};
+  const specData = specsList.find((s) => s.idTechnicalSpec === spec.id);
+  const placeholder = specData
+    ? `Digite o valor de ${specData.technicalSpecKey}`
+    : "Digite o valor";
 
+  return (
+    <TextInput
+      style={styles.input}
+      placeholder={placeholder}
+      value={spec.value || ""}
+      onChangeText={(val) => onSpecChange(index, "value", val)}
+    />
+  );
+};
 
 const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
   // --- Form States ---
@@ -56,6 +60,15 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
   const [expirationDate, setExpirationDate] = useState(new Date());
   const [noExpiration, setNoExpiration] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [showAddLocation, setShowAddLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState({ place: "", code: "" });
+
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+
+  const [showAddSpec, setShowAddSpec] = useState(false);
+  const [newSpec, setNewSpec] = useState("");
 
   // --- Image ---
   const [selectedImageInfo, setSelectedImageInfo] = useState(initialImageState);
@@ -119,6 +132,20 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const role = await SecureStore.getItemAsync("userRole");
+      setUserRole(role);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const role = await SecureStore.getItemAsync("userRole");
+      setUserRole(role);
+    })();
+  }, []);
+
   // --- Clear Form ---
   const clearFields = () => {
     setSapCode("");
@@ -140,8 +167,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     onClose();
   };
 
-  
-
   // --- Technical Specs ---
   const handleAddSpec = () =>
     setSelectedSpecs((prev) => [...prev, initialSpecsState()]);
@@ -150,6 +175,87 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     const updated = [...selectedSpecs];
     updated[index][field] = value;
     setSelectedSpecs(updated);
+  };
+
+  const handleAddLocation = async () => {
+    if (!newLocation.place.trim() || !newLocation.code.trim()) {
+      setInternalModalType("error");
+      setInternalModalMessage(
+        "Preencha o nome e o código da nova localização."
+      );
+      setInternalModalVisible(true);
+      return;
+    }
+
+    try {
+      const response = await sheets.createLocation(newLocation);
+      setLocations((prev) => [...prev, response.data]);
+      setNewLocation({ place: "", code: "" });
+      setShowAddLocation(false);
+      setInternalModalType("success");
+      setInternalModalMessage("Localização adicionada com sucesso!");
+      setInternalModalVisible(true);
+    } catch (error) {
+      console.error(
+        "Erro ao adicionar localização:",
+        error.response?.data || error.message
+      );
+      setInternalModalType("error");
+      setInternalModalMessage("Erro ao adicionar localização.");
+      setInternalModalVisible(true);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) {
+      setInternalModalType("error");
+      setInternalModalMessage("Digite o nome da categoria.");
+      setInternalModalVisible(true);
+      return;
+    }
+
+    try {
+      const response = await sheets.createCategory({
+        categoryValue: newCategory,
+      });
+      setCategories((prev) => [...prev, response.data]);
+      setNewCategory("");
+      setShowAddCategory(false);
+      setInternalModalType("success");
+      setInternalModalMessage("Categoria adicionada com sucesso!");
+      setInternalModalVisible(true);
+    } catch (error) {
+      console.error(error);
+      setInternalModalType("error");
+      setInternalModalMessage("Erro ao adicionar categoria.");
+      setInternalModalVisible(true);
+    }
+  };
+
+  const handleAddSpecKey = async () => {
+    if (!newSpec.trim()) {
+      setInternalModalType("error");
+      setInternalModalMessage("Digite o nome da especificação.");
+      setInternalModalVisible(true);
+      return;
+    }
+
+    try {
+      const response = await sheets.createTechnicalSpec({
+        technicalSpecKey: newSpec,
+      });
+      setSpecs((prev) => [...prev, response.data]);
+      setNewSpec("");
+      setShowAddSpec(false);
+      setInternalModalType("success");
+      setInternalModalMessage("Especificação técnica adicionada com sucesso!");
+      setInternalModalVisible(true);
+    } catch (error) {
+      console.error(error);
+      setInternalModalType("error");
+      setInternalModalMessage("Erro ao adicionar especificação técnica.");
+      setInternalModalVisible(true);
+    }
   };
 
   const validatePayload = () => {
@@ -294,7 +400,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     }
   };
 
-
   return (
     <>
       <Modal visible={visible} animationType="slide" transparent>
@@ -396,6 +501,47 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 </Picker>
               </View>
 
+              {/* Botão Adicionar Localização Fora do Retângulo */}
+              {userRole === "manager" && (
+                <>
+                  <TouchableOpacity
+                    onPress={() => setShowAddLocation((prev) => !prev)}
+                    style={styles.addButton} // Novo estilo para o botão
+                  >
+                    <Text style={styles.addButtonText}>
+                      + Adicionar Localização
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showAddLocation && (
+                    <View style={styles.addLocationContainer}>
+                      <TextInput
+                        style={[styles.input, { flex: 1 }]}
+                        placeholder="Nome da localização"
+                        value={newLocation.place}
+                        onChangeText={(val) =>
+                          setNewLocation((prev) => ({ ...prev, place: val }))
+                        }
+                      />
+                      <TextInput
+                        style={[styles.input, { flex: 0.6 }]}
+                        placeholder="Código"
+                        value={newLocation.code}
+                        onChangeText={(val) =>
+                          setNewLocation((prev) => ({ ...prev, code: val }))
+                        }
+                      />
+                      <TouchableOpacity
+                        style={styles.addLocationButton}
+                        onPress={handleAddLocation}
+                      >
+                        <Ionicons name="add" size={20} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
+              )}
+
               <Text style={styles.label}>Categoria *</Text>
               <View style={styles.pickerContainer}>
                 <Picker
@@ -413,10 +559,40 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 </Picker>
               </View>
 
+              {/* Botão para adicionar nova categoria */}
+              {userRole === "manager" && (
+                <>
+                  <TouchableOpacity
+                    onPress={() => setShowAddCategory((prev) => !prev)}
+                    style={styles.addButton} // Estilo reutilizado do botão de categoria
+                  >
+                    <Text style={styles.addButtonText}>
+                      + Adicionar Categoria
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showAddCategory && (
+                    <View style={styles.addLocationContainer}>
+                      <TextInput
+                        style={[styles.input, { flex: 1 }]}
+                        placeholder="Nome da categoria"
+                        value={newCategory}
+                        onChangeText={setNewCategory}
+                      />
+                      <TouchableOpacity
+                        style={styles.addLocationButton}
+                        onPress={handleAddCategory}
+                      >
+                        <Ionicons name="add" size={20} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
+              )}
+
               {/* Technical Specs */}
               <Text style={styles.label}>Especificações Técnicas</Text>
               {selectedSpecs.map((spec, index) => (
-                // ALTERAÇÃO 2: Usar o `uniqueId` como key
                 <View key={spec.uniqueId} style={styles.specGroup}>
                   <View style={styles.pickerContainer}>
                     <Picker
@@ -438,17 +614,49 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                       ))}
                     </Picker>
                   </View>
+
+                  {/* Campo para editar o valor da especificação, caso tenha sido selecionada */}
                   {spec.id !== "" && (
-                     // Passando as props necessárias
-                    <SpecValueInput 
-                      spec={spec} 
-                      index={index} 
+                    <SpecValueInput
+                      spec={spec}
+                      index={index}
                       onSpecChange={handleSpecChange}
                       specsList={specs}
                     />
                   )}
                 </View>
               ))}
+
+              {/* Botão Adicionar Especificação Fora do Retângulo */}
+              {userRole === "manager" && (
+                <>
+                  <TouchableOpacity
+                    onPress={() => setShowAddSpec((prev) => !prev)}
+                    style={styles.addButton} // Estilo reutilizado do botão de categoria e localização
+                  >
+                    <Text style={styles.addButtonText}>
+                      + Adicionar Especificação Técnica
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showAddSpec && (
+                    <View style={styles.addLocationContainer}>
+                      <TextInput
+                        style={[styles.input, { flex: 1 }]}
+                        placeholder="Nome da especificação"
+                        value={newSpec}
+                        onChangeText={setNewSpec}
+                      />
+                      <TouchableOpacity
+                        style={styles.addLocationButton}
+                        onPress={handleAddSpecKey}
+                      >
+                        <Ionicons name="add" size={20} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
+              )}
               <TouchableOpacity
                 style={styles.addSpecButton}
                 onPress={handleAddSpec}
@@ -521,7 +729,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     </>
   );
 };
-
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -617,6 +824,30 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   imageButtonText: { color: "#fff", fontWeight: "bold" },
+  addButtonText: {
+    color: "red",
+    padding: 8,
+    marginTop: -5, // Ajusta o espaço entre o dropdown e o botão
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  addLocationContainer: {
+    flexDirection: "row", // Faz com que o input e o botão fiquem lado a lado
+    gap: 8, // Adiciona um espaço entre o input e o botão
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  addLocationButton: {
+    backgroundColor: "#7d0e06ff",
+    borderRadius: 8,
+    paddingHorizontal:15,
+    paddingVertical: -5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+    marginBottom: 10,
+    marginLeft: 4, // Dá espaço entre o input e o botão
+  },
 });
 
 export default CreateItemModal;

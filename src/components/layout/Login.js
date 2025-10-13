@@ -48,13 +48,16 @@ function Login({ visible, onClose, onOpenCadastro }) {
     if (onClose) onClose();
   }
 
-  async function armazenarTokenETipoUsuario(token, idUser) {
+  async function armazenarTokenETipoUsuario(token, idUser, userRole) {
     try {
       if (token) {
         await SecureStore.setItemAsync("tokenUsuario", String(token));
       }
       if (idUser) {
         await SecureStore.setItemAsync("userId", String(idUser)); 
+      }
+      if (userRole){
+        await SecureStore.setItemAsync("userRole", String(userRole)); 
       }
     } catch (erro) {
     }
