@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.82:5000/stock/",
+  baseURL: "http://10.89.240.91:5000/stock/",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -28,12 +28,9 @@ const sheets = {
   postFinalizarCadastro: (user) => api.post("/user/verify-register", user),
   putAtualizarUsuario: (idUser, user) => api.put(`/user/${idUser}`, user),
   postRecoveryPassword: (data) => api.post("/user/recovery-password", data),
-  postValidateRecoveryCode: (data) =>
-    api.post("/user/validate-recovery-code", data),
-  postVerifyRecoveryPassword: (email) =>
-    api.post("user/verify-recovery-password", { email }),
-  postValidatePassword: (idUser, data) =>
-    api.post(`/user/validate-password/${idUser}`, data),
+  postValidateRecoveryCode: (data) => api.post("/user/validate-recovery-code", data),
+  postVerifyRecoveryPassword: (email) => api.post("user/verify-recovery-password", { email }),
+  postValidatePassword: (idUser, data) => api.post(`/user/validate-password/${idUser}`, data),
   deleteUsuario: (idUser) => api.delete(`/user/${idUser}`),
   verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
@@ -45,7 +42,7 @@ const sheets = {
         limit: limit,
       },
     }),
-  registerUserByManager:(idUser) => api.post(`/user/register/manager`, idUser),
+  registerUserByManager: (idUser) => api.post(`/user/register/manager`, idUser),
 
   // Itens / Lotes
   updateLotQuantity: (idLot, payload) =>
@@ -58,7 +55,8 @@ const sheets = {
     api.post(`/items/filter?page=${page}&limit=${limit}`, payload),
 
   // Itens / Lotes
-  updateLotQuantity: (idLot, payload) => api.put(`lot/quantity/${idLot}`, payload),
+  updateLotQuantity: (idLot, payload) =>
+    api.put(`lot/quantity/${idLot}`, payload),
   getAllItems: (params) => api.get("items", { params }),
   getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
 
@@ -69,6 +67,31 @@ const sheets = {
   getCategories: () => api.get("category"),
   getLocations: () => api.get("location"),
   getTechnicalSpecs: () => api.get("technicalSpec"),
+
+  // Upload de imagem do usuário
+  uploadItemImage: async (idItem, imageUri) => {
+    if (!imageUri || typeof imageUri !== "string") {
+      console.warn("URI da imagem não fornecida ou inválida para upload.");
+      return;
+    }
+
+    const data = new FormData(); 
+
+    const filename = imageUri.split("/").pop(); 
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : `image/jpeg`; 
+
+    data.append("image", {
+      uri: imageUri,
+      name: filename,
+      type: type,
+    }); 
+    return api.post(`/item/image/${idItem}`, data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };
 
 export default sheets;
