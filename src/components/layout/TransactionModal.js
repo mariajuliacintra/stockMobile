@@ -24,7 +24,6 @@ export default function TransactionModal({ visible, onClose, userId }) {
     try {
       setLoading(true);
       const response = await api.TransactionUser(userId);
-      console.log("Transações da API:", response.data); // 🔹 veja aqui a estrutura
   
       if (response.data?.success) {
         setTransactions(response.data.transactions || response.data.data || []);
@@ -32,7 +31,6 @@ export default function TransactionModal({ visible, onClose, userId }) {
         setTransactions([]);
       }
     } catch (error) {
-      console.error("Erro ao buscar transações:", error.message);
       setTransactions([]);
     } finally {
       setLoading(false);

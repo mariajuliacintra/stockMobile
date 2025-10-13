@@ -110,7 +110,6 @@ function Itens() {
         const response = await sheets.getItemsByCategory(category);
         setItems(response.data);
       } catch (error) {
-        console.error("Erro ao buscar itens por categoria:", error);
       } finally {
         setLoading(false);
       }

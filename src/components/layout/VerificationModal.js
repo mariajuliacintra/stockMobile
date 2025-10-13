@@ -35,7 +35,6 @@ export default function VerificationModal({
       await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
       await SecureStore.setItemAsync("tokenUsuario", token.toString());
     } catch (erro) {
-      console.error("Erro ao armazenar dados:", erro);
     }
   }
 
@@ -65,14 +64,6 @@ export default function VerificationModal({
         });
       }
 
-      // 🔹 Log completo da resposta
-      console.log("==== Verificação API ====");
-      console.log("Mode:", mode);
-      console.log("Form Data:", formData);
-      console.log("Código inserido:", verificationCode);
-      console.log("Resposta da API:", response.data);
-      console.log("========================");
-
       if (response.data.success) {
         setInternalModalMessage(
           response.data.message || response.data.details || "Verificação concluída com sucesso!"
@@ -91,7 +82,6 @@ export default function VerificationModal({
 
         if (mode === "update") {
           const updatedUser = response.data.data; // API envia dados do usuário atualizado
-          console.log("Usuário atualizado retornado:", updatedUser);
           onVerificationSuccess(updatedUser || {});
         }
 
@@ -107,7 +97,6 @@ export default function VerificationModal({
         setTimeout(() => setVerificationCode(""), 500);
       }
     } catch (error) {
-      console.error("Erro ao chamar a API:", error);
       setInternalModalMessage(
         error.response?.data?.details || error.response?.data?.error || "Erro ao verificar o código."
       );

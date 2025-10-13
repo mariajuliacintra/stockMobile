@@ -44,9 +44,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       setFetching(true);
       setDetailedItem(null);
       try {
-        console.log("Modal aberto. Buscando detalhes do item ID:", item.idItem);
         const response = await sheets.getItemByIdDetails(item.idItem);
-        console.log("Resposta da API getItemByIdDetails:", response.data);
 
         if (response.data?.success && response.data?.item?.length > 0) {
           setDetailedItem(response.data.item[0]);
@@ -54,7 +52,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
           showCustomModal("Erro", "Não foi possível carregar os detalhes do item.", "error");
         }
       } catch (error) {
-        console.error("Erro ao buscar detalhes do item:", error);
         showCustomModal("Erro", "Erro ao buscar detalhes do item.", "error");
       } finally {
         setFetching(false);
@@ -90,7 +87,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       }
 
       const response = await sheets.updateLotQuantity(idItem, payload);
-      console.log("Resposta updateLotQuantity:", response.data);
 
       if (response.data?.success) {
         showCustomModal("Sucesso", "Quantidade do lote atualizada com sucesso!", "success");
@@ -100,7 +96,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
         showCustomModal("Erro", response.data?.message || "Erro ao registrar a transação.", "error");
       }
     } catch (error) {
-      console.error("Erro ao registrar a transação:", error);
       showCustomModal("Erro", error?.message || "Erro ao registrar a transação.", "error");
     } finally {
       setLoading(false);

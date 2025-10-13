@@ -35,7 +35,6 @@ export default function ConfirmPasswordModal({
         showCustomModal("Erro", "Senha incorreta!", "error");
       }
     } catch (error) {
-      console.error(error);
       showCustomModal("Erro", "Erro ao validar senha.", "error");
     } finally {
       setLoading(false);

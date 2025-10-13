@@ -36,11 +36,19 @@ const sheets = {
   verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
   TransactionUser: (userId) => api.get(`/transactions/user/${userId}`),
+  getAllUsers: (page = 1, limit = 10) =>
+    api.get("/users", {
+      params: {
+        page: page,
+        limit: limit,
+      },
+    }),
+  registerUserByManager:(idUser) => api.post(`/user/register/manager`, idUser),
 
   // Itens / Lotes
   updateLotQuantity: (idLot, payload) =>
     api.put(`lot/quantity/${idLot}`, payload),
-getCategories: () => api.get("/category"),
+  getCategories: () => api.get("/category"),
 
   getAllItems: (params) => api.get("/items", { params }),
 

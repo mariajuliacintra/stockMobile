@@ -58,7 +58,7 @@ function Types() {
         const response = await sheets.getItemsByCategory(category);
         setItems(response.data);
       } catch (error) {
-        console.error("Erro ao buscar itens por categoria");
+
       } finally {
         setLoading(false);
       }
@@ -76,8 +76,6 @@ function Types() {
   };
 
   const handleCardPress = (item) => {
-    // Adicione a lógica para lidar com o clique em um item, se necessário
-    console.log("Card clicado:", item.name);
   };
 
   const translatedTitle = categoryMapping[category]?.title || category;
