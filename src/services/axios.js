@@ -60,6 +60,15 @@ const sheets = {
   getAllItems: (params) => api.get("items", { params }),
   getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
 
+  //EXCELL
+  getExcelGeneral: () => api.get("report/excel/general", { responseType: "arraybuffer" }),
+  getExcelLowStock: () => api.get("report/excel/low-stock", { responseType: "arraybuffer" }),
+  getExcelTransactions: () => api.get("report/excel/transactions", { responseType: "arraybuffer" }),
+
+  //PDF
+  getPdfGeneral: () => api.get("report/pdf/general", { responseType: "arraybuffer" }),
+  getPdfLowStock: () => api.get("report/pdf/low-stock", { responseType: "arraybuffer" }),
+  getPdfTransactions: () => api.get("report/pdf/transactions", { responseType: "arraybuffer" }),
   createItem: (payload) => api.post("item", payload), // POST /stock/item
   filtroItems: (body) => api.post("items/filter?page=1&limit=50", body),
 
@@ -93,5 +102,7 @@ const sheets = {
     });
   },
 };
+
+
 
 export default sheets;

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
@@ -34,10 +35,30 @@ function Principal() {
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [isDetailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isManager, setIsManager] = useState(false); // 👈 novo estado
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [userId, setUserId] = useState(null);
 
+  // ✅ Verifica se o usuário é manager
+  useEffect(() => {
+    const fetchRole = async () => {
+      const storedRole = await SecureStore.getItemAsync("userRole");
+      const storedEmail = await SecureStore.getItemAsync("userEmail");
+      if (storedRole === "manager" || (storedEmail && storedEmail.includes("@sp.senai.br"))) {
+        setIsManager(true);
+      }
+    };
+    fetchRole();
+  }, []);
+
+  // Função para buscar itens da API
+  const fetchItems = async (pageToLoad = 1) => {
+    if (pageToLoad === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
   // 🔹 Buscar userId do SecureStore
   useEffect(() => {
     const fetchUserId = async () => {
@@ -55,6 +76,13 @@ function Principal() {
   const fetchItems = async () => {
     setLoading(true);
     try {
+      const token = await SecureStore.getItemAsync("tokenUsuario");
+      const params = {
+        page: pageToLoad,
+        limit: 10,
+        searchTerm,
+        categories: selectedCategories.join(","),
+
       const body = {
         name: searchTerm.trim() || "",
         idCategory: selectedCategories.length > 0 ? selectedCategories : [],
@@ -62,50 +90,68 @@ function Principal() {
 
       const response = await sheets.filtroItems(body);
 
-      if (response.data && response.data.success) {
-        setItems(response.data.items || []);
-      } else {
-        setItems([]);
-        console.error("Erro: resposta sem sucesso", response.data);
-      }
-    } catch (error) {
-      setItems([]);
-    } finally {
-      setLoading(false);
+      if (response.data.success) {  // assumindo que exista um flag de sucesso
+  const newItems = response.data.items || [];
+
+  if (pageToLoad === 1) {
+    setItems(newItems);
+  } else {
+    setItems((prevItems) => [...prevItems, ...newItems]);
+  }
+
+  setTotalPages(response.data.totalPages || 1);
+  setPage(pageToLoad);
+} else {
+  setItems([]);
+  console.error("Erro: resposta sem sucesso", response.data);
+}
+
+// 📦 Buscar categorias
+const fetchCategorias = async () => {
+  setLoadingCategorias(true);
+  try {
+    const response = await sheets.getCategories();
+    if (response.data && Array.isArray(response.data.categories)) {
+      setCategorias(response.data.categories);
+    } else {
+      console.error("Formato inesperado de categorias:", response.data);
     }
-  };
+  } catch (error) {
+    console.error("Erro ao buscar categorias:", error);
+  } finally {
+    setLoadingCategorias(false);
+  }
+};
 
-  // 📦 Buscar categorias
-  const fetchCategorias = async () => {
-    setLoadingCategorias(true);
-    try {
-      const response = await sheets.getCategories();
-      if (response.data && Array.isArray(response.data.categories)) {
-        setCategorias(response.data.categories);
-      } else {
-        console.error("Formato inesperado de categorias:", response.data);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
-    } finally {
-      setLoadingCategorias(false);
-    }
-  };
+// Atualiza pesquisa com debounce
+useEffect(() => {
+  const delay = setTimeout(() => {
+    setItems([]);
+    setPage(1);
+    fetchItems(1);
+  }, 500);
 
-  // Atualiza pesquisa
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchItems();
-    }, 500);
-    return () => clearTimeout(delay);
-  }, [searchTerm, selectedCategories]);
+  return () => clearTimeout(delay);
+}, [searchTerm, selectedCategories]);
 
-  // Buscar categorias quando o modal abrir
-  useEffect(() => {
-    if (isFilterModalVisible) fetchCategorias();
-  }, [isFilterModalVisible]);
+// Buscar categorias quando o modal abrir
+useEffect(() => {
+  if (isFilterModalVisible) fetchCategorias();
+}, [isFilterModalVisible]);
 
-  const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
+// Infinite scroll
+const handleScroll = ({ nativeEvent }) => {
+  const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+  const isCloseToBottom =
+    layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
+  if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
+    fetchItems(page + 1);
+  }
+};
+
+// Alterna modal
+const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
+
 
   const toggleDetailModal = (item) => {
     setSelectedItem(item);
@@ -120,16 +166,36 @@ function Principal() {
     );
   };
 
+
   const handleLogout = () => navigation.navigate("Home");
   const handleProfile = () => navigation.navigate("Perfil");
 
+
+  const handleArquivos = () => {
+    navigation.navigate("Arquivos"); // tela que você ainda vai criar
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleProfile} style={styles.profile}>
           <Ionicons name="person-circle-outline" color="#FFF" size={40} />
         </TouchableOpacity>
+
+        {isManager && (
+          <TouchableOpacity
+            onPress={handleArquivos}
+            style={styles.folderButton}
+          >
+            <MaterialCommunityIcons
+              name="folder-outline"
+              color="#FFF"
+              size={40}
+            />
+          </TouchableOpacity>
+        )}
+
+        {/* Botão logout */}
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <AntDesign name="logout" color="#FFF" size={25} />
         </TouchableOpacity>
@@ -270,6 +336,37 @@ const styles = StyleSheet.create({
     width: width,
     paddingRight: 20,
   },
+  profile: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 10,
+  },
+  folderButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 32,
+  },
+  logoutButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginLeft: -22,
+    marginRight: -10,
+  },
   searchBarContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -294,27 +391,6 @@ const styles = StyleSheet.create({
   itemsContainer: { flex: 1, width: "100%" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 10, fontSize: 16, color: "#600000" },
-  profile: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 8.5,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginRight: 30,
-  },
-  logoutButton: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginLeft: -22,
-    marginRight: -10,
-  },
   messageContainer: {
     alignItems: "center",
     justifyContent: "center",
