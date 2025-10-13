@@ -17,6 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
 import ItemDetailModal from "../components/layout/ItemDetailModal";
+import CreateItemModal from "../components/layout/createItemModal";
 import * as SecureStore from "expo-secure-store";
 
 const { width } = Dimensions.get("window");
@@ -25,18 +26,19 @@ function Principal() {
   const navigation = useNavigation();
 
   const [items, setItems] = useState([]);
+  const [categorias, setCategorias] = useState([]); 
+  const [selectedCategories, setSelectedCategories] = useState([]); 
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingCategorias, setLoadingCategorias] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
+
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [isDetailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isManager, setIsManager] = useState(false); // 👈 novo estado
 
-  // Estados para a paginação
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   // ✅ Verifica se o usuário é manager
   useEffect(() => {
@@ -57,7 +59,22 @@ function Principal() {
     } else {
       setLoadingMore(true);
     }
+  // 🔹 Buscar userId do SecureStore
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const id = await SecureStore.getItemAsync("userId");
+        if (id) setUserId(Number(id));
+      } catch (error) {
+        console.error("Erro ao carregar ID do usuário:", error);
+      }
+    };
+    fetchUserId();
+  }, []);
 
+  // 🔍 Buscar itens
+  const fetchItems = async () => {
+    setLoading(true);
     try {
       const token = await SecureStore.getItemAsync("tokenUsuario");
       const params = {
@@ -65,67 +82,94 @@ function Principal() {
         limit: 10,
         searchTerm,
         categories: selectedCategories.join(","),
+
+      const body = {
+        name: searchTerm.trim() || "",
+        idCategory: selectedCategories.length > 0 ? selectedCategories : [],
       };
-      const response = await sheets.getAllItems(params, token);
 
-      if (response.data && response.data.success) {
-        if (pageToLoad === 1) {
-          setItems(response.data.items);
-        } else {
-          setItems((prevItems) => [...prevItems, ...response.data.data]);
-        }
-        setTotalPages(response.data.totalPages);
-        setPage(pageToLoad);
-      } else {
-        setItems([]);
-      }
-    } catch (error) {
-      setItems([]);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      const response = await sheets.filtroItems(body);
+
+      if (response.data.success) {  // assumindo que exista um flag de sucesso
+  const newItems = response.data.items || [];
+
+  if (pageToLoad === 1) {
+    setItems(newItems);
+  } else {
+    setItems((prevItems) => [...prevItems, ...newItems]);
+  }
+
+  setTotalPages(response.data.totalPages || 1);
+  setPage(pageToLoad);
+} else {
+  setItems([]);
+  console.error("Erro: resposta sem sucesso", response.data);
+}
+
+// 📦 Buscar categorias
+const fetchCategorias = async () => {
+  setLoadingCategorias(true);
+  try {
+    const response = await sheets.getCategories();
+    if (response.data && Array.isArray(response.data.categories)) {
+      setCategorias(response.data.categories);
+    } else {
+      console.error("Formato inesperado de categorias:", response.data);
     }
-  };
+  } catch (error) {
+    console.error("Erro ao buscar categorias:", error);
+  } finally {
+    setLoadingCategorias(false);
+  }
+};
 
-  useEffect(() => {
+// Atualiza pesquisa com debounce
+useEffect(() => {
+  const delay = setTimeout(() => {
     setItems([]);
     setPage(1);
     fetchItems(1);
-  }, [searchTerm, selectedCategories]);
+  }, 500);
 
-  const handleScroll = ({ nativeEvent }) => {
-    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-    const isCloseToBottom =
-      layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
-    if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
-      fetchItems(page + 1);
-    }
-  };
+  return () => clearTimeout(delay);
+}, [searchTerm, selectedCategories]);
 
-  const toggleFilterModal = () => {
-    setFilterModalVisible(!isFilterModalVisible);
-  };
+// Buscar categorias quando o modal abrir
+useEffect(() => {
+  if (isFilterModalVisible) fetchCategorias();
+}, [isFilterModalVisible]);
+
+// Infinite scroll
+const handleScroll = ({ nativeEvent }) => {
+  const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+  const isCloseToBottom =
+    layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
+  if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
+    fetchItems(page + 1);
+  }
+};
+
+// Alterna modal
+const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
+
 
   const toggleDetailModal = (item) => {
     setSelectedItem(item);
     setDetailModalVisible(!isDetailModalVisible);
   };
 
-  const handleCategoryToggle = (category) => {
+  const handleCategoryToggle = (categoryId) => {
     setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((cat) => cat !== category)
-        : [...prev, category]
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
     );
   };
 
-  const handleLogout = () => {
-    navigation.navigate("Home");
-  };
 
-  const handleProfile = () => {
-    navigation.navigate("Perfil");
-  };
+  const handleLogout = () => navigation.navigate("Home");
+  const handleProfile = () => navigation.navigate("Perfil");
+
 
   const handleArquivos = () => {
     navigation.navigate("Arquivos"); // tela que você ainda vai criar
@@ -170,22 +214,18 @@ function Principal() {
           style={styles.filterButton}
           onPress={toggleFilterModal}
         >
-          <Text style={styles.filterButtonText}>Filtros Avançados</Text>
+          <Text style={styles.filterButtonText}>Filtros</Text>
         </TouchableOpacity>
       </View>
 
       {/* Lista de itens */}
-      {loading && items.length === 0 ? (
+      {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#600000" />
           <Text style={styles.loadingText}>Carregando itens...</Text>
         </View>
       ) : (
-        <ScrollView
-          style={styles.itemsContainer}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-        >
+        <ScrollView style={styles.itemsContainer}>
           {items.length === 0 ? (
             <View style={styles.messageContainer}>
               <Text style={styles.messageText}>Nenhum item encontrado.</Text>
@@ -200,17 +240,10 @@ function Principal() {
               />
             ))
           )}
-          {loadingMore && (
-            <ActivityIndicator
-              size="small"
-              color="#600000"
-              style={styles.loadingMoreIndicator}
-            />
-          )}
         </ScrollView>
       )}
 
-      {/* Modal de filtros */}
+      {/* Modal de Filtros */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -219,24 +252,73 @@ function Principal() {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalTitle}>Filtros por Categoria</Text>
+            <Text style={styles.modalTitle}>Selecione as Categorias</Text>
+
+            {loadingCategorias ? (
+              <ActivityIndicator size="small" color="#600000" />
+            ) : (
+              <ScrollView style={{ maxHeight: 250, width: "100%" }}>
+                {categorias.map((cat) => {
+                  const selected = selectedCategories.includes(cat.idCategory);
+                  return (
+                    <TouchableOpacity
+                      key={cat.idCategory}
+                      style={styles.checkboxRow}
+                      onPress={() => handleCategoryToggle(cat.idCategory)}
+                    >
+                      <View
+                        style={[
+                          styles.checkboxBox,
+                          selected && styles.checkboxBoxSelected,
+                        ]}
+                      >
+                        {selected && (
+                          <Ionicons name="checkmark" size={18} color="#FFF" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>{cat.categoryValue}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
 
             <TouchableOpacity
               style={styles.closeButton}
-              onPress={toggleFilterModal}
+              onPress={() => {
+                toggleFilterModal();
+                fetchItems();
+              }}
             >
-              <Text style={styles.buttonText}>Aplicar</Text>
+              <Text style={styles.buttonText}>Aplicar Filtros</Text>
+            </TouchableOpacity>
+
+            {/* Botão correto para abrir modal de criar item */}
+            <TouchableOpacity
+              style={[styles.closeButton, { marginTop: 10 }]}
+              onPress={() => setShowCreateModal(true)}
+            >
+              <Text style={styles.buttonText}>Adicionar Item</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* Modal de detalhes */}
+      {/* Modal de Detalhes do Item */}
       <ItemDetailModal
         isVisible={isDetailModalVisible}
         onClose={() => setDetailModalVisible(false)}
         item={selectedItem}
       />
+
+      {/* Modal de Criação de Item */}
+      {userId && (
+        <CreateItemModal
+          visible={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          fkIdUser={userId}
+        />
+      )}
     </View>
   );
 }
@@ -326,8 +408,9 @@ const styles = StyleSheet.create({
     margin: 20,
     backgroundColor: "white",
     borderRadius: 20,
-    padding: 35,
-    alignItems: "flex-start",
+    padding: 25,
+    alignItems: "center",
+    width: "85%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -341,9 +424,34 @@ const styles = StyleSheet.create({
     padding: 10,
     elevation: 2,
     marginTop: 15,
+    width: 150,
   },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
-  loadingMoreIndicator: { marginVertical: 20 },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    marginBottom: 5,
+  },
+  checkboxBox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: "#600000",
+    borderRadius: 4,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  checkboxBoxSelected: {
+    backgroundColor: "#600000",
+    borderColor: "#600000",
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: "#333",
+  },
 });
 
 export default Principal;
