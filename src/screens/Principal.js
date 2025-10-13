@@ -69,7 +69,6 @@ function Principal() {
         console.error("Erro: resposta sem sucesso", response.data);
       }
     } catch (error) {
-      console.error("Erro ao buscar itens:", error);
       setItems([]);
     } finally {
       setLoading(false);
