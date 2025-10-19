@@ -2,7 +2,8 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.91:5000/stock/",
+
+  baseURL: "https://senaiestoque.duckdns.org/api",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
