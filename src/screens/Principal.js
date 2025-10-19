@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
@@ -25,18 +26,33 @@ function Principal() {
   const navigation = useNavigation();
 
   const [items, setItems] = useState([]);
-  const [categorias, setCategorias] = useState([]); 
-  const [selectedCategories, setSelectedCategories] = useState([]); 
+  const [categorias, setCategorias] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [isDetailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-
+  const [isManager, setIsManager] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [userId, setUserId] = useState(null);
+
+  // ✅ Verifica se o usuário é manager
+  useEffect(() => {
+    const fetchRole = async () => {
+      const storedRole = await SecureStore.getItemAsync("userRole");
+      const storedEmail = await SecureStore.getItemAsync("userEmail");
+      if (storedRole === "manager" || (storedEmail && storedEmail.includes("@sp.senai.br"))) {
+        setIsManager(true);
+      }
+    };
+    fetchRole();
+  }, []);
 
   // 🔹 Buscar userId do SecureStore
   useEffect(() => {
@@ -52,8 +68,13 @@ function Principal() {
   }, []);
 
   // 🔍 Buscar itens
-  const fetchItems = async () => {
-    setLoading(true);
+  const fetchItems = async (pageToLoad = 1) => {
+    if (pageToLoad === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
       const body = {
         name: searchTerm.trim() || "",
@@ -62,16 +83,26 @@ function Principal() {
 
       const response = await sheets.filtroItems(body);
 
-      if (response.data && response.data.success) {
-        setItems(response.data.items || []);
+      if (response.data.success) {
+        const newItems = response.data.items || [];
+
+        if (pageToLoad === 1) {
+          setItems(newItems);
+        } else {
+          setItems((prevItems) => [...prevItems, ...newItems]);
+        }
+
+        setTotalPages(response.data.totalPages || 1);
+        setPage(pageToLoad);
       } else {
         setItems([]);
         console.error("Erro: resposta sem sucesso", response.data);
       }
     } catch (error) {
-      setItems([]);
+      console.error("Erro ao buscar itens:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -92,11 +123,14 @@ function Principal() {
     }
   };
 
-  // Atualiza pesquisa
+  // Atualiza pesquisa com debounce
   useEffect(() => {
     const delay = setTimeout(() => {
-      fetchItems();
+      setItems([]);
+      setPage(1);
+      fetchItems(1);
     }, 500);
+
     return () => clearTimeout(delay);
   }, [searchTerm, selectedCategories]);
 
@@ -105,6 +139,17 @@ function Principal() {
     if (isFilterModalVisible) fetchCategorias();
   }, [isFilterModalVisible]);
 
+  // Infinite scroll
+  const handleScroll = ({ nativeEvent }) => {
+    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+    const isCloseToBottom =
+      layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
+    if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
+      fetchItems(page + 1);
+    }
+  };
+
+  // Alterna modal de filtro
   const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
 
   const toggleDetailModal = (item) => {
@@ -122,6 +167,7 @@ function Principal() {
 
   const handleLogout = () => navigation.navigate("Home");
   const handleProfile = () => navigation.navigate("Perfil");
+  const handleArquivos = () => navigation.navigate("Arquivos");
 
   return (
     <View style={styles.container}>
@@ -130,6 +176,13 @@ function Principal() {
         <TouchableOpacity onPress={handleProfile} style={styles.profile}>
           <Ionicons name="person-circle-outline" color="#FFF" size={40} />
         </TouchableOpacity>
+
+        {isManager && (
+          <TouchableOpacity onPress={handleArquivos} style={styles.folderButton}>
+            <MaterialCommunityIcons name="folder-outline" color="#FFF" size={40} />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <AntDesign name="logout" color="#FFF" size={25} />
         </TouchableOpacity>
@@ -144,10 +197,7 @@ function Principal() {
           value={searchTerm}
           onChangeText={setSearchTerm}
         />
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={toggleFilterModal}
-        >
+        <TouchableOpacity style={styles.filterButton} onPress={toggleFilterModal}>
           <Text style={styles.filterButtonText}>Filtros</Text>
         </TouchableOpacity>
       </View>
@@ -159,7 +209,7 @@ function Principal() {
           <Text style={styles.loadingText}>Carregando itens...</Text>
         </View>
       ) : (
-        <ScrollView style={styles.itemsContainer}>
+        <ScrollView style={styles.itemsContainer} onScroll={handleScroll} scrollEventThrottle={400}>
           {items.length === 0 ? (
             <View style={styles.messageContainer}>
               <Text style={styles.messageText}>Nenhum item encontrado.</Text>
@@ -206,9 +256,7 @@ function Principal() {
                           selected && styles.checkboxBoxSelected,
                         ]}
                       >
-                        {selected && (
-                          <Ionicons name="checkmark" size={18} color="#FFF" />
-                        )}
+                        {selected && <Ionicons name="checkmark" size={18} color="#FFF" />}
                       </View>
                       <Text style={styles.checkboxLabel}>{cat.categoryValue}</Text>
                     </TouchableOpacity>
@@ -227,7 +275,6 @@ function Principal() {
               <Text style={styles.buttonText}>Aplicar Filtros</Text>
             </TouchableOpacity>
 
-            {/* Botão correto para abrir modal de criar item */}
             <TouchableOpacity
               style={[styles.closeButton, { marginTop: 10 }]}
               onPress={() => setShowCreateModal(true)}
@@ -270,6 +317,37 @@ const styles = StyleSheet.create({
     width: width,
     paddingRight: 20,
   },
+  profile: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 10,
+  },
+  folderButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 32,
+  },
+  logoutButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginLeft: -22,
+    marginRight: -10,
+  },
   searchBarContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -294,27 +372,6 @@ const styles = StyleSheet.create({
   itemsContainer: { flex: 1, width: "100%" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 10, fontSize: 16, color: "#600000" },
-  profile: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 8.5,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginRight: 30,
-  },
-  logoutButton: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginLeft: -22,
-    marginRight: -10,
-  },
   messageContainer: {
     alignItems: "center",
     justifyContent: "center",
