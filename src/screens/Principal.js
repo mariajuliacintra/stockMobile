@@ -65,34 +65,35 @@ function Principal() {
         const id = await SecureStore.getItemAsync("userId");
         if (id) setUserId(Number(id));
       } catch (error) {
-        console.error("Erro ao carregar ID do usuário:", error);
       }
     };
     fetchUserId();
   }, []);
 
   // Buscar itens
-  const fetchItems = async (pageToLoad = 1) => {
-    setLoading(true);
-    try {
-      const body = {
-        name: searchTerm.trim() || "",
-        idCategory: selectedCategories.length > 0 ? selectedCategories : [],
-      };
+  const fetchItems = async (pageToLoad = 1, append = false) => {
+    if (pageToLoad === 1 && !append) setLoading(true);
+    else setLoadingMore(true);
 
-      const response = await sheets.getAllItems(pageToLoad, 5); // 25 itens por página
+    try {
+      const response = await sheets.getAllItems(pageToLoad, 25); // 25 itens por página
 
       if (response.data.success) {
-        setItems(response.data.items || []);
+        const newItems = response.data.items || [];
+
+        setItems((prevItems) =>
+          append ? [...prevItems, ...newItems] : newItems
+        );
+
         setTotalPages(response.data.pagination?.totalPages || 1);
-        setPage(response.data.pagination?.currentPage || 1);
+        setPage(response.data.pagination?.currentPage || pageToLoad);
       } else {
-        setItems([]);
+        if (!append) setItems([]);
       }
     } catch (err) {
-      console.error(err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -104,10 +105,8 @@ function Principal() {
       if (response.data && Array.isArray(response.data.categories)) {
         setCategorias(response.data.categories);
       } else {
-        console.error("Formato inesperado de categorias:", response.data);
       }
     } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
     } finally {
       setLoadingCategorias(false);
     }
@@ -128,16 +127,6 @@ function Principal() {
   useEffect(() => {
     if (isFilterModalVisible) fetchCategorias();
   }, [isFilterModalVisible]);
-
-  // Infinite scroll
-  const handleScroll = ({ nativeEvent }) => {
-    const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-    const isCloseToBottom =
-      layoutMeasurement.height + contentOffset.y >= contentSize.height - 50;
-    if (isCloseToBottom && page < totalPages && !loading && !loadingMore) {
-      fetchItems(page + 1);
-    }
-  };
 
   // Alterna modal de filtro
   const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
@@ -164,7 +153,6 @@ function Principal() {
   const handleLogout = () => navigation.navigate("Home");
   const handleProfile = () => navigation.navigate("Perfil");
   const handleArquivos = () => navigation.navigate("Arquivos");
-  console.log("Paginação:", totalPages, page);
   return (
     <View style={styles.container}>
       <Header
@@ -223,7 +211,7 @@ function Principal() {
               <Pagination
                 totalPages={totalPages}
                 currentPage={page}
-                onPageChange={(pageNum) => fetchItems(pageNum)}
+                onPageChange={(pageNum) => fetchItems(pageNum, false)} // ⬅️ Substitui itens
               />
             </View>
           )}
@@ -468,8 +456,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   paginationWrapper: {
-    backgroundColor: "#fff",
-    paddingVertical: 10,
+    paddingVertical: 0,
     borderTopWidth: 1,
     borderTopColor: "#ccc",
     alignItems: "center",

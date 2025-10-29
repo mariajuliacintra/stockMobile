@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.82:5000/api/",
+  baseURL: "http://10.89.240.83:5000/api/",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -52,13 +52,9 @@ const sheets = {
     api.put(`lot/quantity/${idLot}`, payload),
   getCategories: () => api.get("/category"),
 
-  getAllItems: (page = 1, limit = 5) =>
-    api.get("/items", {
-      params: {
-        page,
-        limit,
-      },
-    }),
+  getAllItems: (page = 1, limit = 5) => {
+    return api.get(`/items?page=${page}&limit=${limit}`);
+  },  
 
   filterItems: (payload, page = 1, limit = 10) =>
     api.post(`/items/filter?page=${page}&limit=${limit}`, payload),

@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
@@ -18,7 +19,7 @@ import sheets from "../services/axios";
 export default function ArquivosScreen() {
   const navigation = useNavigation();
 
-  // 📊 GERAR EXCEL
+  // GERAR EXCEL
   const handleGerarExcel = async (tipo) => {
     try {
       let response;
@@ -55,7 +56,7 @@ export default function ArquivosScreen() {
     }
   };
 
-  // 📄 GERAR PDF
+  //GERAR PDF
   const handleGerarPDF = async (tipo) => {
     try {
       let response;
@@ -87,7 +88,6 @@ export default function ArquivosScreen() {
         Alert.alert("Download concluído", `Arquivo salvo em: ${fileUri}`);
       }
     } catch (error) {
-      console.error(error);
       Alert.alert("Erro", "Não foi possível gerar o arquivo PDF.");
     }
   };
@@ -101,11 +101,7 @@ export default function ArquivosScreen() {
             onPress={() => navigation.navigate("Principal")}
             style={styles.iconButton}
           >
-            <MaterialCommunityIcons
-              name="home-circle-outline"
-              size={40}
-              color="#fff"
-            />
+            <Entypo name="home" size={40} color="white" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -116,6 +112,7 @@ export default function ArquivosScreen() {
               name="account-circle-outline"
               size={40}
               color="#fff"
+              light
             />
           </TouchableOpacity>
         </View>
@@ -255,7 +252,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#a30000",
-    height: 70,
+    height: 90,
     justifyContent: "center",
     alignItems: "flex-end",
     paddingHorizontal: 20,
@@ -266,6 +263,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   iconButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: -5,
     marginLeft: 15,
   },
   scrollContent: {

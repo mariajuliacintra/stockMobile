@@ -206,7 +206,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                   />
                 ) : (
                   <Text style={{ alignSelf: "center", marginBottom: 15 }}>
-                    Imagem não disponível
+                    Item não possui erro!
                   </Text>
                 )}
 
