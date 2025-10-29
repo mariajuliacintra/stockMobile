@@ -161,7 +161,24 @@ function Principal() {
     );
   };
 
-  const handleLogout = () => navigation.navigate("Home");
+  const handleLogout = async () => {
+    try {
+      // Remove os dados do usuário armazenados
+      await SecureStore.deleteItemAsync("tokenUsuario");
+      await SecureStore.deleteItemAsync("userId");
+      await SecureStore.deleteItemAsync("userRole");
+      await SecureStore.deleteItemAsync("userEmail");
+  
+      // Redireciona para a tela de login / Home
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
+  
   const handleProfile = () => navigation.navigate("Perfil");
   const handleArquivos = () => navigation.navigate("Arquivos");
   console.log("Paginação:", totalPages, page);
