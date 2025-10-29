@@ -7,21 +7,21 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
-  useWindowDimensions, 
+  useWindowDimensions,
 } from "react-native";
-import EditUserModal from '../components/layout/EditUserModal';
-import CreateUserModal from '../components/layout/CreateUserModal';
-import { useNavigation } from "@react-navigation/native"; 
-import * as SecureStore from 'expo-secure-store';
+import EditUserModal from "../components/layout/EditUserModal";
+import CreateUserModal from "../components/layout/CreateUserModal";
+import { useNavigation } from "@react-navigation/native";
+import * as SecureStore from "expo-secure-store";
 
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import sheets from "../services/axios";
-import ConfirmarDelecaoModal from '../components/mod/ConfirmarDelecaoModal';
-
+import ConfirmarDelecaoModal from "../components/mod/ConfirmarDelecaoModal";
+import Pagination from "../components/mod/Pagination";
 
 const UsersScreen = () => {
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
   const [editUserModalVisible, setEditUserModalVisible] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
   const { width, height } = useWindowDimensions();
@@ -33,9 +33,10 @@ const UsersScreen = () => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
-  const showCustomModal = (title, message, type = "info") => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  };
+  const showCustomModal = (title, message, type = "info") => {};
 
   const dynamicStyles = StyleSheet.create({
     topBar: {
@@ -48,7 +49,7 @@ const UsersScreen = () => {
       alignItems: "center",
       width: width,
       paddingRight: width * 0.06,
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       zIndex: 10,
@@ -56,31 +57,31 @@ const UsersScreen = () => {
   });
 
   // Lógica de Requisição
-  const fetchUsers = async () => {
+  const fetchUsers = async (page = 1) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await sheets.getAllUsers(1, 10); 
-
-      if (response.data && response.data.success) {
-        const paginationObject = response.data.data[0]; 
-        
-        const userList = (paginationObject?.users || []).map(user => ({
+  
+      const response = await sheets.getAllUsers(page, 10);
+      console.log("API RESPONSE:", response.data);
+  
+      const paginationData = response.data.data[0]; // 👈 corrigido
+  
+      if (paginationData?.users) {
+        const userList = paginationData.users.map(user => ({
           ...user,
-          displayRole: user.role === 'manager' ? 'Administrador' : 'Comum'
+          displayRole: user.role === "manager" ? "Administrador" : "Comum",
         }));
-
-        if (Array.isArray(userList)) {
-          setUsers(userList);
-        } else {
-          setError("Erro: Estrutura de dados inválida da API.");
-          setUsers([]);
-        }
+  
+        setUsers(userList);
+        setCurrentPage(paginationData.currentPage || 1);
+        setTotalPages(paginationData.totalPages || 1);
       } else {
-        setError(response.data?.message || "Falha ao buscar usuários.");
+        setError("Nenhum usuário encontrado.");
         setUsers([]);
       }
     } catch (err) {
+      console.error("Erro ao buscar usuários:", err);
       let errorMessage = "Erro de Conexão. Verifique sua rede e o servidor.";
       if (err.response) {
         errorMessage = `Erro HTTP ${err.response.status}: ${err.response.data?.message || err.message}`;
@@ -91,23 +92,31 @@ const UsersScreen = () => {
       setIsLoading(false);
     }
   };
+  
+  
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(currentPage);
+  }, [currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const handleEditPress = (userId) => {
-    const user = users.find(u => String(u.idUser) === String(userId));
+    const user = users.find((u) => String(u.idUser) === String(userId));
     if (user) {
-        setUserToEdit(user);
-        setEditUserModalVisible(true);
+      setUserToEdit(user);
+      setEditUserModalVisible(true);
     } else {
       showCustomModal("Erro", "Usuário não encontrado.", "error");
     }
   };
 
   const handleDeletePress = (userId) => {
-    const user = users.find(u => String(u.idUser) === String(userId));
+    const user = users.find((u) => String(u.idUser) === String(userId));
     if (user) {
       setUserToDelete(user);
       setDeleteModalVisible(true);
@@ -129,51 +138,69 @@ const UsersScreen = () => {
 
     try {
       const storedToken = await SecureStore.getItemAsync("tokenUsuario");
-      
+
       if (!userId || !storedToken) {
-        showCustomModal("Erro", "Dados de usuário ou token de acesso ausentes.", "error");
+        showCustomModal(
+          "Erro",
+          "Dados de usuário ou token de acesso ausentes.",
+          "error"
+        );
         return;
       }
-      
+
       const headers = { Authorization: storedToken };
-      const response = await sheets.deleteUsuario(userId, { headers }); 
+      const response = await sheets.deleteUsuario(userId, { headers });
 
       if (response.data?.success) {
-        showCustomModal(response.data.message || "Sucesso", response.data.details || "Usuário deletado com sucesso.", "success");
-        fetchUsers(); 
+        showCustomModal(
+          response.data.message || "Sucesso",
+          response.data.details || "Usuário deletado com sucesso.",
+          "success"
+        );
+        fetchUsers();
       } else {
-        showCustomModal("Erro", response.data.error || "Erro ao deletar usuário", "error");
+        showCustomModal(
+          "Erro",
+          response.data.error || "Erro ao deletar usuário",
+          "error"
+        );
       }
     } catch (error) {
       showCustomModal("Erro", "Não foi possível deletar o usuário.", "error");
     } finally {
       setIsLoading(false);
     }
-  }
-
+  };
 
   const handleAddPress = () => {
     setCreateUserModalVisible(true);
   };
 
   const handleUserRegistrationSuccess = () => {
-    showCustomModal("Sucesso", "A lista será recarregada para mostrar o novo usuário.", "success");
+    showCustomModal(
+      "Sucesso",
+      "A lista será recarregada para mostrar o novo usuário.",
+      "success"
+    );
     fetchUsers();
   };
   const handleUserUpdateSuccess = () => {
-    fetchUsers(); 
+    fetchUsers();
     setEditUserModalVisible(false);
   };
 
   const handleNavigateToHome = () => {
-    navigation.navigate('Principal'); 
+    navigation.navigate("Principal");
   };
-
 
   const AppHeader = () => (
     <View style={dynamicStyles.topBar}>
       <TouchableOpacity onPress={handleNavigateToHome}>
-        <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
+        <MaterialCommunityIcons
+          name="home-circle-outline"
+          size={60}
+          color="#fff"
+        />
       </TouchableOpacity>
     </View>
   );
@@ -182,10 +209,10 @@ const UsersScreen = () => {
     <View style={styles.userItem}>
       <View style={styles.userInfo}>
         <Text style={styles.userName} numberOfLines={1}>
-          Nome do Usuário: {item.name || 'N/A'}
+          Nome do Usuário: {item.name || "N/A"}
         </Text>
         <Text style={styles.userRole}>
-          Cargo: {item.displayRole || 'Comum'}
+          Cargo: {item.displayRole || "Comum"}
         </Text>
       </View>
 
@@ -206,7 +233,6 @@ const UsersScreen = () => {
     </View>
   );
 
-
   if (isLoading) {
     return (
       <View style={styles.fullScreenContainer}>
@@ -221,32 +247,33 @@ const UsersScreen = () => {
     );
   }
 
-  const listContent = users.length === 0 ? (
-    <View style={styles.noUsersContent}>
-      <Text style={styles.noUsers}>Nenhum usuário encontrado</Text>
-      <TouchableOpacity onPress={fetchUsers} style={{ marginTop: 10 }}>
-        <Text style={styles.retryText}>Recarregar Lista</Text>
-      </TouchableOpacity>
-    </View>
-  ) : (
-    <FlatList
-      data={users}
-      keyExtractor={(item) => String(item.idUser)}
-      renderItem={renderUserItem}
-      contentContainerStyle={styles.listContent}
-      style={styles.list}
-      scrollEnabled={false} 
-      nestedScrollEnabled={true} 
-    />
-  );
+  const listContent =
+    users.length === 0 ? (
+      <View style={styles.noUsersContent}>
+        <Text style={styles.noUsers}>Nenhum usuário encontrado</Text>
+        <TouchableOpacity onPress={fetchUsers} style={{ marginTop: 10 }}>
+          <Text style={styles.retryText}>Recarregar Lista</Text>
+        </TouchableOpacity>
+      </View>
+    ) : (
+      <FlatList
+        data={users}
+        keyExtractor={(item) => String(item.idUser)}
+        renderItem={renderUserItem}
+        contentContainerStyle={styles.listContent}
+        style={styles.list}
+        scrollEnabled={false}
+        nestedScrollEnabled={true}
+      />
+    );
 
   return (
     <View style={styles.fullScreenContainer}>
       <AppHeader />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
-        nestedScrollEnabled={true} 
+        nestedScrollEnabled={true}
       >
         <View style={styles.cardContainer}>
           <View style={styles.cardHeader}>
@@ -279,21 +306,29 @@ const UsersScreen = () => {
         visible={editUserModalVisible}
         onClose={() => setEditUserModalVisible(false)}
         showCustomModal={showCustomModal}
-        user={userToEdit} 
+        user={userToEdit}
         onUpdateSuccess={handleUserUpdateSuccess}
       />
-      
+
       <ConfirmarDelecaoModal
         visible={deleteModalVisible}
         title="Excluir Usuário"
-        message={userToDelete ? `Tem certeza que deseja excluir o usuário "${userToDelete.name}"? Esta ação é irreversível.` : "Confirme a exclusão deste usuário."}
+        message={
+          userToDelete
+            ? `Tem certeza que deseja excluir o usuário "${userToDelete.name}"? Esta ação é irreversível.`
+            : "Confirme a exclusão deste usuário."
+        }
         onConfirm={handleConfirmDelete}
         onCancel={() => {
-            setDeleteModalVisible(false);
-            setUserToDelete(null);
+          setDeleteModalVisible(false);
+          setUserToDelete(null);
         }}
       />
-
+      <Pagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+      />
     </View>
   );
 };
@@ -303,19 +338,19 @@ export default UsersScreen;
 const styles = StyleSheet.create({
   fullScreenContainer: {
     flex: 1,
-    backgroundColor: "#d9d9d9", 
+    backgroundColor: "#d9d9d9",
   },
 
   loadingWrapper: {
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 90,
     paddingBottom: 40,
     paddingHorizontal: 16,
@@ -335,13 +370,13 @@ const styles = StyleSheet.create({
   },
 
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 15,
     paddingBottom: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   title: {
     fontSize: 20,
@@ -356,7 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 6,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: "#000",
@@ -381,8 +416,8 @@ const styles = StyleSheet.create({
   },
 
   actionIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginLeft: 15,
   },
   iconButton: {
@@ -392,8 +427,8 @@ const styles = StyleSheet.create({
   },
 
   loadingCard: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 150,
   },
   loadingText: {
@@ -411,17 +446,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#007BFF",
     marginTop: 5,
-    textAlign: 'center',
+    textAlign: "center",
     textDecorationLine: "underline",
   },
   noUsersContent: {
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   noUsers: {
     fontSize: 16,
     color: "#999",
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 });
