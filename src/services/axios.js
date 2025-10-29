@@ -52,13 +52,9 @@ const sheets = {
     api.put(`lot/quantity/${idLot}`, payload),
   getCategories: () => api.get("/category"),
 
-  getAllItems: (page = 1, limit = 5) =>
-    api.get("/items", {
-      params: {
-        page,
-        limit,
-      },
-    }),
+  getAllItems: (page = 1, limit = 5) => {
+    return api.get(`/items?page=${page}&limit=${limit}`);
+  },  
 
   filterItems: (payload, page = 1, limit = 10) =>
     api.post(`/items/filter?page=${page}&limit=${limit}`, payload),

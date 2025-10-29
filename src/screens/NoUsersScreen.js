@@ -14,6 +14,7 @@ import CreateUserModal from "../components/layout/CreateUserModal";
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 
+import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import sheets from "../services/axios";
@@ -41,7 +42,7 @@ const UsersScreen = () => {
   const dynamicStyles = StyleSheet.create({
     topBar: {
       backgroundColor: "rgba(177, 16, 16, 1)",
-      height: height * 0.1,
+      height: 90,
       borderBottomColor: "white",
       borderBottomWidth: 3,
       flexDirection: "row",
@@ -63,12 +64,12 @@ const UsersScreen = () => {
       setError(null);
   
       const response = await sheets.getAllUsers(page, 10);
-      console.log("API RESPONSE:", response.data);
   
-      const paginationData = response.data.data[0]; // 👈 corrigido
+      const usersData = response.data?.users || [];
+      const paginationData = response.data?.pagination || {};
   
-      if (paginationData?.users) {
-        const userList = paginationData.users.map(user => ({
+      if (usersData.length > 0) {
+        const userList = usersData.map((user) => ({
           ...user,
           displayRole: user.role === "manager" ? "Administrador" : "Comum",
         }));
@@ -81,7 +82,6 @@ const UsersScreen = () => {
         setUsers([]);
       }
     } catch (err) {
-      console.error("Erro ao buscar usuários:", err);
       let errorMessage = "Erro de Conexão. Verifique sua rede e o servidor.";
       if (err.response) {
         errorMessage = `Erro HTTP ${err.response.status}: ${err.response.data?.message || err.message}`;
@@ -91,8 +91,7 @@ const UsersScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-  
+  };  
   
 
   useEffect(() => {
@@ -195,12 +194,11 @@ const UsersScreen = () => {
 
   const AppHeader = () => (
     <View style={dynamicStyles.topBar}>
-      <TouchableOpacity onPress={handleNavigateToHome}>
-        <MaterialCommunityIcons
-          name="home-circle-outline"
-          size={60}
-          color="#fff"
-        />
+      <TouchableOpacity
+        onPress={handleNavigateToHome}
+        style={styles.home}
+      >
+        <Entypo name="home" size={40} color="white" />
       </TouchableOpacity>
     </View>
   );
@@ -346,7 +344,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
+  home: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: -15,
+  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
