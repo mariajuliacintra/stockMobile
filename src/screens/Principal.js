@@ -10,12 +10,13 @@ import {
   TextInput,
   Modal,
 } from "react-native";
+import Header from "../components/mod/Header";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import CardType from "../components/layout/cardType";
+import Pagination from "../components/mod/Pagination";
 import ItemDetailModal from "../components/layout/ItemDetailModal";
 import CreateItemModal from "../components/layout/createItemModal";
 import * as SecureStore from "expo-secure-store";
@@ -47,7 +48,10 @@ function Principal() {
     const fetchRole = async () => {
       const storedRole = await SecureStore.getItemAsync("userRole");
       const storedEmail = await SecureStore.getItemAsync("userEmail");
-      if (storedRole === "manager" || (storedEmail && storedEmail.includes("@sp.senai.br"))) {
+      if (
+        storedRole === "manager" ||
+        (storedEmail && storedEmail.includes("@sp.senai.br"))
+      ) {
         setIsManager(true);
       }
     };
@@ -67,42 +71,28 @@ function Principal() {
     fetchUserId();
   }, []);
 
-  // 🔍 Buscar itens
+  // Buscar itens
   const fetchItems = async (pageToLoad = 1) => {
-    if (pageToLoad === 1) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
-
+    setLoading(true);
     try {
       const body = {
         name: searchTerm.trim() || "",
         idCategory: selectedCategories.length > 0 ? selectedCategories : [],
       };
 
-      const response = await sheets.filtroItems(body);
+      const response = await sheets.getAllItems(pageToLoad, 5); // 25 itens por página
 
       if (response.data.success) {
-        const newItems = response.data.items || [];
-
-        if (pageToLoad === 1) {
-          setItems(newItems);
-        } else {
-          setItems((prevItems) => [...prevItems, ...newItems]);
-        }
-
-        setTotalPages(response.data.totalPages || 1);
-        setPage(pageToLoad);
+        setItems(response.data.items || []);
+        setTotalPages(response.data.pagination?.totalPages || 1);
+        setPage(response.data.pagination?.currentPage || 1);
       } else {
         setItems([]);
-        console.error("Erro: resposta sem sucesso", response.data);
       }
-    } catch (error) {
-      console.error("Erro ao buscar itens:", error);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 
@@ -165,28 +155,24 @@ function Principal() {
     );
   };
 
+  const handleItemDeleted = (deletedItemId) => {
+    setItems((prevItems) =>
+      prevItems.filter((item) => item.idItem !== deletedItemId)
+    );
+  };
+
   const handleLogout = () => navigation.navigate("Home");
   const handleProfile = () => navigation.navigate("Perfil");
   const handleArquivos = () => navigation.navigate("Arquivos");
-
+  console.log("Paginação:", totalPages, page);
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleProfile} style={styles.profile}>
-          <Ionicons name="person-circle-outline" color="#FFF" size={40} />
-        </TouchableOpacity>
-
-        {isManager && (
-          <TouchableOpacity onPress={handleArquivos} style={styles.folderButton}>
-            <MaterialCommunityIcons name="folder-outline" color="#FFF" size={40} />
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <AntDesign name="logout" color="#FFF" size={25} />
-        </TouchableOpacity>
-      </View>
+      <Header
+        isManager={isManager}
+        onProfilePress={handleProfile}
+        onLogoutPress={handleLogout}
+        onArquivosPress={handleArquivos}
+      />
 
       {/* Barra de pesquisa */}
       <View style={styles.searchBarContainer}>
@@ -197,7 +183,10 @@ function Principal() {
           value={searchTerm}
           onChangeText={setSearchTerm}
         />
-        <TouchableOpacity style={styles.filterButton} onPress={toggleFilterModal}>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={toggleFilterModal}
+        >
           <Text style={styles.filterButtonText}>Filtros</Text>
         </TouchableOpacity>
       </View>
@@ -209,22 +198,36 @@ function Principal() {
           <Text style={styles.loadingText}>Carregando itens...</Text>
         </View>
       ) : (
-        <ScrollView style={styles.itemsContainer} onScroll={handleScroll} scrollEventThrottle={400}>
-          {items.length === 0 ? (
-            <View style={styles.messageContainer}>
-              <Text style={styles.messageText}>Nenhum item encontrado.</Text>
-            </View>
-          ) : (
-            items.map((item) => (
-              <CardType
-                key={item.idItem}
-                title={item.name}
-                description={item.description}
-                onPress={() => toggleDetailModal(item)}
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 20 }}
+            style={{ flex: 1 }}
+          >
+            {items.length === 0 ? (
+              <View style={styles.messageContainer}>
+                <Text style={styles.messageText}>Nenhum item encontrado.</Text>
+              </View>
+            ) : (
+              items.map((item) => (
+                <CardType
+                  key={item.idItem}
+                  title={item.name}
+                  description={item.description}
+                  onPress={() => toggleDetailModal(item)}
+                />
+              ))
+            )}
+          </ScrollView>
+          {totalPages > 1 && (
+            <View style={styles.paginationWrapper}>
+              <Pagination
+                totalPages={totalPages}
+                currentPage={page}
+                onPageChange={(pageNum) => fetchItems(pageNum)}
               />
-            ))
+            </View>
           )}
-        </ScrollView>
+        </View>
       )}
 
       {/* Modal de Filtros */}
@@ -236,6 +239,14 @@ function Principal() {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
+            {/* Botão de fechar (X) */}
+            <TouchableOpacity
+              style={styles.closeIcon}
+              onPress={toggleFilterModal}
+            >
+              <AntDesign name="close" size={24} color="#600000" />
+            </TouchableOpacity>
+
             <Text style={styles.modalTitle}>Selecione as Categorias</Text>
 
             {loadingCategorias ? (
@@ -256,9 +267,13 @@ function Principal() {
                           selected && styles.checkboxBoxSelected,
                         ]}
                       >
-                        {selected && <Ionicons name="checkmark" size={18} color="#FFF" />}
+                        {selected && (
+                          <Ionicons name="checkmark" size={18} color="#FFF" />
+                        )}
                       </View>
-                      <Text style={styles.checkboxLabel}>{cat.categoryValue}</Text>
+                      <Text style={styles.checkboxLabel}>
+                        {cat.categoryValue}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -288,8 +303,12 @@ function Principal() {
       {/* Modal de Detalhes do Item */}
       <ItemDetailModal
         isVisible={isDetailModalVisible}
-        onClose={() => setDetailModalVisible(false)}
+        onClose={() => {
+          setDetailModalVisible(false);
+          fetchItems(1); // 🔹 Atualiza a lista de itens
+        }}
         item={selectedItem}
+        onItemDeleted={handleItemDeleted}
       />
 
       {/* Modal de Criação de Item */}
@@ -407,6 +426,13 @@ const styles = StyleSheet.create({
     marginTop: 15,
     width: 150,
   },
+  closeIcon: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    padding: 5,
+    zIndex: 1,
+  },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
   checkboxRow: {
     flexDirection: "row",
@@ -432,6 +458,22 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 16,
     color: "#333",
+  },
+  listWrapper: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  scrollContent: {
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+  },
+  paginationWrapper: {
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

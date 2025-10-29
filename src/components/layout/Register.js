@@ -90,6 +90,7 @@ export default function Register({ visible, onClose, onOpenLogin }) {
         message: error.response?.data?.details || "Erro ao enviar o código.",
         type: "error",
       });
+      console.error("erro", error);
     } finally {
       setIsLoading(false);
     }

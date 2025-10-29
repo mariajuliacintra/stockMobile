@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "SENAI Estoque",
-    "slug": "senai-estoque-v1",
-    "version": "1.0.1",
+    "name": "StockSenai",
+    "slug": "meuApp",
+    "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/img/slogo.png",
+    "icon": "./src/img/iconesenai.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./src/img/slogo.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,22 +17,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/img/slogo.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "buildType": "apk",
-      "package": "com.fogazza.senaiestoquev1"
+      }
     },
     "web": {
-      "favicon": "./src/img/slogo.png"
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "af4480ac-5d0d-4078-8b5b-0e5541c7cccb"
-      }
-    }
+    ]
   }
 }

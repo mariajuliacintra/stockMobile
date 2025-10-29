@@ -2,8 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-
-  baseURL: "https://senaiestoque.duckdns.org/api",
+  baseURL: "http://10.89.240.82:5000/api/",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -15,7 +14,7 @@ api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
     if (token) {
-      config.headers["Authorization"] = token; // sem Bearer
+      config.headers["Authorization"] = token;
     }
     return config;
   },
@@ -53,15 +52,22 @@ const sheets = {
     api.put(`lot/quantity/${idLot}`, payload),
   getCategories: () => api.get("/category"),
 
-  getAllItems: (params) => api.get("/items", { params }),
+  getAllItems: (page = 1, limit = 5) =>
+    api.get("/items", {
+      params: {
+        page,
+        limit,
+      },
+    }),
 
   filterItems: (payload, page = 1, limit = 10) =>
     api.post(`/items/filter?page=${page}&limit=${limit}`, payload),
 
+  deleteItem: (idItem) => api.delete(`/item/${idItem}`, idItem),
+
   // Itens / Lotes
   updateLotQuantity: (idLot, payload) =>
     api.put(`lot/quantity/${idLot}`, payload),
-  getAllItems: (params) => api.get("items", { params }),
   getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
 
   //EXCELL

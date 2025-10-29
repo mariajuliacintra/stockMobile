@@ -274,11 +274,11 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     if (hasDuplicateSpecs)
       return "Você selecionou a mesma especificação técnica mais de uma vez.";
 
-    const hasIncompleteSpec = selectedSpecs.some(
-      (spec) => spec.id && !spec.value.trim()
-    );
-    if (hasIncompleteSpec)
-      return "Todas as especificações técnicas selecionadas devem ter um valor preenchido.";
+    // const hasIncompleteSpec = selectedSpecs.some(
+    //   (spec) => spec.id && !spec.value.trim()
+    // );
+    // if (hasIncompleteSpec)
+    //   return "Todas as especificações técnicas selecionadas devem ter um valor preenchido.";
 
     return null;
   };
@@ -348,13 +348,14 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
       if (spec.id && spec.value.trim()) acc[spec.id] = spec.value;
       return acc;
     }, {});
-
+    
+    // Se não houver specs, enviar null
     const createItemPayload = {
       sapCode,
       name,
       brand,
       description,
-      technicalSpecs: specsObject,
+      technicalSpecs: Object.keys(specsObject).length > 0 ? specsObject : null, // <<< ALTERAÇÃO
       minimumStock: Number(minimumStock),
       fkIdCategory: Number(selectedCategory),
       quantity: Number(quantity),
@@ -364,6 +365,7 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
       fkIdLocation: Number(selectedLocation),
       fkIdUser: Number(fkIdUser),
     };
+    
 
     let idItem = null;
 
