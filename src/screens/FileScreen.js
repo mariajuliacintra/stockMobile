@@ -124,7 +124,6 @@ export default function ArquivosScreen() {
         "Não foi possível gerar o arquivo PDF."
       );
 
-=======
 
     }
   };
