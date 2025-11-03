@@ -13,7 +13,7 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <StatusBar barStyle="light-conten" backgroundColor="black" />
+      <StatusBar barStyle="light-content" backgroundColor="black" />
       <Stack.Navigator
         initialRouteName="AuthLoading"
         screenOptions={{ headerShown: false }}
