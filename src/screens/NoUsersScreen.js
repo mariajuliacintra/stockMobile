@@ -63,7 +63,7 @@ const UsersScreen = () => {
       setIsLoading(true);
       setError(null);
   
-      const response = await sheets.getAllUsers(page, 10);
+      const response = await sheets.getAllUsers(page, 8);
   
       const usersData = response.data?.users || [];
       const paginationData = response.data?.pagination || {};
