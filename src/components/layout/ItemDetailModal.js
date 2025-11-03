@@ -186,6 +186,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                 ) : (
                   <Text style={{ alignSelf: "center", marginBottom: 15 }}>
                     Item não possui imagem!
+
                   </Text>
                 )}
 

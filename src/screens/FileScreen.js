@@ -20,6 +20,7 @@ export default function ArquivosScreen() {
   const navigation = useNavigation();
 
 
+
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState("info");
   const [modalTitle, setModalTitle] = useState("");
@@ -31,6 +32,7 @@ export default function ArquivosScreen() {
     setModalMessage(message);
     setModalVisible(true);
   };
+
 
 
   const handleGerarExcel = async (tipo) => {
@@ -114,12 +116,15 @@ export default function ArquivosScreen() {
       }
     } catch (error) {
 
+
       console.error(error);
       showModal(
         "error",
         "Erro ao gerar PDF",
         "Não foi possível gerar o arquivo PDF."
       );
+
+=======
 
     }
   };
