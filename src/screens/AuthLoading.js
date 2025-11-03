@@ -6,12 +6,10 @@ export default function AuthLoading({ navigation }) {
   useEffect(() => {
     const checkAuth = async () => {
       const token = await SecureStore.getItemAsync("tokenUsuario");
-
+      //Autenticação usuario
       if (token) {
-        // Usuário autenticado → vai pra tela principal
         navigation.replace("Principal");
       } else {
-        // Sem token → vai pra Home (onde abre o modal de login)
         navigation.replace("Home");
       }
     };

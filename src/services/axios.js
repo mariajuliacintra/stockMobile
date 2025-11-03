@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const api = axios.create({
-  baseURL: "http://10.89.240.83:5000/api/",
+  baseURL: "http://10.89.240.82:5000/api/",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -38,7 +38,7 @@ const sheets = {
   verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
   TransactionUser: (userId) => api.get(`/transactions/user/${userId}`),
-  getAllUsers: (page = 1, limit = 10) =>
+  getAllUsers: (page = 1, limit = 2) =>
     api.get("/users", {
       params: {
         page: page,
@@ -50,9 +50,8 @@ const sheets = {
   // Itens / Lotes
   updateLotQuantity: (idLot, payload) =>
     api.put(`lot/quantity/${idLot}`, payload),
-  getCategories: () => api.get("/category"),
 
-  getAllItems: (page = 1, limit = 5) => {
+  getAllItems: (page = 1, limit = 3) => {
     return api.get(`/items?page=${page}&limit=${limit}`);
   },  
 
@@ -61,10 +60,9 @@ const sheets = {
 
   deleteItem: (idItem) => api.delete(`/item/${idItem}`, idItem),
 
-  // Itens / Lotes
-  updateLotQuantity: (idLot, payload) =>
-    api.put(`lot/quantity/${idLot}`, payload),
-  getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
+  getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details/`),
+
+
 
   //EXCELL
   getExcelGeneral: () =>

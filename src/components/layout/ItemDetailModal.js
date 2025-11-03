@@ -24,13 +24,11 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  // 🔹 Estados para o CustomModal
   const [customModalVisible, setCustomModalVisible] = useState(false);
   const [customModalTitle, setCustomModalTitle] = useState("");
   const [customModalMessage, setCustomModalMessage] = useState("");
   const [customModalType, setCustomModalType] = useState("info");
 
-  //usuario manager
   const [isManager, setIsManager] = useState(false);
 
   const showCustomModal = (title, message, type = "info") => {
@@ -49,7 +47,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       setDetailedItem(null);
       try {
         const response = await sheets.getItemByIdDetails(item.idItem);
-
         if (response.data?.success && response.data?.item?.length > 0) {
           setDetailedItem(response.data.item[0]);
         } else {
@@ -77,51 +74,9 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
     fetchRole();
   }, []);
 
-  //Função de deleção
-  const handleDeleteItem = async () => {
-    if (!detailedItem?.idItem) return;
-
-    setLoading(true);
-    try {
-      const response = await sheets.deleteItem(detailedItem.idItem);
-      if (response.data?.success) {
-        showCustomModal("Sucesso", "Item deletado com sucesso!", "success");
-
-        // 🔹 Atualiza lista na tela Principal
-        if (typeof onItemDeleted === "function") {
-          onItemDeleted(detailedItem.idItem);
-        }
-
-        onClose(); // Fecha modal
-      } else {
-        showCustomModal(
-          "Erro",
-          response.data?.message || "Erro ao deletar o item.",
-          "error"
-        );
-      }
-    } catch (error) {
-      showCustomModal(
-        "Erro",
-        error?.message || "Erro ao deletar o item.",
-        "error"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleTransaction = async () => {
-    if (
-      !quantityChange ||
-      isNaN(quantityChange) ||
-      parseFloat(quantityChange) <= 0
-    ) {
-      showCustomModal(
-        "Erro",
-        "Por favor, insira uma quantidade válida e positiva.",
-        "error"
-      );
+    if (!quantityChange || isNaN(quantityChange) || parseFloat(quantityChange) <= 0) {
+      showCustomModal("Erro", "Por favor, insira uma quantidade válida e positiva.", "error");
       return;
     }
 
@@ -135,14 +90,18 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       if (!fkIdUser) throw new Error("Usuário inválido no token.");
 
       const qtyNum = parseFloat(quantityChange);
-      const quantityForApi =
-        actionDescription === "OUT" ? -Math.abs(qtyNum) : qtyNum;
-      const payload = { quantity: quantityForApi, fkIdUser, isAjust: false };
-
       const idItem = detailedItem?.idItem;
-      if (!idItem) {
-        showCustomModal("Erro", "ID do item não encontrado.", "error");
-        return;
+      if (!idItem) throw new Error("ID do item não encontrado.");
+
+      let payload;
+
+      // 🔹 Verifica a ação selecionada
+      if (actionDescription === "IN") {
+        payload = { quantity: qtyNum, fkIdUser, isAjust: false };
+      } else if (actionDescription === "OUT") {
+        payload = { quantity: -Math.abs(qtyNum), fkIdUser, isAjust: false };
+      } else if (actionDescription === "ADJUST") {
+        payload = { quantity: qtyNum, fkIdUser, isAjust: true };
       }
 
       const response = await sheets.updateLotQuantity(idItem, payload);
@@ -150,11 +109,13 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       if (response.data?.success) {
         showCustomModal(
           "Sucesso",
-          "Quantidade do lote atualizada com sucesso!",
+          actionDescription === "ADJUST"
+            ? "Quantidade ajustada com sucesso!"
+            : "Transação registrada com sucesso!",
           "success"
         );
         setQuantityChange("");
-        onClose(); // 🔹 Fecha o modal principal após sucesso
+        onClose();
       } else {
         showCustomModal(
           "Erro",
@@ -173,27 +134,45 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
     }
   };
 
+  const handleDeleteItem = async () => {
+    if (!detailedItem?.idItem) return;
+    setLoading(true);
+    try {
+      const response = await sheets.deleteItem(detailedItem.idItem);
+      if (response.data?.success) {
+        showCustomModal("Sucesso", "Item deletado com sucesso!", "success");
+        onClose();
+      } else {
+        showCustomModal(
+          "Erro",
+          response.data?.message || "Erro ao deletar o item.",
+          "error"
+        );
+      }
+    } catch (error) {
+      showCustomModal(
+        "Erro",
+        error?.message || "Erro ao deletar o item.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isVisible}
-        onRequestClose={onClose}
-      >
+      <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={onClose}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             {fetching ? (
-              <ActivityIndicator
-                size="large"
-                color="#600000"
-                style={{ margin: 20 }}
-              />
+              <ActivityIndicator size="large" color="#600000" style={{ margin: 20 }} />
             ) : detailedItem ? (
               <>
                 <TouchableOpacity style={styles.closeIcon} onPress={onClose}>
                   <AntDesign name="close" size={24} color="#600000" />
                 </TouchableOpacity>
+
                 <Text style={styles.modalTitle}>{detailedItem.name}</Text>
 
                 {detailedItem.image ? (
@@ -206,35 +185,19 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                   />
                 ) : (
                   <Text style={{ alignSelf: "center", marginBottom: 15 }}>
-                    Item não possui erro!
+                    Item não possui imagem!
+
                   </Text>
                 )}
 
-                <Text style={styles.modalText}>
-                  Descrição: {detailedItem.description}
-                </Text>
-                <Text style={styles.modalText}>
-                  Categoria: {detailedItem.category?.value}
-                </Text>
+                <Text style={styles.modalText}>Descrição: {detailedItem.description}</Text>
+                <Text style={styles.modalText}>Categoria: {detailedItem.category?.value}</Text>
                 {detailedItem.brand && (
-                  <Text style={styles.modalText}>
-                    Marca: {detailedItem.brand}
-                  </Text>
+                  <Text style={styles.modalText}>Marca: {detailedItem.brand}</Text>
                 )}
                 <Text style={styles.modalText}>
                   Quantidade disponível: {detailedItem.totalQuantity}
                 </Text>
-
-                {detailedItem.technicalSpecs?.length > 0 && (
-                  <View style={{ marginBottom: 8 }}>
-                    <Text style={styles.modalText}>Especificações:</Text>
-                    {detailedItem.technicalSpecs.map((spec) => (
-                      <Text key={spec.idTechnicalSpec} style={styles.modalText}>
-                        • {spec.technicalSpecKey}: {spec.technicalSpecValue}
-                      </Text>
-                    ))}
-                  </View>
-                )}
 
                 <View style={styles.transactionContainer}>
                   <TouchableOpacity
@@ -242,13 +205,13 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                     onPress={() => setActionPickerVisible(true)}
                   >
                     <Text style={styles.actionButtonText}>
-                      {actionDescription === "IN" ? "Entrada" : "Saída"}
+                      {actionDescription === "IN"
+                        ? "Entrada"
+                        : actionDescription === "OUT"
+                        ? "Saída"
+                        : "Ajuste"}
                     </Text>
-                    <Ionicons
-                      name="caret-down-outline"
-                      size={20}
-                      color="#fff"
-                    />
+                    <Ionicons name="caret-down-outline" size={20} color="#fff" />
                   </TouchableOpacity>
 
                   <TextInput
@@ -269,16 +232,13 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                   {loading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={styles.buttonText}>Registrar Transação</Text>
+                    <Text style={styles.buttonText}>Confirmar Ação</Text>
                   )}
                 </TouchableOpacity>
 
                 {isManager && (
                   <TouchableOpacity
-                    style={[
-                      styles.transactButton,
-                      { backgroundColor: "#600000" },
-                    ]}
+                    style={[styles.transactButton, { backgroundColor: "#600000" }]}
                     onPress={handleDeleteItem}
                     disabled={loading}
                   >
@@ -291,9 +251,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                 )}
               </>
             ) : (
-              <Text style={{ margin: 20, textAlign: "center" }}>
-                Item não encontrado
-              </Text>
+              <Text style={{ margin: 20, textAlign: "center" }}>Item não encontrado</Text>
             )}
 
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -301,7 +259,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Modal de escolha de ação */}
+          {/* 🔹 Modal do seletor de ação */}
           <Modal
             animationType="fade"
             transparent={true}
@@ -328,13 +286,26 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                 >
                   <Text style={styles.pickerOptionText}>Saída</Text>
                 </TouchableOpacity>
+
+                {isManager && (
+                  <TouchableOpacity
+                    style={styles.pickerOption}
+                    onPress={() => {
+                      setActionDescription("ADJUST");
+                      setActionPickerVisible(false);
+                    }}
+                  >
+                    <Text style={[styles.pickerOptionText, { color: "black" }]}>
+                      Ajuste de Quantidade
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </Modal>
         </View>
       </Modal>
 
-      {/* 🔹 CustomModal para mensagens da API */}
       <CustomModal
         open={customModalVisible}
         onClose={onDismissCustomModal}

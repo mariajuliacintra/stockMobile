@@ -282,7 +282,6 @@ export default function PerfilScreen() {
     alignItems: "center",
     borderColor: "white",
     borderWidth: 2,
-    marginRight: 10,
     },
     engrenagem:{
       backgroundColor: "#600000",
@@ -309,7 +308,7 @@ export default function PerfilScreen() {
       <ImageBackground style={dynamicStyles.background} source={require("../img/fundo.png")}>
       <View style={dynamicStyles.header}>
   {/* Botão home */}
-  <TouchableOpacity onPress={() => navigation.navigate("Principal")} style={dynamicStyles.home}>
+  <TouchableOpacity onPress={() => navigation.navigate("Principal")} style={[dynamicStyles.home, { marginRight: isManager ? 10 : -20 }]}>
      <Entypo name="home" size={40} color="white" />
   </TouchableOpacity>
 
