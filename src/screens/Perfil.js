@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from "@react-navigation/native";
 import sheets from "../services/axios";
 import * as SecureStore from "expo-secure-store";
@@ -218,7 +219,7 @@ export default function PerfilScreen() {
     background: { flex: 1, width, height, alignItems: "center" },
     header: {
       backgroundColor: "rgba(177, 16, 16, 1)",
-      height: height * 0.1,
+      height: 80,
       borderBottomColor: "white",
       borderBottomWidth: 3,
       flexDirection: "row",
@@ -273,6 +274,25 @@ export default function PerfilScreen() {
     },
     buttonText: { color: "white", fontWeight: "bold", fontSize: width * 0.045 },
     loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+    home:{
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 8.5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    },
+    engrenagem:{
+      backgroundColor: "#600000",
+      borderRadius: 50,
+      padding: 8.5,
+      justifyContent: "center",
+      alignItems: "center",
+      borderColor: "white",
+      borderWidth: 2,
+      marginRight: -20,
+      },
   });
 
   if (isDataLoading) {
@@ -284,18 +304,18 @@ export default function PerfilScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} >
       <ImageBackground style={dynamicStyles.background} source={require("../img/fundo.png")}>
       <View style={dynamicStyles.header}>
   {/* Botão home */}
-  <TouchableOpacity onPress={() => navigation.navigate("Principal")}>
-    <MaterialCommunityIcons name="home-circle-outline" size={60} color="#fff" />
+  <TouchableOpacity onPress={() => navigation.navigate("Principal")} style={[dynamicStyles.home, { marginRight: isManager ? 10 : -20 }]}>
+     <Entypo name="home" size={40} color="white" />
   </TouchableOpacity>
 
   {/* Botão engrenagem (só para managers) */}
   {isManager && (
-    <TouchableOpacity onPress={() => navigation.navigate("NoUsers")} style={{ marginLeft: 15 }}>
-      <MaterialCommunityIcons name="account-cog-outline" size={60} color="#fff" />
+    <TouchableOpacity onPress={() => navigation.navigate("NoUsers")} style={dynamicStyles.engrenagem}>
+      <MaterialCommunityIcons name="account-cog-outline" size={40} color="#fff" />
     </TouchableOpacity>
   )}
 </View>

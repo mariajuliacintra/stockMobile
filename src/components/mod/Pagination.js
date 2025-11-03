@@ -5,7 +5,7 @@ import AntDesign from "react-native-vector-icons/AntDesign";
 const Pagination = ({ totalPages, currentPage, onPageChange }) => {
   if (totalPages <= 1) return null; // não renderiza se só há 1 página
 
-  const maxPagesToShow = 5; // número máximo de botões visíveis
+  const maxPagesToShow = 2; // número máximo de botões visíveis
   const half = Math.floor(maxPagesToShow / 2);
 
   let startPage = Math.max(1, currentPage - half);

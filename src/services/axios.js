@@ -38,7 +38,7 @@ const sheets = {
   verifyUpdate: (data) => api.post("/user/verify-update", data),
   getUserById: (idUser) => api.get(`/user/${idUser}`),
   TransactionUser: (userId) => api.get(`/transactions/user/${userId}`),
-  getAllUsers: (page = 1, limit = 10) =>
+  getAllUsers: (page = 1, limit = 2) =>
     api.get("/users", {
       params: {
         page: page,
@@ -50,25 +50,19 @@ const sheets = {
   // Itens / Lotes
   updateLotQuantity: (idLot, payload) =>
     api.put(`lot/quantity/${idLot}`, payload),
-  getCategories: () => api.get("/category"),
 
-  getAllItems: (page = 1, limit = 5) =>
-    api.get("/items", {
-      params: {
-        page,
-        limit,
-      },
-    }),
+  getAllItems: (page = 1, limit = 3) => {
+    return api.get(`/items?page=${page}&limit=${limit}`);
+  },  
 
   filterItems: (payload, page = 1, limit = 10) =>
     api.post(`/items/filter?page=${page}&limit=${limit}`, payload),
 
   deleteItem: (idItem) => api.delete(`/item/${idItem}`, idItem),
 
-  // Itens / Lotes
-  updateLotQuantity: (idLot, payload) =>
-    api.put(`lot/quantity/${idLot}`, payload),
-  getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details`),
+  getItemByIdDetails: (idItem) => api.get(`item/${idItem}/details/`),
+
+
 
   //EXCELL
   getExcelGeneral: () =>
