@@ -1,12 +1,11 @@
-// ArquivosScreen.js
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
+  ActivityIndicator,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -14,11 +13,23 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { Buffer } from "buffer";
 import sheets from "../services/axios";
+import CustomModal from "../components/mod/CustomModal"; 
 
 export default function ArquivosScreen() {
   const navigation = useNavigation();
 
-  // 📊 GERAR EXCEL
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState("info");
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+
+  const showModal = (type, title, message) => {
+    setModalType(type);
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalVisible(true);
+  };
+
   const handleGerarExcel = async (tipo) => {
     try {
       let response;
@@ -47,15 +58,22 @@ export default function ArquivosScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri);
       } else {
-        Alert.alert("Download concluído", `Arquivo salvo em: ${fileUri}`);
+        showModal(
+          "success",
+          "Download concluído",
+          `Arquivo salvo em:\n${fileUri}`
+        );
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Erro", "Não foi possível gerar o arquivo Excel.");
+      showModal(
+        "error",
+        "Erro ao gerar Excel",
+        "Não foi possível gerar o arquivo Excel."
+      );
     }
   };
 
-  // 📄 GERAR PDF
   const handleGerarPDF = async (tipo) => {
     try {
       let response;
@@ -84,17 +102,33 @@ export default function ArquivosScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri);
       } else {
-        Alert.alert("Download concluído", `Arquivo salvo em: ${fileUri}`);
+        showModal(
+          "success",
+          "Download concluído",
+          `Arquivo salvo em:\n${fileUri}`
+        );
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Erro", "Não foi possível gerar o arquivo PDF.");
+      showModal(
+        "error",
+        "Erro ao gerar PDF",
+        "Não foi possível gerar o arquivo PDF."
+      );
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* 🔔 Modal de mensagens */}
+      <CustomModal
+        open={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={modalTitle}
+        message={modalMessage}
+        type={modalType}
+      />
+
       <View style={styles.header}>
         <View style={styles.iconContainer}>
           <TouchableOpacity
@@ -121,9 +155,7 @@ export default function ArquivosScreen() {
         </View>
       </View>
 
-      {/* Conteúdo */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Relatório Geral */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <MaterialCommunityIcons name="folder" size={30} color="#003366" />
@@ -162,7 +194,6 @@ export default function ArquivosScreen() {
           </View>
         </View>
 
-        {/* Estoque Baixo */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <MaterialCommunityIcons
@@ -204,7 +235,6 @@ export default function ArquivosScreen() {
           </View>
         </View>
 
-        {/* Transações */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <MaterialCommunityIcons name="history" size={30} color="#003366" />
@@ -247,7 +277,6 @@ export default function ArquivosScreen() {
   );
 }
 
-// 🎨 ESTILOS ORIGINAIS MANTIDOS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
