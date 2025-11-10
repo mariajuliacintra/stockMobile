@@ -58,44 +58,16 @@ function Principal() {
     fetchRole();
   }, []);
 
-  // 🔹 Buscar userId do SecureStore
+  // 🔹 Buscar userId
   useEffect(() => {
     const fetchUserId = async () => {
       try {
         const id = await SecureStore.getItemAsync("userId");
         if (id) setUserId(Number(id));
-      } catch (error) {
-      }
+      } catch (error) {}
     };
     fetchUserId();
   }, []);
-
-  // Buscar itens
-  const fetchItems = async (pageToLoad = 1, append = false) => {
-    if (pageToLoad === 1 && !append) setLoading(true);
-    else setLoadingMore(true);
-
-    try {
-      const response = await sheets.getAllItems(pageToLoad, 25); // 25 itens por página
-
-      if (response.data.success) {
-        const newItems = response.data.items || [];
-
-        setItems((prevItems) =>
-          append ? [...prevItems, ...newItems] : newItems
-        );
-
-        setTotalPages(response.data.pagination?.totalPages || 1);
-        setPage(response.data.pagination?.currentPage || pageToLoad);
-      } else {
-        if (!append) setItems([]);
-      }
-    } catch (err) {
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
 
   // 📦 Buscar categorias
   const fetchCategorias = async () => {
@@ -104,7 +76,6 @@ function Principal() {
       const response = await sheets.getCategories();
       if (response.data && Array.isArray(response.data.categories)) {
         setCategorias(response.data.categories);
-      } else {
       }
     } catch (error) {
     } finally {
@@ -112,23 +83,71 @@ function Principal() {
     }
   };
 
-  // Atualiza pesquisa com debounce
+  // 🔹 Buscar todos os itens
+  const fetchItems = async (pageToLoad = 1, append = false) => {
+    if (pageToLoad === 1 && !append) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const response = await sheets.getAllItems(pageToLoad, 25);
+      if (response.data.success) {
+        const newItems = response.data.items || [];
+        setItems((prev) => (append ? [...prev, ...newItems] : newItems));
+        setTotalPages(response.data.pagination?.totalPages || 1);
+        setPage(response.data.pagination?.currentPage || pageToLoad);
+      } else {
+        setItems([]);
+      }
+    } catch (err) {
+      setItems([]);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // 🟢 Buscar itens filtrados (formato correto da API)
+  const filterItems = async (pageToLoad = 1) => {
+    setLoading(true);
+    try {
+      const payload = {
+        name: searchTerm.trim() || "",
+        idCategory: selectedCategories.length > 0 ? selectedCategories : [],
+      };
+
+      const response = await sheets.filterItems(payload, pageToLoad, 25);
+
+      if (response.data.success) {
+        setItems(response.data.items || []);
+        setTotalPages(response.data.pagination?.totalPages || 1);
+        setPage(response.data.pagination?.currentPage || 1);
+      } else {
+        setItems([]);
+      }
+    } catch (error) {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🟢 Atualiza automaticamente quando pesquisa ou filtros mudam
   useEffect(() => {
     const delay = setTimeout(() => {
-      setItems([]);
-      setPage(1);
-      fetchItems(1);
+      if (searchTerm.trim() || selectedCategories.length > 0) {
+        filterItems(1);
+      } else {
+        fetchItems(1);
+      }
     }, 500);
-
     return () => clearTimeout(delay);
   }, [searchTerm, selectedCategories]);
 
-  // Buscar categorias quando o modal abrir
+  // Buscar categorias ao abrir o modal
   useEffect(() => {
     if (isFilterModalVisible) fetchCategorias();
   }, [isFilterModalVisible]);
 
-  // Alterna modal de filtro
   const toggleFilterModal = () => setFilterModalVisible(!isFilterModalVisible);
 
   const toggleDetailModal = (item) => {
@@ -136,6 +155,7 @@ function Principal() {
     setDetailModalVisible(!isDetailModalVisible);
   };
 
+  // 🟢 Selecionar / desmarcar categorias (mantém array de IDs)
   const handleCategoryToggle = (categoryId) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryId)
@@ -145,31 +165,27 @@ function Principal() {
   };
 
   const handleItemDeleted = (deletedItemId) => {
-    setItems((prevItems) =>
-      prevItems.filter((item) => item.idItem !== deletedItemId)
-    );
+    setItems((prev) => prev.filter((item) => item.idItem !== deletedItemId));
   };
 
   const handleLogout = async () => {
     try {
-      // Remove os dados do usuário armazenados
       await SecureStore.deleteItemAsync("tokenUsuario");
       await SecureStore.deleteItemAsync("userId");
       await SecureStore.deleteItemAsync("userRole");
       await SecureStore.deleteItemAsync("userEmail");
-  
-      // Redireciona para a tela de login / Home
+
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],
       });
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
     }
   };
-  
+
   const handleProfile = () => navigation.navigate("Perfil");
   const handleArquivos = () => navigation.navigate("Arquivos");
+
   return (
     <View style={styles.container}>
       <Header
@@ -179,7 +195,7 @@ function Principal() {
         onArquivosPress={handleArquivos}
       />
 
-      {/* Barra de pesquisa */}
+      {/* 🔍 Barra de pesquisa */}
       <View style={styles.searchBarContainer}>
         <TextInput
           style={styles.searchInput}
@@ -196,7 +212,7 @@ function Principal() {
         </TouchableOpacity>
       </View>
 
-      {/* Lista de itens */}
+      {/* 🧾 Lista de itens */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#600000" />
@@ -228,14 +244,18 @@ function Principal() {
               <Pagination
                 totalPages={totalPages}
                 currentPage={page}
-                onPageChange={(pageNum) => fetchItems(pageNum, false)} // ⬅️ Substitui itens
+                onPageChange={(pageNum) =>
+                  searchTerm.trim() || selectedCategories.length > 0
+                    ? filterItems(pageNum)
+                    : fetchItems(pageNum)
+                }
               />
             </View>
           )}
         </View>
       )}
 
-      {/* Modal de Filtros */}
+      {/* 🧰 Modal de Filtros */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -244,7 +264,6 @@ function Principal() {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            {/* Botão de fechar (X) */}
             <TouchableOpacity
               style={styles.closeIcon}
               onPress={toggleFilterModal}
@@ -289,7 +308,7 @@ function Principal() {
               style={styles.closeButton}
               onPress={() => {
                 toggleFilterModal();
-                fetchItems();
+                filterItems(1); // 🟢 aplica filtro
               }}
             >
               <Text style={styles.buttonText}>Aplicar Filtros</Text>
@@ -305,18 +324,18 @@ function Principal() {
         </View>
       </Modal>
 
-      {/* Modal de Detalhes do Item */}
+      {/* Modal de Detalhes */}
       <ItemDetailModal
         isVisible={isDetailModalVisible}
         onClose={() => {
           setDetailModalVisible(false);
-          fetchItems(1); // 🔹 Atualiza a lista de itens
+          fetchItems(1);
         }}
         item={selectedItem}
         onItemDeleted={handleItemDeleted}
       />
 
-      {/* Modal de Criação de Item */}
+      {/* Modal de Criação */}
       {userId && (
         <CreateItemModal
           visible={showCreateModal}
@@ -330,48 +349,6 @@ function Principal() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#E4E4E4" },
-  header: {
-    backgroundColor: "rgba(177, 16, 16, 1)",
-    height: 80,
-    borderBottomColor: "white",
-    borderBottomWidth: 3,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    width: width,
-    paddingRight: 20,
-  },
-  profile: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 8.5,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginRight: 10,
-  },
-  folderButton: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 8.5,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginRight: 32,
-  },
-  logoutButton: {
-    backgroundColor: "#600000",
-    borderRadius: 50,
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "white",
-    borderWidth: 2,
-    marginLeft: -22,
-    marginRight: -10,
-  },
   searchBarContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -393,16 +370,14 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   filterButtonText: { color: "#FFF", fontWeight: "bold" },
-  itemsContainer: { flex: 1, width: "100%" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 10, fontSize: 16, color: "#600000" },
   messageContainer: {
     alignItems: "center",
     justifyContent: "center",
     marginTop: 50,
-    paddingHorizontal: 20,
   },
-  messageText: { fontSize: 18, color: "#600000", textAlign: "center" },
+  messageText: { fontSize: 18, color: "#600000" },
   centeredView: {
     flex: 1,
     justifyContent: "center",
@@ -410,17 +385,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalView: {
-    margin: 20,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 25,
     alignItems: "center",
     width: "85%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
   closeButton: {
@@ -430,13 +399,6 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginTop: 15,
     width: 150,
-  },
-  closeIcon: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    padding: 5,
-    zIndex: 1,
   },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
   checkboxRow: {
@@ -460,24 +422,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#600000",
     borderColor: "#600000",
   },
-  checkboxLabel: {
-    fontSize: 16,
-    color: "#333",
-  },
-  listWrapper: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  scrollContent: {
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-  },
+  checkboxLabel: { fontSize: 16, color: "#333" },
   paginationWrapper: {
-    paddingVertical: 0,
+    paddingVertical: 5,
     borderTopWidth: 1,
     borderTopColor: "#ccc",
     alignItems: "center",
-    justifyContent: "center",
+  },
+  closeIcon: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    padding: 5,
   },
 });
 
