@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ConfirmPasswordModal({
   visible,
@@ -18,6 +19,7 @@ export default function ConfirmPasswordModal({
 }) {
   const [senhaAtual, setSenhaAtual] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSenha, setShowSenha] = useState(false);
 
   const handleConfirm = async () => {
     if (!senhaAtual) {
@@ -58,13 +60,27 @@ export default function ConfirmPasswordModal({
         <View style={styles.modal}>
           <Text style={styles.title}>Confirme sua senha</Text>
 
-          <TextInput
-            placeholder="Senha atual"
-            secureTextEntry
-            value={senhaAtual}
-            onChangeText={setSenhaAtual}
-            style={styles.input}
-          />
+          {/* Campo de senha com ícone de olhinho */}
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Senha atual"
+              secureTextEntry={!showSenha}
+              value={senhaAtual}
+              onChangeText={setSenhaAtual}
+              style={styles.input}
+              placeholderTextColor="gray"
+            />
+            <TouchableOpacity
+              onPress={() => setShowSenha(!showSenha)}
+              style={styles.eyeButton}
+            >
+              <Ionicons
+                name={showSenha ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             onPress={handleConfirm}
@@ -106,13 +122,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 15,
   },
-  input: {
+  passwordContainer: {
     width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
-    padding: 10,
+    paddingHorizontal: 10,
     marginBottom: 15,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 10,
+  },
+  eyeButton: {
+    padding: 5,
   },
   confirmButton: {
     backgroundColor: "rgb(177,16,16)",

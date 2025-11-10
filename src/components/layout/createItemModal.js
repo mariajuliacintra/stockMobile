@@ -447,7 +447,7 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
               {/* Inputs */}
               <TextInput
                 style={styles.input}
-                placeholder="Código SAP (opcional)"
+                placeholder="Código SAP *"
                 value={sapCode}
                 onChangeText={setSapCode}
               />

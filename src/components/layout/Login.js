@@ -29,9 +29,12 @@ function Login({ visible, onClose, onOpenCadastro }) {
     showSenha: true,
   });
 
-  const [internalModalVisible, setInternalModalVisible] = useState(false);
-  const [internalModalMessage, setInternalModalMessage] = useState("");
-  const [internalModalType, setInternalModalType] = useState("info");
+  const [modalState, setModalState] = useState({
+    visible: false,
+    message: "",
+    type: "info",
+  });
+
   const [forgotPasswordModalVisible, setForgotPasswordModalVisible] =
     useState(false);
   const [loginModalVisible, setLoginModalVisible] = useState(visible);
@@ -40,80 +43,66 @@ function Login({ visible, onClose, onOpenCadastro }) {
     setLoginModalVisible(visible);
   }, [visible]);
 
-  function handleCloseLogin() {
-    setInternalModalMessage("");
-    setInternalModalType("");
-    setInternalModalVisible(false);
+  const handleCloseLogin = () => {
+    setModalState({ visible: false, message: "", type: "info" });
     setLoginModalVisible(false);
-    if (onClose) onClose();
-  }
+    onClose?.();
+  };
 
-  async function armazenarTokenETipoUsuario(token, idUser, userRole) {
+  const armazenarTokenETipoUsuario = async (token, idUser, userRole) => {
     try {
-      if (token) {
-        await SecureStore.setItemAsync("tokenUsuario", String(token));
-      }
-      if (idUser) {
-        await SecureStore.setItemAsync("userId", String(idUser)); 
-      }
-      if (userRole){
-        await SecureStore.setItemAsync("userRole", String(userRole)); 
-      }
+      if (token) await SecureStore.setItemAsync("tokenUsuario", String(token));
+      if (idUser) await SecureStore.setItemAsync("userId", String(idUser));
+      if (userRole)
+        await SecureStore.setItemAsync("userRole", String(userRole));
     } catch (erro) {
+      console.error("Erro ao armazenar token:", erro);
     }
-  }
+  };
 
-async function handleLogin() {
-  try {
-    const response = await api.postLogin(usuario);
+  const handleLogin = async () => {
+    try {
+      const response = await api.postLogin(usuario);
+      const userData = response.data?.user?.[0];
 
-    // Obtém os dados do usuário retornados pela API
-    const userData = response.data?.user?.[0];
-
-    if (!userData || !userData.token || !userData.idUser) {
-      setInternalModalMessage("Resposta inválida da API. Tente novamente.");
-      setInternalModalType("error");
-      setInternalModalVisible(true);
-      return;
-    }
-
-    // Armazena token, idUser e role
-    await armazenarTokenETipoUsuario(userData.token, userData.idUser, userData.role);
-    await SecureStore.setItemAsync("userRole", userData.role);
-await SecureStore.setItemAsync("userEmail", userData.email);
-
-    setInternalModalMessage(response.data.message || "Login realizado!");
-    setInternalModalType("success");
-    setInternalModalVisible(true);
-
-    // Limpa campos de login
-    setUsuario({
-      email: "",
-      password: "",
-      showSenha: true,
-    });
-
-    // Redireciona conforme o tipo de usuário
-    setTimeout(() => {
-      handleCloseLogin();
-
-      if (userData.role === "manager" || userData.isManager) {
-        navigation.navigate("Principal"); // Tela do gerente
-      } else {
-        navigation.navigate("Principal"); // Tela do usuário comum
+      if (!userData?.token || !userData?.idUser) {
+        setModalState({
+          visible: true,
+          message: "Resposta inválida da API. Tente novamente.",
+          type: "error",
+        });
+        return;
       }
-    }, 1000);
-  } catch (error) {
-    setInternalModalMessage(
-      error.response?.data?.details || "Erro desconhecido"
-    );
-    setInternalModalType("error");
-    setInternalModalVisible(true);
-  }
-}
 
+      await armazenarTokenETipoUsuario(
+        userData.token,
+        userData.idUser,
+        userData.role
+      );
+      await SecureStore.setItemAsync("userEmail", userData.email);
 
-  const dynamicStyles = StyleSheet.create({
+      setModalState({
+        visible: true,
+        message: response.data.message || "Login realizado!",
+        type: "success",
+      });
+
+      setUsuario({ email: "", password: "", showSenha: true });
+
+      setTimeout(() => {
+        handleCloseLogin();
+        navigation.navigate("Principal");
+      }, 1000);
+    } catch (error) {
+      setModalState({
+        visible: true,
+        message: error.response?.data?.details || "Erro desconhecido",
+        type: "error",
+      });
+    }
+  };
+
+  const styles = StyleSheet.create({
     overlay: {
       flex: 1,
       backgroundColor: "rgba(0,0,0,0.7)",
@@ -121,7 +110,7 @@ await SecureStore.setItemAsync("userEmail", userData.email);
       alignItems: "center",
     },
     modal: {
-      backgroundColor: "rgba(255, 255, 255, 1)",
+      backgroundColor: "#fff",
       padding: width * 0.06,
       borderRadius: 15,
       width: width * 0.85,
@@ -139,7 +128,7 @@ await SecureStore.setItemAsync("userEmail", userData.email);
       resizeMode: "contain",
       marginBottom: height * 0.02,
     },
-    loginInputContainer: {
+    inputContainer: {
       flexDirection: "row",
       alignItems: "center",
       width: "100%",
@@ -151,18 +140,17 @@ await SecureStore.setItemAsync("userEmail", userData.email);
       borderRadius: 8,
       marginBottom: height * 0.025,
     },
-    loginInputField: {
+    inputField: {
       flex: 1,
       fontSize: width * 0.04,
       color: "#333",
       paddingVertical: 0,
     },
-    confirmButton: {
+    button: {
       backgroundColor: "rgb(177, 16, 16)",
       paddingVertical: height * 0.02,
       paddingHorizontal: width * 0.08,
       borderRadius: 10,
-      flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       width: "100%",
@@ -173,13 +161,12 @@ await SecureStore.setItemAsync("userEmail", userData.email);
       elevation: 6,
       marginBottom: height * 0.015,
     },
-    confirmButtonText: {
+    buttonText: {
       color: "white",
       fontWeight: "bold",
       fontSize: width * 0.045,
-      marginLeft: width * 0.02,
     },
-    buttonToCadastro: {
+    linkButton: {
       backgroundColor: "transparent",
       paddingVertical: height * 0.0001,
       paddingHorizontal: width * 0.05,
@@ -188,7 +175,7 @@ await SecureStore.setItemAsync("userEmail", userData.email);
       marginTop: height * 0.015,
       width: "100%",
     },
-    textButtonToCadastro: {
+    linkText: {
       fontSize: width * 0.045,
       color: "rgb(152, 0, 0)",
       fontWeight: "bold",
@@ -205,11 +192,11 @@ await SecureStore.setItemAsync("userEmail", userData.email);
   return (
     <Modal
       animationType="fade"
-      transparent={true}
+      transparent
       visible={loginModalVisible}
       onRequestClose={handleCloseLogin}
     >
-      <View style={dynamicStyles.overlay}>
+      <View style={styles.overlay}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{
@@ -219,18 +206,19 @@ await SecureStore.setItemAsync("userEmail", userData.email);
             width: "100%",
           }}
         >
-          <View style={dynamicStyles.modal}>
+          <View style={styles.modal}>
             <Image
               source={require("../../img/logo.png")}
-              style={dynamicStyles.headerImage}
+              style={styles.headerImage}
             />
 
             {/* Email */}
-            <View style={dynamicStyles.loginInputContainer}>
+            <View style={styles.inputContainer}>
               <Ionicons
                 name="person-outline"
                 size={width * 0.05}
                 color="gray"
+                style={{ marginRight: width * 0.02 }}
               />
               <TextInput
                 placeholder="e-mail"
@@ -238,13 +226,19 @@ await SecureStore.setItemAsync("userEmail", userData.email);
                 onChangeText={(value) =>
                   setUsuario({ ...usuario, email: value })
                 }
-                style={dynamicStyles.loginInputField}
+                style={styles.inputField}
                 placeholderTextColor="gray"
               />
             </View>
 
             {/* Senha */}
-            <View style={dynamicStyles.loginInputContainer}>
+            <View style={styles.inputContainer}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={width * 0.05}
+                color="gray"
+                style={{ marginRight: width * 0.02 }}
+              />
               <TextInput
                 placeholder="senha"
                 value={usuario.password}
@@ -252,7 +246,7 @@ await SecureStore.setItemAsync("userEmail", userData.email);
                 onChangeText={(value) =>
                   setUsuario({ ...usuario, password: value })
                 }
-                style={dynamicStyles.loginInputField}
+                style={styles.inputField}
                 placeholderTextColor="gray"
               />
               <TouchableOpacity
@@ -268,38 +262,32 @@ await SecureStore.setItemAsync("userEmail", userData.email);
               </TouchableOpacity>
             </View>
 
-            {/* Botão login */}
-            <TouchableOpacity
-              onPress={handleLogin}
-              style={dynamicStyles.confirmButton}
-            >
-              <Text style={dynamicStyles.confirmButtonText}>Login</Text>
+            {/* Botão de Login */}
+            <TouchableOpacity onPress={handleLogin} style={styles.button}>
+              <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
 
-            <View style={dynamicStyles.separator} />
+            <View style={styles.separator} />
 
             {/* Esqueceu senha */}
             <TouchableOpacity
-              style={dynamicStyles.buttonToCadastro}
+              style={styles.linkButton}
               onPress={() => setForgotPasswordModalVisible(true)}
             >
-              <Text style={dynamicStyles.textButtonToCadastro}>
-                Esqueceu a senha?
-              </Text>
+              <Text style={styles.linkText}>Esqueceu a senha?</Text>
             </TouchableOpacity>
 
             {/* Cadastro */}
             <TouchableOpacity
-              style={dynamicStyles.buttonToCadastro}
+              style={styles.linkButton}
               onPress={() => {
                 handleCloseLogin();
-                if (onOpenCadastro) onOpenCadastro();
-                else navigation.navigate("Cadastro");
+                onOpenCadastro
+                  ? onOpenCadastro()
+                  : navigation.navigate("Cadastro");
               }}
             >
-              <Text style={dynamicStyles.textButtonToCadastro}>
-                Cadastre-se
-              </Text>
+              <Text style={styles.linkText}>Cadastre-se</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -307,11 +295,11 @@ await SecureStore.setItemAsync("userEmail", userData.email);
 
       {/* Modais */}
       <CustomModal
-        open={internalModalVisible}
-        onClose={() => setInternalModalVisible(false)}
-        title={internalModalType === "success" ? "Login Concluído" : "Erro"}
-        message={internalModalMessage}
-        type={internalModalType}
+        open={modalState.visible}
+        onClose={() => setModalState({ ...modalState, visible: false })}
+        title={modalState.type === "success" ? "Login Concluído" : "Erro"}
+        message={modalState.message}
+        type={modalState.type}
       />
 
       <ForgotPasswordModal

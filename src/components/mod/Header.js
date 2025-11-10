@@ -6,9 +6,14 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 
 const { width } = Dimensions.get("window");
 
-const Header = ({ isManager, onProfilePress, onLogoutPress, onArquivosPress }) => {
+const Header = ({ isManager, onProfilePress, onLogoutPress, onArquivosPress, onAddPress }) => {
   return (
     <View style={styles.header}>
+      {/* Botão de adicionar item (visível para todos) */}
+      <TouchableOpacity onPress={onAddPress} style={styles.addButton}>
+        <AntDesign name="plus" size={28} color="#FFF" />
+      </TouchableOpacity>
+
       {/* Profile */}
       <TouchableOpacity
         onPress={onProfilePress}
@@ -20,7 +25,7 @@ const Header = ({ isManager, onProfilePress, onLogoutPress, onArquivosPress }) =
         <Ionicons name="person-circle-outline" color="#FFF" size={40} />
       </TouchableOpacity>
 
-      {/* Apenas managers veem o folderButton */}
+      {/* Apenas managers veem o botão de arquivos */}
       {isManager && (
         <TouchableOpacity onPress={onArquivosPress} style={styles.folderButton}>
           <MaterialCommunityIcons name="folder-outline" color="#FFF" size={40} />
@@ -46,6 +51,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: width,
     paddingRight: 20,
+  },
+  addButton: {
+    backgroundColor: "#600000",
+    borderRadius: 50,
+    padding: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "white",
+    borderWidth: 2,
+    marginRight: 10,
   },
   profile: {
     backgroundColor: "#600000",

@@ -75,8 +75,16 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
   }, []);
 
   const handleTransaction = async () => {
-    if (!quantityChange || isNaN(quantityChange) || parseFloat(quantityChange) <= 0) {
-      showCustomModal("Erro", "Por favor, insira uma quantidade válida e positiva.", "error");
+    if (
+      !quantityChange ||
+      isNaN(quantityChange) ||
+      parseFloat(quantityChange) <= 0
+    ) {
+      showCustomModal(
+        "Erro",
+        "Por favor, insira uma quantidade válida e positiva.",
+        "error"
+      );
       return;
     }
 
@@ -90,12 +98,14 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       if (!fkIdUser) throw new Error("Usuário inválido no token.");
 
       const qtyNum = parseFloat(quantityChange);
-      const idItem = detailedItem?.idItem;
-      if (!idItem) throw new Error("ID do item não encontrado.");
+      const idLot =
+        detailedItem?.lots?.[0]?.idLot ||
+        detailedItem?.idLot ||
+        detailedItem?.lot?.idLot;
+
+      if (!idLot) throw new Error("ID do lote não encontrado.");
 
       let payload;
-
-      // 🔹 Verifica a ação selecionada
       if (actionDescription === "IN") {
         payload = { quantity: qtyNum, fkIdUser, isAjust: false };
       } else if (actionDescription === "OUT") {
@@ -104,7 +114,7 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
         payload = { quantity: qtyNum, fkIdUser, isAjust: true };
       }
 
-      const response = await sheets.updateLotQuantity(idItem, payload);
+      const response = await sheets.updateLotQuantity(idLot, payload);
 
       if (response.data?.success) {
         showCustomModal(
@@ -162,11 +172,20 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
 
   return (
     <>
-      <Modal animationType="slide" transparent={true} visible={isVisible} onRequestClose={onClose}>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isVisible}
+        onRequestClose={onClose}
+      >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             {fetching ? (
-              <ActivityIndicator size="large" color="#600000" style={{ margin: 20 }} />
+              <ActivityIndicator
+                size="large"
+                color="#600000"
+                style={{ margin: 20 }}
+              />
             ) : detailedItem ? (
               <>
                 <TouchableOpacity style={styles.closeIcon} onPress={onClose}>
@@ -186,14 +205,19 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                 ) : (
                   <Text style={{ alignSelf: "center", marginBottom: 15 }}>
                     Item não possui imagem!
-
                   </Text>
                 )}
 
-                <Text style={styles.modalText}>Descrição: {detailedItem.description}</Text>
-                <Text style={styles.modalText}>Categoria: {detailedItem.category?.value}</Text>
+                <Text style={styles.modalText}>
+                  Descrição: {detailedItem.description}
+                </Text>
+                <Text style={styles.modalText}>
+                  Categoria: {detailedItem.category?.value}
+                </Text>
                 {detailedItem.brand && (
-                  <Text style={styles.modalText}>Marca: {detailedItem.brand}</Text>
+                  <Text style={styles.modalText}>
+                    Marca: {detailedItem.brand}
+                  </Text>
                 )}
                 <Text style={styles.modalText}>
                   Quantidade disponível: {detailedItem.totalQuantity}
@@ -208,10 +232,14 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                       {actionDescription === "IN"
                         ? "Entrada"
                         : actionDescription === "OUT"
-                        ? "Saída"
-                        : "Ajuste"}
+                          ? "Saída"
+                          : "Ajuste"}
                     </Text>
-                    <Ionicons name="caret-down-outline" size={20} color="#fff" />
+                    <Ionicons
+                      name="caret-down-outline"
+                      size={20}
+                      color="#fff"
+                    />
                   </TouchableOpacity>
 
                   <TextInput
@@ -238,7 +266,10 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
 
                 {isManager && (
                   <TouchableOpacity
-                    style={[styles.transactButton, { backgroundColor: "#600000" }]}
+                    style={[
+                      styles.transactButton,
+                      { backgroundColor: "#600000" },
+                    ]}
                     onPress={handleDeleteItem}
                     disabled={loading}
                   >
@@ -251,7 +282,9 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                 )}
               </>
             ) : (
-              <Text style={{ margin: 20, textAlign: "center" }}>Item não encontrado</Text>
+              <Text style={{ margin: 20, textAlign: "center" }}>
+                Item não encontrado
+              </Text>
             )}
 
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>

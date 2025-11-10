@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "StockSenai",
-    "slug": "meuApp",
+    "name": "SENAI - Estoque",
+    "slug": "senai-estoque-v1",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./src/img/iconesenai.png",
+    "icon": "./src/img/slogo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./src/img/slogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,15 +17,22 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./src/img/slogo.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.mariafernandacintra.meuApp"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./src/img/slogo.png"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6dc95800-de48-4a6b-b35c-2f191a3c26ff"
+      }
+    },
+    "owner": "mariafernandacintra"
   }
 }

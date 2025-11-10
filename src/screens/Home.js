@@ -42,7 +42,7 @@ function Home() {
       borderRadius: 8,
       borderColor: "white",
       borderWidth: 4,
-      marginRight: width * 0.04,
+      marginRight: width * 0.025,
     },
     buttonToCadastro: {
       backgroundColor: "rgb(250, 24, 24)",
@@ -79,15 +79,18 @@ function Home() {
 
     body: {
       flex: 1, 
-      width: width * 0.8,
+      width: width * 1,
       alignItems: "center", 
       justifyContent: "center", 
     },
+
     textBody: {
       color: "white",
       fontSize: Math.min(width * 0.188, height * 0.9),
+      //fontSize: 92,
       fontWeight: "bold",
-      textAlign: "left", 
+      //textAlign: "left", 
+      marginLeft: 10,
     }
   });
 
@@ -114,7 +117,7 @@ function Home() {
       </View>
       <View style={dynamicStyles.body}>
         <Text style={dynamicStyles.textBody}>
-          Seja Bem Vindo ao Site de Estoque do SENAI
+          Seja Bem-Vindo ao aplicativo de Estoque do SENAI
         </Text>
       </View>
 
