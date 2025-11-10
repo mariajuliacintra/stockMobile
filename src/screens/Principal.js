@@ -179,8 +179,7 @@ function Principal() {
         index: 0,
         routes: [{ name: "Home" }],
       });
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const handleProfile = () => navigation.navigate("Perfil");
@@ -193,6 +192,7 @@ function Principal() {
         onProfilePress={handleProfile}
         onLogoutPress={handleLogout}
         onArquivosPress={handleArquivos}
+        onAddPress={() => setShowCreateModal(true)}
       />
 
       {/* 🔍 Barra de pesquisa */}
@@ -255,7 +255,6 @@ function Principal() {
         </View>
       )}
 
-      {/* 🧰 Modal de Filtros */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -276,7 +275,10 @@ function Principal() {
             {loadingCategorias ? (
               <ActivityIndicator size="small" color="#600000" />
             ) : (
-              <ScrollView style={{ maxHeight: 250, width: "100%" }}>
+              <ScrollView
+                style={styles.scrollCategorias}
+                contentContainerStyle={{ paddingBottom: 10 }}
+              >
                 {categorias.map((cat) => {
                   const selected = selectedCategories.includes(cat.idCategory);
                   return (
@@ -312,13 +314,6 @@ function Principal() {
               }}
             >
               <Text style={styles.buttonText}>Aplicar Filtros</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.closeButton, { marginTop: 10 }]}
-              onPress={() => setShowCreateModal(true)}
-            >
-              <Text style={styles.buttonText}>Adicionar Item</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -388,10 +383,17 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 20,
     padding: 25,
-    alignItems: "center",
-    width: "85%",
+    alignItems: "flex-start",
+    width: "90%",
+    maxHeight: "80%",
   },
-  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15 },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center", 
+    width: "100%", 
+  },
   closeButton: {
     backgroundColor: "#600000",
     borderRadius: 20,
@@ -399,6 +401,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginTop: 15,
     width: 150,
+    alignSelf: "center",
   },
   buttonText: { color: "white", fontWeight: "bold", textAlign: "center" },
   checkboxRow: {
