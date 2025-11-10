@@ -8,7 +8,7 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
-import api from "../../services/axios"; // importa o objeto com as funções
+import api from "../../services/axios"; 
 
 export default function TransactionModal({ visible, onClose, userId }) {
   const [loading, setLoading] = useState(false);
@@ -91,14 +91,14 @@ export default function TransactionModal({ visible, onClose, userId }) {
 const styles = StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: "rgba(0,0,0,0.7)", // mais escuro para destaque
+      backgroundColor: "rgba(0,0,0,0.7)",
       justifyContent: "center",
       alignItems: "center",
       padding: 20,
     },
     container: {
       backgroundColor: "#fff",
-      borderRadius: 20, // bordas mais arredondadas
+      borderRadius: 20,
       padding: 25,
       width: "95%",
       maxHeight: "85%",

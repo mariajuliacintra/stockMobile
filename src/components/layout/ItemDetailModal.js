@@ -292,7 +292,6 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
             </TouchableOpacity>
           </View>
 
-          {/* 🔹 Modal do seletor de ação */}
           <Modal
             animationType="fade"
             transparent={true}

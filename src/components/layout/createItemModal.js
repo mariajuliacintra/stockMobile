@@ -20,8 +20,6 @@ import * as ImagePicker from "expo-image-picker";
 import { Camera } from "expo-camera";
 import * as SecureStore from "expo-secure-store";
 
-// --- Constants ---
-// ADIÇÃO 1: Adicionamos um uniqueId para usar como key estável no map.
 const initialSpecsState = () => ({
   uniqueId: Date.now() + Math.random(),
   id: "",
@@ -29,7 +27,6 @@ const initialSpecsState = () => ({
 });
 const initialImageState = null;
 
-// ALTERAÇÃO 1: Mover o componente para fora do componente principal.
 const SpecValueInput = ({ spec, index, onSpecChange, specsList }) => {
   const specData = specsList.find((s) => s.idTechnicalSpec === spec.id);
   const placeholder = specData
@@ -47,7 +44,6 @@ const SpecValueInput = ({ spec, index, onSpecChange, specsList }) => {
 };
 
 const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
-  // --- Form States ---
   const [sapCode, setSapCode] = useState("");
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
@@ -70,24 +66,19 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
   const [showAddSpec, setShowAddSpec] = useState(false);
   const [newSpec, setNewSpec] = useState("");
 
-  // --- Image ---
   const [selectedImageInfo, setSelectedImageInfo] = useState(initialImageState);
 
-  // --- Dropdowns & UI ---
   const [locations, setLocations] = useState([]);
   const [categories, setCategories] = useState([]);
   const [specs, setSpecs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // --- Modal Feedback ---
   const [internalModalVisible, setInternalModalVisible] = useState(false);
   const [internalModalType, setInternalModalType] = useState("success");
   const [internalModalMessage, setInternalModalMessage] = useState("");
 
-  // --- Camera Permission ---
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
 
-  // --- Form Validation ---
   const isFormValid = useMemo(() => {
     return (
       name.trim() !== "" &&
@@ -98,7 +89,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     );
   }, [name, minimumStock, quantity, selectedLocation, selectedCategory]);
 
-  // --- Fetch Dropdowns ---
   const fetchDropdownData = useCallback(async () => {
     try {
       setLoading(true);
@@ -146,7 +136,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     })();
   }, []);
 
-  // --- Clear Form ---
   const clearFields = () => {
     setSapCode("");
     setName("");
@@ -167,7 +156,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     onClose();
   };
 
-  // --- Technical Specs ---
   const handleAddSpec = () =>
     setSelectedSpecs((prev) => [...prev, initialSpecsState()]);
 
@@ -274,16 +262,9 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     if (hasDuplicateSpecs)
       return "Você selecionou a mesma especificação técnica mais de uma vez.";
 
-    // const hasIncompleteSpec = selectedSpecs.some(
-    //   (spec) => spec.id && !spec.value.trim()
-    // );
-    // if (hasIncompleteSpec)
-    //   return "Todas as especificações técnicas selecionadas devem ter um valor preenchido.";
-
     return null;
   };
 
-  // --- Image Picker & Camera ---
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -332,7 +313,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
     }
   };
 
-  // --- Create Item ---
   const handleCreateItem = async () => {
     setLoading(true);
     const validationError = validatePayload();
@@ -349,7 +329,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
       return acc;
     }, {});
     
-    // Se não houver specs, enviar null
     const createItemPayload = {
       sapCode,
       name,
@@ -415,7 +394,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Image */}
               <Text style={styles.label}>Imagem do Item</Text>
               {selectedImageInfo ? (
                 <Image
@@ -444,7 +422,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 <Text style={styles.imageButtonText}>Tirar Foto</Text>
               </TouchableOpacity>
 
-              {/* Inputs */}
               <TextInput
                 style={styles.input}
                 placeholder="Código SAP *"
@@ -485,7 +462,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 onChangeText={setQuantity}
               />
 
-              {/* Location & Category */}
               <Text style={styles.label}>Local *</Text>
               <View style={styles.pickerContainer}>
                 <Picker
@@ -503,12 +479,11 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 </Picker>
               </View>
 
-              {/* Botão Adicionar Localização Fora do Retângulo */}
               {userRole === "manager" && (
                 <>
                   <TouchableOpacity
                     onPress={() => setShowAddLocation((prev) => !prev)}
-                    style={styles.addButton} // Novo estilo para o botão
+                    style={styles.addButton} 
                   >
                     <Text style={styles.addButtonText}>
                       + Adicionar Localização
@@ -561,12 +536,11 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 </Picker>
               </View>
 
-              {/* Botão para adicionar nova categoria */}
               {userRole === "manager" && (
                 <>
                   <TouchableOpacity
                     onPress={() => setShowAddCategory((prev) => !prev)}
-                    style={styles.addButton} // Estilo reutilizado do botão de categoria
+                    style={styles.addButton} 
                   >
                     <Text style={styles.addButtonText}>
                       + Adicionar Categoria
@@ -592,7 +566,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 </>
               )}
 
-              {/* Technical Specs */}
               <Text style={styles.label}>Especificações Técnicas</Text>
               {selectedSpecs.map((spec, index) => (
                 <View key={spec.uniqueId} style={styles.specGroup}>
@@ -617,7 +590,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                     </Picker>
                   </View>
 
-                  {/* Campo para editar o valor da especificação, caso tenha sido selecionada */}
                   {spec.id !== "" && (
                     <SpecValueInput
                       spec={spec}
@@ -629,12 +601,11 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 </View>
               ))}
 
-              {/* Botão Adicionar Especificação Fora do Retângulo */}
               {userRole === "manager" && (
                 <>
                   <TouchableOpacity
                     onPress={() => setShowAddSpec((prev) => !prev)}
-                    style={styles.addButton} // Estilo reutilizado do botão de categoria e localização
+                    style={styles.addButton} 
                   >
                     <Text style={styles.addButtonText}>
                       + Adicionar Especificação Técnica
@@ -668,7 +639,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 </Text>
               </TouchableOpacity>
 
-              {/* Expiration */}
               <View style={styles.validityRow}>
                 <Text style={styles.label}>Sem Validade</Text>
                 <Switch value={noExpiration} onValueChange={setNoExpiration} />
@@ -697,7 +667,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
                 />
               )}
 
-              {/* Save Button */}
               <TouchableOpacity
                 style={[
                   styles.saveButton,
@@ -717,7 +686,6 @@ const CreateItemModal = ({ visible, onClose, fkIdUser }) => {
         </View>
       </Modal>
 
-      {/* Feedback Modal */}
       <CustomModal
         open={internalModalVisible}
         onClose={() => {
@@ -829,13 +797,13 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "red",
     padding: 8,
-    marginTop: -5, // Ajusta o espaço entre o dropdown e o botão
+    marginTop: -5, 
     alignItems: "center",
     borderRadius: 8,
   },
   addLocationContainer: {
-    flexDirection: "row", // Faz com que o input e o botão fiquem lado a lado
-    gap: 8, // Adiciona um espaço entre o input e o botão
+    flexDirection: "row", 
+    gap: 8, 
     marginTop: 10,
     marginBottom: 10,
   },
@@ -848,7 +816,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 1,
     marginBottom: 10,
-    marginLeft: 4, // Dá espaço entre o input e o botão
+    marginLeft: 4, 
   },
 });
 

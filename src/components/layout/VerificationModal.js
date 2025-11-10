@@ -21,7 +21,7 @@ export default function VerificationModal({
   onClose,
   formData,
   onVerificationSuccess,
-  mode = "register", // register ou update
+  mode = "register", 
 }) {
   const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -81,7 +81,7 @@ export default function VerificationModal({
         }
 
         if (mode === "update") {
-          const updatedUser = response.data.data; // API envia dados do usuário atualizado
+          const updatedUser = response.data.data; 
           onVerificationSuccess(updatedUser || {});
         }
 
@@ -108,7 +108,6 @@ export default function VerificationModal({
     }
   }
 
-  // 🔹 JSX dentro da função (return correto)
   return (
     <>
       <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>

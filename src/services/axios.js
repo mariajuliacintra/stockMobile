@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// Interceptor para adicionar o token em todas as requisições
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync("tokenUsuario");
@@ -47,7 +46,7 @@ const sheets = {
     }),
   registerUserByManager: (idUser) => api.post(`/user/register/manager`, idUser),
 
-  // Itens / Lotes
+  // Itens 
   updateLotQuantity: (idLot, payload) =>
     api.put(`lot/quantity/${idLot}`, payload),
 
@@ -82,7 +81,6 @@ const sheets = {
   createItem: (payload) => api.post("item", payload), // POST /stock/item
   filtroItems: (body) => api.post("items/filter?page=1&limit=50", body),
 
-  // Dropdowns
   getCategories: () => api.get("category"),
   getLocations: () => api.get("location"),
   getTechnicalSpecs: () => api.get("technicalSpec"),
@@ -91,7 +89,6 @@ const sheets = {
   createCategory: (data) => api.post("category", data),
   createTechnicalSpec: (data) => api.post("technicalSpec", data),
 
-  // Upload de imagem do usuário
   uploadItemImage: async (idItem, imageUri) => {
     if (!imageUri || typeof imageUri !== "string") {
       console.warn("URI da imagem não fornecida ou inválida para upload.");

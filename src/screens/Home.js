@@ -87,9 +87,7 @@ function Home() {
     textBody: {
       color: "white",
       fontSize: Math.min(width * 0.188, height * 0.9),
-      //fontSize: 92,
       fontWeight: "bold",
-      //textAlign: "left", 
       marginLeft: 10,
     }
   });
