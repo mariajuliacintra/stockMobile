@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
-import sheets from "../../services/axios"; 
+import sheets from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
 
 const { width, height } = Dimensions.get("window");
@@ -34,15 +34,16 @@ export default function VerificationModal({
     try {
       await SecureStore.setItemAsync("idUsuario", idUsuario.toString());
       await SecureStore.setItemAsync("tokenUsuario", token.toString());
-    } catch (erro) {
-    }
+    } catch (erro) {}
   }
 
   async function handleCodeVerification() {
     setIsLoading(true);
 
     if (!formData.email || !verificationCode) {
-      setInternalModalMessage("Por favor, insira o e-mail e o código de verificação.");
+      setInternalModalMessage(
+        "Por favor, insira o e-mail e o código de verificação."
+      );
       setInternalModalType("error");
       setInternalModalVisible(true);
       setIsLoading(false);
@@ -66,12 +67,18 @@ export default function VerificationModal({
 
       if (response.data.success) {
         setInternalModalMessage(
-          response.data.message || response.data.details || "Verificação concluída com sucesso!"
+          response.data.message ||
+            response.data.details ||
+            "Verificação concluída com sucesso!"
         );
         setInternalModalType("success");
         setInternalModalVisible(true);
 
-        if (mode === "register" && Array.isArray(response.data.user) && response.data.user.length > 0) {
+        if (
+          mode === "register" &&
+          Array.isArray(response.data.user) &&
+          response.data.user.length > 0
+        ) {
           const usuario = response.data.user[0];
           const idUsuario = usuario.idUser;
           const token = usuario.token;
@@ -81,8 +88,13 @@ export default function VerificationModal({
         }
 
         if (mode === "update") {
-          const updatedUser = response.data.data; 
-          onVerificationSuccess(updatedUser || {});
+          const updatedUser = {
+            idUser: formData.idUser, 
+            name: formData.name,
+            email: formData.email,
+          };
+
+          onVerificationSuccess(updatedUser);
         }
 
         setTimeout(() => {
@@ -90,7 +102,9 @@ export default function VerificationModal({
         }, 800);
       } else {
         setInternalModalMessage(
-          response.data.details || response.data.error || "Código incorreto ou expirado."
+          response.data.details ||
+            response.data.error ||
+            "Código incorreto ou expirado."
         );
         setInternalModalType("error");
         setInternalModalVisible(true);
@@ -98,7 +112,9 @@ export default function VerificationModal({
       }
     } catch (error) {
       setInternalModalMessage(
-        error.response?.data?.details || error.response?.data?.error || "Erro ao verificar o código."
+        error.response?.data?.details ||
+          error.response?.data?.error ||
+          "Erro ao verificar o código."
       );
       setInternalModalType("error");
       setInternalModalVisible(true);
@@ -110,21 +126,37 @@ export default function VerificationModal({
 
   return (
     <>
-      <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={visible}
+        onRequestClose={onClose}
+      >
         <View style={styles.overlay}>
           <View style={styles.modal}>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
+              <Ionicons
+                name="close-circle-outline"
+                size={width * 0.07}
+                color="#999"
+              />
             </TouchableOpacity>
             <Text style={styles.titleText}>Verificação de E-mail</Text>
             <Text style={styles.instructionText}>
-              Um código foi enviado para o e-mail: <Text style={{ fontWeight: "bold" }}>{formData.email}</Text>. 
-              {mode === "register" ? " Complete o cadastro abaixo." : " Confirme a atualização abaixo."}
+              Um código foi enviado para o e-mail:{" "}
+              <Text style={{ fontWeight: "bold" }}>{formData.email}</Text>.
+              {mode === "register"
+                ? " Complete o cadastro abaixo."
+                : " Confirme a atualização abaixo."}
             </Text>
 
-            <View style={[styles.inputContainer, styles.disabledInputContainer]}>
+            <View
+              style={[styles.inputContainer, styles.disabledInputContainer]}
+            >
               <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
-              <Text style={[styles.inputField, styles.disabledInputText]}>{formData.email}</Text>
+              <Text style={[styles.inputField, styles.disabledInputText]}>
+                {formData.email}
+              </Text>
             </View>
 
             <View style={styles.inputContainer}>
@@ -139,8 +171,16 @@ export default function VerificationModal({
               />
             </View>
 
-            <TouchableOpacity onPress={handleCodeVerification} style={styles.confirmButton} disabled={isLoading}>
-              {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmButtonText}>Verificar</Text>}
+            <TouchableOpacity
+              onPress={handleCodeVerification}
+              style={styles.confirmButton}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.confirmButtonText}>Verificar</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

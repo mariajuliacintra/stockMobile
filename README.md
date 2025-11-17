@@ -1,20 +1,19 @@
+
 # SprintMobile
 
 Este é o aplicativo mobile de um sistema de controle de estoque desenvolvido durante um sprint.
 
+
 ## Descrição
 
-O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outras funcionalidades relacionadas ao controle de estoque. Desenvolvido com React Native e utilizando Expo, a interface foi criada para oferecer uma experiência de usuário moderna, intuitiva e responsiva. O aplicativo integra com a Sprint API para obter dados em tempo real e possibilitar a navegação entre as telas.
-
+O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e funcionalidades de controle de estoque. Desenvolvido com React Native e Expo, ele se integra à Sprint API para obter dados e permitir navegação fluida entre as telas.
 ## Tecnologias Utilizadas
-
 - **React Native** – Framework para construir aplicações mobile nativas usando JavaScript e React.
 - **Expo** – Plataforma que facilita o desenvolvimento, teste e deploy de aplicativos React Native.
 - **React Navigation** – Biblioteca para gerenciamento de rotas e navegação dentro do aplicativo.
 - **Axios** – Cliente HTTP para realizar requisições a APIs.
 - **Styled-Components** – Biblioteca para estilização de componentes utilizando tagged template literals.
-
-## Estrutura do Projeto
+## Estrutura do projeto
 
 - **assets/** : Imagens, fontes e outros recursos utilizados no aplicativo.
 - **src/** : Código-fonte da aplicação (componentes, telas, estilos e lógica de negócio).
@@ -99,6 +98,34 @@ O projeto consiste em uma aplicação mobile com telas de Login, Cadastro e outr
   ```bash
   npm i styled-components
   ```
+  
+## Como gerar um APK (build para android)
+
+- Instalar o EAS CLI:
+```bash
+  npm install -g eas-cli
+  ```
+
+- Fazer login:
+```bash
+    eas login
+```
+
+- Configurar Projeto:
+```bash
+    eas build:configure
+```
+
+## Gerar APK:
+- Gerar build online (Expo gera link):
+```bash
+    eas build -p android --profile preview
+```
+
+- Gerar APK localmente (gera arquivo .apk direto no computador):
+```bash
+    eas build -p android --profile preview --local
+```
 
 ## Documentação Completa dos Requisitos Necessários
 
@@ -109,4 +136,6 @@ Os requisitos necessários para funcionamento pleno do projeto estão em outro r
 - [@mariafernandacintra](https://github.com/MariaFernandaCintra)
 
 - [@joaovitorqueiroz](https://github.com/Joqueiroz)
+
+
 
