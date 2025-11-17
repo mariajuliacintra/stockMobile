@@ -130,7 +130,6 @@ export default function ArquivosScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 🔔 Modal de mensagens */}
       <CustomModal
         open={modalVisible}
         onClose={() => setModalVisible(false)}

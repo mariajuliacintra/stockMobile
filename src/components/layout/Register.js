@@ -16,11 +16,10 @@ import { Ionicons } from "@expo/vector-icons";
 import api from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
 import VerificationModal from "./VerificationModal";
-import Login from "./Login"; // importa o Login (modal)
+import Login from "./Login"; 
 
 const { width, height } = Dimensions.get("window");
 
-// 🔹 Input reutilizável
 const InputField = ({ iconName, placeholder, value, onChangeText, secureTextEntry, onToggleSecureEntry }) => (
   <View style={styles.inputContainer}>
     <Ionicons name={iconName} size={width * 0.05} color="gray" />
@@ -49,31 +48,25 @@ export default function Register({ visible, onClose, onOpenLogin }) {
   const [formData, setFormData] = useState(initialFormData);
   const [showPassword, setShowPassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-
-  // modais
   const [verificationModalVisible, setVerificationModalVisible] = useState(false);
   const [loginModalVisible, setLoginModalVisible] = useState(false);
   const [customModal, setCustomModal] = useState({ visible: false, message: "", type: "info" });
 
-  // reset ao abrir
   useEffect(() => {
     if (visible) {
       setCustomModal({ visible: false, message: "", type: "info" });
     }
   }, [visible]);
 
-  // atualizar campos
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // fechar e resetar
   const handleCloseAndReset = () => {
     setCustomModal({ visible: false, message: "", type: "info" });
     onClose();
   };
 
-  // cadastro
   const handleCadastro = async () => {
     setIsLoading(true);
     try {
@@ -96,7 +89,6 @@ export default function Register({ visible, onClose, onOpenLogin }) {
     }
   };
 
-  // sucesso verificação → abre login
   const handleVerificationSuccess = () => {
     setFormData(initialFormData);
     setVerificationModalVisible(false);
@@ -110,20 +102,14 @@ export default function Register({ visible, onClose, onOpenLogin }) {
 
   return (
     <>
-      {/* modal de cadastro */}
       <Modal animationType="fade" transparent visible={visible} onRequestClose={handleCloseAndReset}>
         <View style={styles.overlay}>
           <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
             <View style={styles.modal}>
-              {/* fechar */}
               <TouchableOpacity style={styles.closeButton} onPress={handleCloseAndReset}>
                 <Ionicons name="close-circle-outline" size={width * 0.07} color="#999" />
               </TouchableOpacity>
-
-              {/* logo */}
               <Image source={require("../../img/logo.png")} style={styles.headerImage} />
-
-              {/* inputs */}
               <InputField
                 iconName="person-outline"
                 placeholder="nome"
@@ -153,15 +139,12 @@ export default function Register({ visible, onClose, onOpenLogin }) {
                 onToggleSecureEntry={() => setShowPassword(!showPassword)}
               />
 
-              {/* botão cadastrar */}
               <TouchableOpacity onPress={handleCadastro} style={styles.confirmButton} disabled={isLoading}>
                 {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmButtonText}>Cadastrar-se</Text>}
               </TouchableOpacity>
 
-              {/* separador */}
               <View style={styles.separator} />
 
-              {/* ir para login */}
               <Text style={styles.createAccountText}>Já tem uma conta?</Text>
               <TouchableOpacity
                 style={styles.buttonToLogin}
@@ -178,7 +161,6 @@ export default function Register({ visible, onClose, onOpenLogin }) {
         </View>
       </Modal>
 
-      {/* outros modais */}
       <Login visible={loginModalVisible} onClose={() => setLoginModalVisible(false)} onOpenCadastro={() => {}} />
 
       <VerificationModal

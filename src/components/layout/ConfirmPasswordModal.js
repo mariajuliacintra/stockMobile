@@ -60,7 +60,6 @@ export default function ConfirmPasswordModal({
         <View style={styles.modal}>
           <Text style={styles.title}>Confirme sua senha</Text>
 
-          {/* Campo de senha com ícone de olhinho */}
           <View style={styles.passwordContainer}>
             <TextInput
               placeholder="Senha atual"

@@ -28,7 +28,6 @@ export default function PerfilScreen() {
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
 
-  // Estados principais
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [currentEmail, setCurrentEmail] = useState("");
@@ -40,20 +39,17 @@ export default function PerfilScreen() {
   const [loading, setLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
-  // Modais
   const [senhaModalVisible, setSenhaModalVisible] = useState(false);
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [transactionsModalVisible, setTransactionsModalVisible] =
     useState(false);
 
-  // Modal personalizado
   const [customModalVisible, setCustomModalVisible] = useState(false);
   const [customModalTitle, setCustomModalTitle] = useState("");
   const [customModalMessage, setCustomModalMessage] = useState("");
   const [customModalType, setCustomModalType] = useState("info");
 
-  // Mostrar/ocultar senhas
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -65,7 +61,6 @@ export default function PerfilScreen() {
   };
   const onDismissCustomModal = () => setCustomModalVisible(false);
 
-  // Verifica papel do usuário
   useEffect(() => {
     const fetchRole = async () => {
       const storedRole = await SecureStore.getItemAsync("userRole");
@@ -80,7 +75,6 @@ export default function PerfilScreen() {
     fetchRole();
   }, []);
 
-  // Busca dados do usuário
   useEffect(() => {
     const fetchUserData = async () => {
       setIsDataLoading(true);
@@ -110,8 +104,6 @@ export default function PerfilScreen() {
     fetchUserData();
   }, []);
 
-
-  // Valida senha atual
   const handleValidatePassword = async (senhaAtual) => {
     try {
       const storedToken = await SecureStore.getItemAsync("tokenUsuario");
@@ -141,7 +133,6 @@ export default function PerfilScreen() {
     }
   };
 
-  // Atualiza perfil
   const handleUpdateUser = async () => {
     if (newPassword && newPassword !== confirmNewPassword) {
       showCustomModal("Erro", "As senhas não coincidem.", "error");
@@ -225,7 +216,6 @@ export default function PerfilScreen() {
     }
   };
 
-  // Deletar usuário
   const handleDeleteUser = async () => {
     try {
       const storedToken = await SecureStore.getItemAsync("tokenUsuario");
@@ -297,17 +287,10 @@ export default function PerfilScreen() {
           )}
         </View>
 
-        {/* Card */}
         <View style={styles.card}>
           <Image source={require("../img/logo.png")} style={styles.logo} />
 
-          {/* Campos */}
-          <CustomInput
-            placeholder="Nome"
-            value={nome}
-            onChangeText={setNome}
-            editable={isEditing}
-          />
+          <CustomInput placeholder="Nome" value={nome} onChangeText={setNome} editable={isEditing} />
           <CustomInput
             placeholder="E-mail"
             value={email}
@@ -335,7 +318,6 @@ export default function PerfilScreen() {
             </>
           )}
 
-          {/* Botões */}
           {isEditing ? (
             <TouchableOpacity
               style={styles.button}
@@ -381,7 +363,6 @@ export default function PerfilScreen() {
           )}
         </View>
 
-        {/* Modais */}
         <ConfirmPasswordModal
           visible={senhaModalVisible}
           onValidatePassword={handleValidatePassword}

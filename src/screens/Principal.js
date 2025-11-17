@@ -43,7 +43,6 @@ function Principal() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [userId, setUserId] = useState(null);
 
-  // ✅ Verifica se o usuário é manager
   useEffect(() => {
     const fetchRole = async () => {
       const storedRole = await SecureStore.getItemAsync("userRole");
@@ -58,7 +57,6 @@ function Principal() {
     fetchRole();
   }, []);
 
-  // 🔹 Buscar userId
   useEffect(() => {
     const fetchUserId = async () => {
       try {
@@ -69,7 +67,6 @@ function Principal() {
     fetchUserId();
   }, []);
 
-  // 📦 Buscar categorias
   const fetchCategorias = async () => {
     setLoadingCategorias(true);
     try {
@@ -83,7 +80,6 @@ function Principal() {
     }
   };
 
-  // 🔹 Buscar todos os itens
   const fetchItems = async (pageToLoad = 1, append = false) => {
     if (pageToLoad === 1 && !append) setLoading(true);
     else setLoadingMore(true);
@@ -106,7 +102,6 @@ function Principal() {
     }
   };
 
-  // 🟢 Buscar itens filtrados (formato correto da API)
   const filterItems = async (pageToLoad = 1) => {
     setLoading(true);
     try {
@@ -131,7 +126,6 @@ function Principal() {
     }
   };
 
-  // 🟢 Atualiza automaticamente quando pesquisa ou filtros mudam
   useEffect(() => {
     const delay = setTimeout(() => {
       if (searchTerm.trim() || selectedCategories.length > 0) {
@@ -143,7 +137,6 @@ function Principal() {
     return () => clearTimeout(delay);
   }, [searchTerm, selectedCategories]);
 
-  // Buscar categorias ao abrir o modal
   useEffect(() => {
     if (isFilterModalVisible) fetchCategorias();
   }, [isFilterModalVisible]);
@@ -155,7 +148,6 @@ function Principal() {
     setDetailModalVisible(!isDetailModalVisible);
   };
 
-  // 🟢 Selecionar / desmarcar categorias (mantém array de IDs)
   const handleCategoryToggle = (categoryId) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryId)
@@ -195,7 +187,6 @@ function Principal() {
         onAddPress={() => setShowCreateModal(true)}
       />
 
-      {/* 🔍 Barra de pesquisa */}
       <View style={styles.searchBarContainer}>
         <TextInput
           style={styles.searchInput}
@@ -212,7 +203,6 @@ function Principal() {
         </TouchableOpacity>
       </View>
 
-      {/* 🧾 Lista de itens */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#600000" />
@@ -310,7 +300,7 @@ function Principal() {
               style={styles.closeButton}
               onPress={() => {
                 toggleFilterModal();
-                filterItems(1); // 🟢 aplica filtro
+                filterItems(1); 
               }}
             >
               <Text style={styles.buttonText}>Aplicar Filtros</Text>
@@ -319,7 +309,6 @@ function Principal() {
         </View>
       </Modal>
 
-      {/* Modal de Detalhes */}
       <ItemDetailModal
         isVisible={isDetailModalVisible}
         onClose={() => {
@@ -330,7 +319,6 @@ function Principal() {
         onItemDeleted={handleItemDeleted}
       />
 
-      {/* Modal de Criação */}
       {userId && (
         <CreateItemModal
           visible={showCreateModal}

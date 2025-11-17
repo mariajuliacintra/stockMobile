@@ -57,7 +57,6 @@ const UsersScreen = () => {
     },
   });
 
-  // Lógica de Requisição
   const fetchUsers = async (page = 1) => {
     try {
       setIsLoading(true);
@@ -285,7 +284,7 @@ const UsersScreen = () => {
 
           {error ? (
             <View style={styles.noUsersContent}>
-              <Text style={styles.errorText}>❌ {error}</Text>
+              <Text style={styles.errorText}> {error}</Text>
               <TouchableOpacity onPress={fetchUsers}>
                 <Text style={styles.retryText}>Tentar Novamente</Text>
               </TouchableOpacity>

@@ -3,15 +3,14 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 
 const Pagination = ({ totalPages, currentPage, onPageChange }) => {
-  if (totalPages <= 1) return null; // não renderiza se só há 1 página
+  if (totalPages <= 1) return null; 
 
-  const maxPagesToShow = 2; // número máximo de botões visíveis
+  const maxPagesToShow = 2;
   const half = Math.floor(maxPagesToShow / 2);
 
   let startPage = Math.max(1, currentPage - half);
   let endPage = Math.min(totalPages, currentPage + half);
 
-  // ajusta para sempre mostrar 5 botões se possível
   if (endPage - startPage < maxPagesToShow - 1) {
     if (startPage === 1) {
       endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
@@ -27,7 +26,6 @@ const Pagination = ({ totalPages, currentPage, onPageChange }) => {
 
   return (
     <View style={styles.container}>
-      {/* Botão Anterior */}
       <TouchableOpacity
         style={[styles.navButton, currentPage === 1 && styles.disabled]}
         disabled={currentPage === 1}
@@ -36,7 +34,6 @@ const Pagination = ({ totalPages, currentPage, onPageChange }) => {
         <AntDesign name="left" size={16} color="#fff" />
       </TouchableOpacity>
 
-      {/* Botões numéricos */}
       {pageNumbers.map((page) => (
         <TouchableOpacity
           key={page}
@@ -56,8 +53,7 @@ const Pagination = ({ totalPages, currentPage, onPageChange }) => {
           </Text>
         </TouchableOpacity>
       ))}
-
-      {/* Botão Próximo */}
+      
       <TouchableOpacity
         style={[
           styles.navButton,

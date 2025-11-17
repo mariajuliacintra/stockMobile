@@ -28,7 +28,6 @@ export default function ConfirmarDelecaoModal({
           <Text style={styles.message}>{message}</Text>
 
           <View style={styles.buttonContainer}>
-            {/* Botão Cancelar (Branco) */}
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
               onPress={onCancel}
@@ -36,15 +35,10 @@ export default function ConfirmarDelecaoModal({
               <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancelar</Text>
             </TouchableOpacity>
 
-            {/* Botão Confirmar (Vermelho) */}
             <TouchableOpacity
               style={[styles.button, styles.confirmButton]}
               onPress={() => {
                 onConfirm();
-                // Não fechamos aqui para permitir que a função onConfirm gerencie o fechamento
-                // se ela tiver alguma lógica assíncrona, mas chamamos onCancel caso a lógica
-                // de deleção seja síncrona ou não feche o modal por conta própria.
-                // Na prática do PerfilScreen, o onConfirm (handleDeleteUser) fecha o modal após a operação.
               }}
             >
               <Text style={styles.buttonText}>Confirmar</Text>
@@ -115,7 +109,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   confirmButton: {
-    // Cor vermelha forte, alinhada com os estilos do seu PerfilScreen
     backgroundColor: 'rgb(177, 16, 16)', 
   },
   buttonText: {

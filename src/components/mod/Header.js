@@ -9,12 +9,9 @@ const { width } = Dimensions.get("window");
 const Header = ({ isManager, onProfilePress, onLogoutPress, onArquivosPress, onAddPress }) => {
   return (
     <View style={styles.header}>
-      {/* Botão de adicionar item (visível para todos) */}
       <TouchableOpacity onPress={onAddPress} style={styles.addButton}>
         <AntDesign name="plus" size={28} color="#FFF" />
       </TouchableOpacity>
-
-      {/* Profile */}
       <TouchableOpacity
         onPress={onProfilePress}
         style={[
@@ -24,15 +21,11 @@ const Header = ({ isManager, onProfilePress, onLogoutPress, onArquivosPress, onA
       >
         <Ionicons name="person-circle-outline" color="#FFF" size={40} />
       </TouchableOpacity>
-
-      {/* Apenas managers veem o botão de arquivos */}
       {isManager && (
         <TouchableOpacity onPress={onArquivosPress} style={styles.folderButton}>
           <MaterialCommunityIcons name="folder-outline" color="#FFF" size={40} />
         </TouchableOpacity>
       )}
-
-      {/* Logout */}
       <TouchableOpacity onPress={onLogoutPress} style={styles.logoutButton}>
         <AntDesign name="logout" color="#FFF" size={25} />
       </TouchableOpacity>

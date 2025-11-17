@@ -212,7 +212,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
               style={styles.headerImage}
             />
 
-            {/* Email */}
             <View style={styles.inputContainer}>
               <Ionicons
                 name="person-outline"
@@ -231,7 +230,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
               />
             </View>
 
-            {/* Senha */}
             <View style={styles.inputContainer}>
               <Ionicons
                 name="lock-closed-outline"
@@ -262,14 +260,12 @@ function Login({ visible, onClose, onOpenCadastro }) {
               </TouchableOpacity>
             </View>
 
-            {/* Botão de Login */}
             <TouchableOpacity onPress={handleLogin} style={styles.button}>
               <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
 
             <View style={styles.separator} />
 
-            {/* Esqueceu senha */}
             <TouchableOpacity
               style={styles.linkButton}
               onPress={() => setForgotPasswordModalVisible(true)}
@@ -277,7 +273,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
               <Text style={styles.linkText}>Esqueceu a senha?</Text>
             </TouchableOpacity>
 
-            {/* Cadastro */}
             <TouchableOpacity
               style={styles.linkButton}
               onPress={() => {
@@ -293,7 +288,6 @@ function Login({ visible, onClose, onOpenCadastro }) {
         </KeyboardAvoidingView>
       </View>
 
-      {/* Modais */}
       <CustomModal
         open={modalState.visible}
         onClose={() => setModalState({ ...modalState, visible: false })}

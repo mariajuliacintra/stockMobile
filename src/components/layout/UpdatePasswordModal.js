@@ -158,25 +158,21 @@ function UpdatePasswordModal({ visible, onClose, email }) {
               <Text style={dynamicStyles.subtitle}>
                 Insira sua nova senha para continuar.
               </Text>
-              {/* Input para Nova Senha */}
               <View style={dynamicStyles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
                 <TextInput
                   placeholder="Nova Senha"
                   value={password}
                   onChangeText={setPassword}
-                  // secureTextEntry agora depende do estado 'showPassword'
                   secureTextEntry={showPassword}
                   style={dynamicStyles.inputField}
                   placeholderTextColor="gray"
                 />
-                {/* Botão de "olho" para alternar a visibilidade */}
                 <TouchableOpacity
                   style={dynamicStyles.togglePasswordButton}
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   <Ionicons
-                    // O ícone muda dependendo do estado
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={width * 0.05}
                     color="gray"
@@ -199,7 +195,6 @@ function UpdatePasswordModal({ visible, onClose, email }) {
                   onPress={() => setShowPassword(!showPassword)}
                 >
                   <Ionicons
-                    // O ícone muda dependendo do estado
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={width * 0.05}
                     color="gray"

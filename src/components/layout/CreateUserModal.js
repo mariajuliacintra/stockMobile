@@ -69,8 +69,6 @@ export default function CreateUserModal({
 
       if (responseData.success) {
         showCustomModal("Atenção!", responseData.message, "info");
-
-        // prepara dados para modal de verificação
         setFormDataForVerification({ email });
         setVerifyModalVisible(true);
         onClose();
@@ -131,7 +129,6 @@ export default function CreateUserModal({
 
             <Text style={styles.titleText}>Criar Novo Usuário</Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ width: "100%" }}>
-              {/* Nome */}
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -143,7 +140,6 @@ export default function CreateUserModal({
                 />
               </View>
 
-              {/* Email */}
               <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -157,7 +153,6 @@ export default function CreateUserModal({
                 />
               </View>
 
-              {/* Senha */}
               <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -170,7 +165,6 @@ export default function CreateUserModal({
                 />
               </View>
 
-              {/* Confirmar Senha */}
               <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -183,7 +177,6 @@ export default function CreateUserModal({
                 />
               </View>
 
-              {/* Picker de Função */}
               <View style={[styles.inputContainer, styles.pickerContainer]}>
                 <Ionicons name="briefcase-outline" size={width * 0.05} color="gray" />
                 <Picker
@@ -196,7 +189,6 @@ export default function CreateUserModal({
                 </Picker>
               </View>
 
-              {/* Botão */}
               <TouchableOpacity
                 onPress={handleRegister}
                 style={styles.confirmButton}

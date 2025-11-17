@@ -6,7 +6,6 @@ export default function AuthLoading({ navigation }) {
   useEffect(() => {
     const checkAuth = async () => {
       const token = await SecureStore.getItemAsync("tokenUsuario");
-      //Autenticação usuario
       if (token) {
         navigation.replace("Principal");
       } else {

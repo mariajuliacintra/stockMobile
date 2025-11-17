@@ -12,12 +12,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import sheets from "../../services/axios"; // ⚠️ Verifique o caminho
+import sheets from "../../services/axios"; 
 import * as SecureStore from 'expo-secure-store';
-// 🟢 IMPORTAÇÃO DO MODAL DE VERIFICAÇÃO (AJUSTE O CAMINHO SE NECESSÁRIO)
 import VerificationModal from './VerificationModal'; 
-// Assumindo que CustomModal é injetado via prop ou importado
-// import CustomModal from "../mod/CustomModal"; 
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,8 +29,6 @@ export default function EditUserModal({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
   const [isLoading, setIsLoading] = useState(false);
-
-  // 🟢 ESTADOS PARA VERIFICAÇÃO
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [formDataForVerification, setFormDataForVerification] = useState({});
 
@@ -68,19 +63,16 @@ export default function EditUserModal({
       };
 
       const headers = { Authorization: storedToken };
-      // ⚠️ Use a ROTA CORRETA da sua API para atualizar o usuário!
       const response = await sheets.putAtualizarUsuario(user.idUser, dadosAtualizados, { headers }); 
 
       const responseData = response.data;
 
       const requiresVerification =
           Array.isArray(responseData.data) && responseData.data[0]?.requiresEmailVerification;
-
-      // 🟢 TRATAMENTO DE VERIFICAÇÃO DE E-MAIL (COMO NA TELA DE PERFIL)
       if (requiresVerification) {
-          setFormDataForVerification({ email: email, userId: user.idUser }); // Passa o novo e-mail e ID
+          setFormDataForVerification({ email: email, userId: user.idUser });
           setVerifyModalVisible(true);
-          onClose(); // Fecha o modal de edição
+          onClose(); 
           showCustomModal(
             "Verificação Pendente", 
             responseData.message || "E-mail alterado. Insira o código enviado para concluir a verificação.", 
@@ -88,8 +80,8 @@ export default function EditUserModal({
           );
       } else if (responseData.success) {
         showCustomModal("Sucesso", responseData.message || "Usuário atualizado com sucesso!", "success");
-        onUpdateSuccess(); // Recarrega a lista
-        onClose(); // Fecha o modal
+        onUpdateSuccess(); 
+        onClose(); 
       } else {
         showCustomModal(
           "Erro",
@@ -109,15 +101,14 @@ export default function EditUserModal({
     }
   };
 
-  // 🟢 FUNÇÃO DE SUCESSO APÓS VERIFICAÇÃO
   const handleVerificationSuccess = () => {
     showCustomModal(
       "Sucesso",
       "E-mail verificado e usuário atualizado com sucesso!",
       "success"
     );
-    onUpdateSuccess(); // Recarregar a lista na UsersScreen
-    setVerifyModalVisible(false); // Fecha o modal de verificação
+    onUpdateSuccess(); 
+    setVerifyModalVisible(false); 
   };
   
   const handleClose = () => {
@@ -150,9 +141,7 @@ export default function EditUserModal({
 
             <Text style={styles.titleText}>Editar Usuário: {user?.name}</Text>
             <ScrollView showsVerticalScrollIndicator={false} style={{ width: "100%" }}>
-              {/* ... Campos de Nome, Email, Cargo (invariáveis) ... */}
 
-              {/* Nome */}
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -164,7 +153,6 @@ export default function EditUserModal({
                 />
               </View>
 
-              {/* Email */}
               <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -178,7 +166,6 @@ export default function EditUserModal({
                 />
               </View>
 
-              {/* Picker de Função */}
               <View style={[styles.inputContainer, styles.pickerContainer]}>
                 <Ionicons name="briefcase-outline" size={width * 0.05} color="gray" />
                 <Picker
@@ -191,7 +178,6 @@ export default function EditUserModal({
                 </Picker>
               </View>
 
-              {/* Botão */}
               <TouchableOpacity
                 onPress={handleUpdate}
                 style={[styles.confirmButton, { backgroundColor: '#FF2C2C' }]}
@@ -208,13 +194,12 @@ export default function EditUserModal({
         </View>
       </Modal>
 
-      {/* 🟢 RENDERIZAÇÃO DO MODAL DE VERIFICAÇÃO */}
       <VerificationModal
         visible={verifyModalVisible}
         onClose={() => setVerifyModalVisible(false)}
         formData={formDataForVerification}
         onVerificationSuccess={handleVerificationSuccess}
-        mode="update" // Modo de atualização para verificação de e-mail
+        mode="update" 
       />
     </>
   );
@@ -223,7 +208,6 @@ export default function EditUserModal({
 const { width: W, height: H } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
-  // ... (Estilos, mantidos iguais)
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
@@ -284,7 +268,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   confirmButton: {
-    backgroundColor: "#FF2C2C", // Base
+    backgroundColor: "#FF2C2C", 
     paddingVertical: H * 0.02,
     borderRadius: 10,
     alignItems: "center",
