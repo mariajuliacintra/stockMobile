@@ -44,7 +44,8 @@ export default function PerfilScreen() {
   const [senhaModalVisible, setSenhaModalVisible] = useState(false);
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [transactionsModalVisible, setTransactionsModalVisible] = useState(false);
+  const [transactionsModalVisible, setTransactionsModalVisible] =
+    useState(false);
 
   // Modal personalizado
   const [customModalVisible, setCustomModalVisible] = useState(false);
@@ -69,7 +70,10 @@ export default function PerfilScreen() {
     const fetchRole = async () => {
       const storedRole = await SecureStore.getItemAsync("userRole");
       const storedEmail = await SecureStore.getItemAsync("userEmail");
-      if (storedRole === "manager" || (storedEmail && storedEmail.includes("@sp.senai.br"))) {
+      if (
+        storedRole === "manager" ||
+        (storedEmail && storedEmail.includes("@sp.senai.br"))
+      ) {
         setIsManager(true);
       }
     };
@@ -106,6 +110,7 @@ export default function PerfilScreen() {
     fetchUserData();
   }, []);
 
+
   // Valida senha atual
   const handleValidatePassword = async (senhaAtual) => {
     try {
@@ -116,14 +121,19 @@ export default function PerfilScreen() {
       }
 
       const headers = { Authorization: storedToken };
-      const response = await sheets.postValidatePassword(userId, { password: senhaAtual }, { headers });
+      const response = await sheets.postValidatePassword(
+        userId,
+        { password: senhaAtual },
+        { headers }
+      );
 
       const data = response.data;
       return (
         data?.isValid === true ||
         data?.data?.[0]?.isValid === true ||
         data?.data?.isValid === true ||
-        (data?.success === true && data?.details?.toLowerCase().includes("válida"))
+        (data?.success === true &&
+          data?.details?.toLowerCase().includes("válida"))
       );
     } catch {
       showCustomModal("Erro", "Erro ao validar senha.", "error");
@@ -146,14 +156,35 @@ export default function PerfilScreen() {
         return;
       }
 
-      const dadosAtualizados = { name: nome, email };
+      // <-- Só envia dados realmente modificados
+      const dadosAtualizados = {};
+
+      if (nome !== "" && nome !== undefined) {
+        dadosAtualizados.name = nome;
+      }
+
+      if (email !== "" && email !== currentEmail) {
+        dadosAtualizados.email = email;
+      }
+
       if (newPassword) {
         dadosAtualizados.password = newPassword;
         dadosAtualizados.confirmPassword = confirmNewPassword;
       }
 
+      if (Object.keys(dadosAtualizados).length === 0) {
+        showCustomModal("Aviso", "Nenhuma alteração detectada.", "info");
+        return;
+      }
+
       const headers = { Authorization: storedToken };
-      const response = await sheets.putAtualizarUsuario(userId, dadosAtualizados, { headers });
+
+      const response = await sheets.putAtualizarUsuario(
+        userId,
+        dadosAtualizados,
+        { headers }
+      );
+
       const responseData = response.data;
 
       if (responseData?.data?.[0]?.requiresEmailVerification) {
@@ -164,7 +195,10 @@ export default function PerfilScreen() {
             "Seu e-mail foi alterado. Verifique o código enviado para concluir a atualização.",
           "info"
         );
-      } else if (responseData?.user) {
+        return;
+      }
+
+      if (responseData?.user) {
         const updatedUser = Array.isArray(responseData.user)
           ? responseData.user[0]
           : responseData.user;
@@ -172,16 +206,19 @@ export default function PerfilScreen() {
         setNome(updatedUser.name || nome);
         setEmail(updatedUser.email || email);
         setCurrentEmail(updatedUser.email || email);
+
         await SecureStore.setItemAsync("user", JSON.stringify([updatedUser]));
 
         showCustomModal("Sucesso", "Perfil atualizado com sucesso!", "success");
         setNewPassword("");
         setConfirmNewPassword("");
         setIsEditing(false);
-      } else {
-        showCustomModal("Erro", "Falha na atualização do perfil.", "error");
+        return;
       }
-    } catch {
+
+      showCustomModal("Erro", "Falha na atualização do perfil.", "error");
+    } catch (err) {
+      console.log("ERRO ATUALIZAR:", err.response?.data || err.message);
       showCustomModal("Erro", "Erro ao atualizar perfil.", "error");
     } finally {
       setLoading(false);
@@ -204,9 +241,16 @@ export default function PerfilScreen() {
         await SecureStore.deleteItemAsync("tokenUsuario");
         await SecureStore.deleteItemAsync("userId");
         showCustomModal("Sucesso", response.data.message, "success");
-        setTimeout(() => navigation.reset({ index: 0, routes: [{ name: "Home" }] }), 1500);
+        setTimeout(
+          () => navigation.reset({ index: 0, routes: [{ name: "Home" }] }),
+          1500
+        );
       } else {
-        showCustomModal("Erro", response.data.error || "Erro ao deletar usuário.", "error");
+        showCustomModal(
+          "Erro",
+          response.data.error || "Erro ao deletar usuário.",
+          "error"
+        );
       }
     } catch {
       showCustomModal("Erro", "Falha ao deletar usuário.", "error");
@@ -226,7 +270,10 @@ export default function PerfilScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <ImageBackground style={styles.background} source={require("../img/fundo.png")}>
+      <ImageBackground
+        style={styles.background}
+        source={require("../img/fundo.png")}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -241,7 +288,11 @@ export default function PerfilScreen() {
               onPress={() => navigation.navigate("NoUsers")}
               style={styles.engrenagem}
             >
-              <MaterialCommunityIcons name="account-cog-outline" size={40} color="#fff" />
+              <MaterialCommunityIcons
+                name="account-cog-outline"
+                size={40}
+                color="#fff"
+              />
             </TouchableOpacity>
           )}
         </View>
@@ -251,7 +302,12 @@ export default function PerfilScreen() {
           <Image source={require("../img/logo.png")} style={styles.logo} />
 
           {/* Campos */}
-          <CustomInput placeholder="Nome" value={nome} onChangeText={setNome} editable={isEditing} />
+          <CustomInput
+            placeholder="Nome"
+            value={nome}
+            onChangeText={setNome}
+            editable={isEditing}
+          />
           <CustomInput
             placeholder="E-mail"
             value={email}
@@ -281,7 +337,11 @@ export default function PerfilScreen() {
 
           {/* Botões */}
           {isEditing ? (
-            <TouchableOpacity style={styles.button} onPress={handleUpdateUser} disabled={loading}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleUpdateUser}
+              disabled={loading}
+            >
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -289,7 +349,10 @@ export default function PerfilScreen() {
               )}
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.button} onPress={() => setSenhaModalVisible(true)}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setSenhaModalVisible(true)}
+            >
               <Text style={styles.buttonText}>Editar perfil</Text>
             </TouchableOpacity>
           )}
@@ -325,7 +388,11 @@ export default function PerfilScreen() {
           onSuccess={() => {
             setIsEditing(true);
             setSenhaModalVisible(false);
-            showCustomModal("Sucesso", "Senha confirmada! Você pode editar o perfil.", "success");
+            showCustomModal(
+              "Sucesso",
+              "Senha confirmada! Você pode editar o perfil.",
+              "success"
+            );
           }}
           onCancel={() => setSenhaModalVisible(false)}
           showCustomModal={showCustomModal}
@@ -341,7 +408,10 @@ export default function PerfilScreen() {
             setEmail(updatedUser.email);
             setCurrentEmail(updatedUser.email);
             setIsEditing(false);
-            await SecureStore.setItemAsync("user", JSON.stringify([updatedUser]));
+            await SecureStore.setItemAsync(
+              "user",
+              JSON.stringify([updatedUser])
+            );
             showCustomModal("Sucesso", "E-mail atualizado!", "success");
           }}
         />
@@ -372,7 +442,13 @@ export default function PerfilScreen() {
   );
 }
 
-const CustomInput = ({ placeholder, value, onChangeText, editable, keyboardType }) => {
+const CustomInput = ({
+  placeholder,
+  value,
+  onChangeText,
+  editable,
+  keyboardType,
+}) => {
   return (
     <View style={stylesGlobal.inputContainer}>
       <TextInput
@@ -388,7 +464,13 @@ const CustomInput = ({ placeholder, value, onChangeText, editable, keyboardType 
   );
 };
 
-const PasswordInput = ({ placeholder, value, onChangeText, visible, onToggle }) => {
+const PasswordInput = ({
+  placeholder,
+  value,
+  onChangeText,
+  visible,
+  onToggle,
+}) => {
   return (
     <View style={stylesGlobal.inputContainer}>
       <TextInput
@@ -450,7 +532,11 @@ const createDynamicStyles = (width, height) =>
       marginBottom: height * 0.015,
     },
     buttonText: { color: "white", fontWeight: "bold", fontSize: width * 0.045 },
-    loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+    loaderContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
     home: {
       backgroundColor: "#600000",
       borderRadius: 50,
