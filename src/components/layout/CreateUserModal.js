@@ -16,12 +16,11 @@ import sheets from "../../services/axios";
 import CustomModal from "../mod/CustomModal";
 import VerificationModal from "./VerificationModal";
 
-const { width, height } = Dimensions.get("window");
+const { width: W, height: H } = Dimensions.get("window");
 
 export default function CreateUserModal({
   visible,
   onClose,
-  showCustomModal,
   onRegistrationSuccess,
 }) {
   const [name, setName] = useState("");
@@ -29,12 +28,17 @@ export default function CreateUserModal({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("user");
+
   const [isLoading, setIsLoading] = useState(false);
+
+  const [customModalVisible, setCustomModalVisible] = useState(false);
+  const [customModalTitle, setCustomModalTitle] = useState("");
+  const [customModalMessage, setCustomModalMessage] = useState("");
+  const [customModalType, setCustomModalType] = useState("error");
 
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [formDataForVerification, setFormDataForVerification] = useState({});
 
-  // 👁️ estados para mostrar/ocultar senha
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -48,16 +52,6 @@ export default function CreateUserModal({
   };
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !role) {
-      showCustomModal("Atenção", "Todos os campos são obrigatórios.", "warning");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      showCustomModal("Erro", "As senhas não coincidem.", "error");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -69,39 +63,47 @@ export default function CreateUserModal({
         role,
       });
 
-      const responseData = response.data;
+      const data = response.data;
 
-      if (responseData.success) {
-        showCustomModal("Atenção!", responseData.message, "info");
+      if (data.success) {
+        setCustomModalTitle("Sucesso");
+        setCustomModalMessage(data.message);
+        setCustomModalType("success");
+        setCustomModalVisible(true);
+
         setFormDataForVerification({ email });
         setVerifyModalVisible(true);
+
         onClose();
       } else {
-        showCustomModal(
-          "Erro",
-          responseData.details ||
-            responseData.error ||
-            "Falha ao registrar usuário.",
-          "error"
+        setCustomModalTitle("Erro");
+        setCustomModalMessage(
+          data.details || data.error || "Falha ao registrar usuário."
         );
+        setCustomModalType("error");
+        setCustomModalVisible(true);
       }
-    } catch (error) {
+    } catch (err) {
       const errorMsg =
-        error.response?.data?.details ||
-        error.response?.data?.error ||
+        err.response?.data?.details ||
+        err.response?.data?.error ||
         "Erro de conexão ao tentar registrar.";
-      showCustomModal("Erro", errorMsg, "error");
+
+      setCustomModalTitle("Erro");
+      setCustomModalMessage(errorMsg);
+      setCustomModalType("error");
+      setCustomModalVisible(true);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerificationSuccess = (user) => {
-    showCustomModal(
-      "Sucesso",
-      "Usuário criado e verificado com sucesso!",
-      "success"
-    );
+    setCustomModalTitle("Sucesso");
+    setCustomModalMessage("Usuário criado e verificado com sucesso!");
+    setCustomModalType("success");
+    setCustomModalVisible(true);
+
     clearForm();
     onRegistrationSuccess(user);
     setVerifyModalVisible(false);
@@ -111,7 +113,7 @@ export default function CreateUserModal({
     <>
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={visible}
         onRequestClose={onClose}
       >
@@ -126,109 +128,125 @@ export default function CreateUserModal({
             >
               <Ionicons
                 name="close-circle-outline"
-                size={width * 0.07}
+                size={W * 0.07}
                 color="#999"
               />
             </TouchableOpacity>
 
             <Text style={styles.titleText}>Criar Novo Usuário</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ width: "100%" }}>
-              
-              {/* Nome */}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ width: "100%" }}
+            >
               <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={width * 0.05} color="gray" />
+                <Ionicons name="person-outline" size={W * 0.05} color="gray" />
                 <TextInput
                   style={styles.inputField}
                   placeholder="Nome Completo"
+                  placeholderTextColor="gray"
                   value={name}
                   onChangeText={setName}
-                  placeholderTextColor="gray"
                 />
               </View>
 
-              {/* Email */}
               <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
+                <Ionicons name="mail-outline" size={W * 0.05} color="gray" />
                 <TextInput
                   style={styles.inputField}
                   placeholder="E-mail"
-                  value={email}
-                  onChangeText={setEmail}
                   placeholderTextColor="gray"
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
                 />
               </View>
 
-              {/* SENHA — Com olhinho */}
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
-
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={W * 0.05}
+                  color="gray"
+                />
                 <TextInput
                   style={styles.inputField}
                   placeholder="Senha Inicial"
-                  value={password}
-                  onChangeText={setPassword}
                   placeholderTextColor="gray"
                   secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
                 />
-
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                >
                   <Ionicons
                     name={showPassword ? "eye-outline" : "eye-off-outline"}
-                    size={width * 0.055}
+                    size={W * 0.055}
                     color="gray"
                   />
                 </TouchableOpacity>
               </View>
 
-              {/* CONFIRMAR SENHA — Com olhinho */}
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
-
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={W * 0.05}
+                  color="gray"
+                />
                 <TextInput
                   style={styles.inputField}
                   placeholder="Confirmar Senha"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
                   placeholderTextColor="gray"
                   secureTextEntry={!showConfirmPassword}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
                 />
-
                 <TouchableOpacity
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onPress={() =>
+                    setShowConfirmPassword(!showConfirmPassword)
+                  }
                 >
                   <Ionicons
-                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
-                    size={width * 0.055}
+                    name={
+                      showConfirmPassword ? "eye-outline" : "eye-off-outline"
+                    }
+                    size={W * 0.055}
                     color="gray"
                   />
                 </TouchableOpacity>
               </View>
 
-              {/* Cargo */}
               <View style={[styles.inputContainer, styles.pickerContainer]}>
-                <Ionicons name="briefcase-outline" size={width * 0.05} color="gray" />
+                <Ionicons
+                  name="briefcase-outline"
+                  size={W * 0.05}
+                  color="gray"
+                />
                 <Picker
                   selectedValue={role}
-                  onValueChange={(itemValue) => setRole(itemValue)}
+                  onValueChange={setRole}
                   style={styles.picker}
                 >
                   <Picker.Item label="Usuário Comum" value="user" />
-                  <Picker.Item label="Gerente/Administrador" value="manager" />
+                  <Picker.Item
+                    label="Gerente/Administrador"
+                    value="manager"
+                  />
                 </Picker>
               </View>
 
               <TouchableOpacity
-                onPress={handleRegister}
                 style={styles.confirmButton}
+                onPress={handleRegister}
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.confirmButtonText}>Cadastrar Usuário</Text>
+                  <Text style={styles.confirmButtonText}>
+                    Cadastrar Usuário
+                  </Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -236,21 +254,24 @@ export default function CreateUserModal({
         </View>
       </Modal>
 
+      <CustomModal
+        open={customModalVisible}
+        onClose={() => setCustomModalVisible(false)}
+        title={customModalTitle}
+        message={customModalMessage}
+        type={customModalType}
+      />
+
       <VerificationModal
         visible={verifyModalVisible}
-        onClose={() => {
-          setVerifyModalVisible(false);
-          onRegistrationSuccess();
-        }}
         formData={formDataForVerification}
-        onVerificationSuccess={handleVerificationSuccess}
         mode="register"
+        onVerificationSuccess={handleVerificationSuccess}
+        onClose={() => setVerifyModalVisible(false)}
       />
     </>
   );
 }
-
-const { width: W, height: H } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   overlay: {
@@ -267,10 +288,6 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     maxHeight: H * 0.8,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
     elevation: 10,
   },
   titleText: {
@@ -317,15 +334,8 @@ const styles = StyleSheet.create({
     paddingVertical: H * 0.02,
     borderRadius: 10,
     alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
     marginTop: 10,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 6,
   },
   confirmButtonText: {
     color: "white",
