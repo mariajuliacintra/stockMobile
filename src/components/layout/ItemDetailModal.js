@@ -72,7 +72,11 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
         if (response.data?.success && response.data?.item?.length > 0) {
           setDetailedItem(response.data.item[0]);
         } else {
-          showCustomModal("Erro", "Não foi possível carregar os detalhes.", "error");
+          showCustomModal(
+            "Erro",
+            "Não foi possível carregar os detalhes.",
+            "error"
+          );
         }
       } catch {
         showCustomModal("Erro", "Falha ao carregar os detalhes.", "error");
@@ -158,7 +162,11 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
   };
 
   const handleTransaction = async () => {
-    if (!quantityChange || isNaN(quantityChange) || parseFloat(quantityChange) <= 0) {
+    if (
+      !quantityChange ||
+      isNaN(quantityChange) ||
+      parseFloat(quantityChange) <= 0
+    ) {
       showCustomModal("Erro", "Quantidade inválida.", "error");
       return;
     }
@@ -171,18 +179,28 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       const fkIdUser = decoded?.idUser;
 
       const qtyNum = parseFloat(quantityChange);
+
       const idLot =
         detailedItem?.lots?.[0]?.idLot ||
         detailedItem?.idLot ||
         detailedItem?.lot?.idLot;
 
-      let payload;
-      if (actionDescription === "IN")
-        payload = { quantity: qtyNum, fkIdUser, isAjust: false };
-      if (actionDescription === "OUT")
-        payload = { quantity: -Math.abs(qtyNum), fkIdUser, isAjust: false };
-      if (actionDescription === "ADJUST")
-        payload = { quantity: qtyNum, fkIdUser, isAjust: true };
+      // 🔥 LÓGICA RESTAURADA COMO ERA ANTES
+      let payload = {
+        quantity: qtyNum,
+        fkIdUser,
+        isAjust: false,
+      };
+
+      if (actionDescription === "OUT") {
+        payload.quantity = -Math.abs(qtyNum);
+        payload.isAjust = false;
+      }
+
+      if (actionDescription === "ADJUST") {
+        payload.quantity = qtyNum;
+        payload.isAjust = true;
+      }
 
       const response = await sheets.updateLotQuantity(idLot, payload);
 
@@ -193,11 +211,16 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
       } else {
         showCustomModal("Erro", "Falha ao registrar ação.", "error");
       }
-    } catch {
+    } catch (error) {
       showCustomModal("Erro", "Erro ao registrar ação.", "error");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSelectAction = (action) => {
+    setActionDescription(action);
+    setActionPickerVisible(false);
   };
 
   const handleDeleteItem = async () => {
@@ -229,7 +252,10 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
               <ActivityIndicator size="large" color="#600000" />
             ) : detailedItem ? (
               <>
-                <TouchableOpacity style={styles.closeIcon} onPress={handleClose}>
+                <TouchableOpacity
+                  style={styles.closeIcon}
+                  onPress={handleClose}
+                >
                   <AntDesign name="close" size={24} color="#600000" />
                 </TouchableOpacity>
 
@@ -249,7 +275,10 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                 {selectedImage && (
                   <Image
                     source={{ uri: selectedImage }}
-                    style={[styles.itemImage, { borderWidth: 2, borderColor: "#600000" }]}
+                    style={[
+                      styles.itemImage,
+                      { borderWidth: 2, borderColor: "#600000" },
+                    ]}
                   />
                 )}
 
@@ -274,7 +303,9 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                   </TouchableOpacity>
                 )}
 
-                <Text style={styles.modalText}>Descrição: {detailedItem.description}</Text>
+                <Text style={styles.modalText}>
+                  Descrição: {detailedItem.description}
+                </Text>
                 <Text style={styles.modalText}>
                   Categoria: {detailedItem.category?.value}
                 </Text>
@@ -291,10 +322,16 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                       {actionDescription === "IN"
                         ? "Entrada"
                         : actionDescription === "OUT"
-                        ? "Saída"
-                        : "Ajuste"}
+                          ? "Saída"
+                          : isManager
+                            ? "Ajuste"
+                            : "Entrada"}
                     </Text>
-                    <Ionicons name="caret-down-outline" size={20} color="#fff" />
+                    <Ionicons
+                      name="caret-down-outline"
+                      size={20}
+                      color="#fff"
+                    />
                   </TouchableOpacity>
 
                   <TextInput
@@ -306,13 +343,54 @@ const ItemDetailModal = ({ isVisible, onClose, item }) => {
                   />
                 </View>
 
-                <TouchableOpacity style={styles.transactButton} onPress={handleTransaction}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Confirmar Ação</Text>}
+                {/* 🔥 DROPDOWN RESTAURADO */}
+                {isActionPickerVisible && (
+                  <View style={styles.dropdownContainer}>
+                    {/* Entrada */}
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => handleSelectAction("IN")}
+                    >
+                      <Text style={styles.dropdownText}>Entrada</Text>
+                    </TouchableOpacity>
+
+                    {/* Saída */}
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => handleSelectAction("OUT")}
+                    >
+                      <Text style={styles.dropdownText}>Saída</Text>
+                    </TouchableOpacity>
+
+                    {/* Ajuste — SOMENTE PARA MANAGER */}
+                    {isManager && (
+                      <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => handleSelectAction("ADJUST")}
+                      >
+                        <Text style={styles.dropdownText}>Ajuste</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  style={styles.transactButton}
+                  onPress={handleTransaction}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Confirmar Ação</Text>
+                  )}
                 </TouchableOpacity>
 
                 {isManager && (
                   <TouchableOpacity
-                    style={[styles.transactButton, { backgroundColor: "#600000" }]}
+                    style={[
+                      styles.transactButton,
+                      { backgroundColor: "#600000" },
+                    ]}
                     onPress={handleDeleteItem}
                   >
                     <Text style={styles.buttonText}>Deletar Item</Text>
@@ -382,6 +460,31 @@ const styles = StyleSheet.create({
     marginTop: 5,
     alignItems: "center",
   },
+
+  // 🔥 ESTILOS DO DROPDOWN RESTAURADO
+  dropdownContainer: {
+    position: "absolute",
+    top: 300,
+    left: 40,
+    right: 40,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 10,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    zIndex: 999,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: "#600000",
+    fontWeight: "bold",
+  },
+
   closeButton: {
     backgroundColor: "#600000",
     padding: 10,
