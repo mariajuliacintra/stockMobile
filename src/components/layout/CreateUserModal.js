@@ -34,6 +34,10 @@ export default function CreateUserModal({
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [formDataForVerification, setFormDataForVerification] = useState({});
 
+  // 👁️ estados para mostrar/ocultar senha
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const clearForm = () => {
     setName("");
     setEmail("");
@@ -128,7 +132,10 @@ export default function CreateUserModal({
             </TouchableOpacity>
 
             <Text style={styles.titleText}>Criar Novo Usuário</Text>
+
             <ScrollView showsVerticalScrollIndicator={false} style={{ width: "100%" }}>
+              
+              {/* Nome */}
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -140,6 +147,7 @@ export default function CreateUserModal({
                 />
               </View>
 
+              {/* Email */}
               <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={width * 0.05} color="gray" />
                 <TextInput
@@ -153,30 +161,53 @@ export default function CreateUserModal({
                 />
               </View>
 
+              {/* SENHA — Com olhinho */}
               <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
+
                 <TextInput
                   style={styles.inputField}
                   placeholder="Senha Inicial"
                   value={password}
                   onChangeText={setPassword}
                   placeholderTextColor="gray"
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                 />
+
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={width * 0.055}
+                    color="gray"
+                  />
+                </TouchableOpacity>
               </View>
 
+              {/* CONFIRMAR SENHA — Com olhinho */}
               <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={width * 0.05} color="gray" />
+
                 <TextInput
                   style={styles.inputField}
                   placeholder="Confirmar Senha"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholderTextColor="gray"
-                  secureTextEntry
+                  secureTextEntry={!showConfirmPassword}
                 />
+
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <Ionicons
+                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                    size={width * 0.055}
+                    color="gray"
+                  />
+                </TouchableOpacity>
               </View>
 
+              {/* Cargo */}
               <View style={[styles.inputContainer, styles.pickerContainer]}>
                 <Ionicons name="briefcase-outline" size={width * 0.05} color="gray" />
                 <Picker
